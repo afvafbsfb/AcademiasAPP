@@ -19,7 +19,9 @@ data class ChatUiState(
     val error: String? = null,
     val messages: List<ChatMessage> = emptyList(),
     val items: List<GenericItem> = emptyList(),
-    val suggestions: List<String> = emptyList()
+    val suggestions: List<String> = emptyList(),
+    val summaryFields: List<String> = emptyList(),
+    val type: String? = null
 )
 
 class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
@@ -60,7 +62,9 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
                 error = null,
                 messages = if (assistantMsg != null) current.messages + assistantMsg else current.messages,
                 items = env.data?.items.orEmpty(),
-                suggestions = env.suggestions.orEmpty()
+                suggestions = env.suggestions.orEmpty(),
+                summaryFields = env.data?.summaryFields.orEmpty(),
+                type = env.data?.type
             )
         }
     }

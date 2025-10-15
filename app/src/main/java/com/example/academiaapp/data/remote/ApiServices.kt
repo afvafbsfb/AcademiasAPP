@@ -12,5 +12,5 @@ interface AuthApi {
 
 interface ChatApi {
     @POST("/chat")
-    suspend fun chat(@Body req: ChatRequest, @HeaderMap headers: Map<String, String> = emptyMap()): Envelope<GenericItem>
+    suspend fun chat(@Body req: ChatPayload, @HeaderMap headers: Map<String, String> = emptyMap()): Envelope<GenericItem>
 }

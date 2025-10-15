@@ -11,17 +11,18 @@ data class Envelope<T>(
 data class DataSection<T>(
     val type: String?,
     val items: List<T>?,
+    val summaryFields: List<String>? = null,
 )
 
-// Generic item for early stages; later we can create models per type
-data class GenericItem(
-    val id: String? = null,
-    val name: String? = null,
-    val title: String? = null,
-    val description: String? = null
+// Dynamic item as key-value pairs to preserve all fields from backend
+typealias GenericItem = Map<String, Any?>
+
+data class ChatMessageDto(
+    val role: String,
+    val content: String
 )
 
-data class ChatRequest(
-    val query: String,
+data class ChatPayload(
+    val messages: List<ChatMessageDto>,
     val context: Map<String, Any?>? = null
 )

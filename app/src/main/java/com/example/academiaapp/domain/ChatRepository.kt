@@ -1,7 +1,8 @@
 package com.example.academiaapp.domain
 
 import com.example.academiaapp.data.remote.ChatApi
-import com.example.academiaapp.data.remote.dto.ChatRequest
+import com.example.academiaapp.data.remote.dto.ChatPayload
+import com.example.academiaapp.data.remote.dto.ChatMessageDto
 import com.example.academiaapp.data.remote.dto.Envelope
 import com.example.academiaapp.data.remote.dto.GenericItem
 import com.example.academiaapp.data.session.SessionStore
@@ -17,14 +18,18 @@ class ChatRepository(
     }
 
     suspend fun welcome(): Result<Envelope<GenericItem>> = runCatching {
-        api.chat(ChatRequest(query = ""), headers = authHeaders())
+        val userName = session.name.first().orEmpty().trim()
+        val content = if (userName.isNotEmpty()) "hola, soy $userName" else "hola"
+        val payload = ChatPayload(messages = listOf(ChatMessageDto(role = "user", content = content)))
+        api.chat(payload, headers = authHeaders())
     }.fold(
         onSuccess = { Result.Success(it) },
         onFailure = { Result.Error("No se pudo obtener la bienvenida", it) }
     )
 
     suspend fun sendMessage(text: String): Result<Envelope<GenericItem>> = runCatching {
-        api.chat(ChatRequest(query = text), headers = authHeaders())
+        val payload = ChatPayload(messages = listOf(ChatMessageDto(role = "user", content = text)))
+        api.chat(payload, headers = authHeaders())
     }.fold(
         onSuccess = { Result.Success(it) },
         onFailure = { Result.Error("No se pudo enviar el mensaje", it) }

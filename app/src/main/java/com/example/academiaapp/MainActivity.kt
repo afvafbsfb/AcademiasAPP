@@ -28,7 +28,12 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("login") { LoginScreen(navController = navController) }
-                        composable("chat") { ChatScreen() }
+                        composable("chat?fromLogin={fromLogin}") { backStackEntry ->
+                            val fromLogin = backStackEntry.arguments?.getString("fromLogin")?.toBooleanStrictOrNull() ?: false
+                            ChatScreen(fromLogin = fromLogin)
+                        }
+                        // fallback for direct route without query param
+                        composable("chat") { ChatScreen(fromLogin = false) }
                     }
                 }
             }

@@ -40,7 +40,9 @@ class LoginViewModel(private val repo: LoginRepository) : ViewModel() {
         _uiState.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             when (val res = repo.login(email, pass)) {
-                is Result.Success -> _uiState.update { it.copy(loading = false, success = true) }
+                is Result.Success -> {
+                    _uiState.update { it.copy(loading = false, success = true) }
+                }
                 is Result.Error -> _uiState.update { it.copy(loading = false, error = res.message) }
             }
         }
