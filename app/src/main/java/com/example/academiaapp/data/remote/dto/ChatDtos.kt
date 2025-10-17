@@ -12,6 +12,7 @@ data class DataSection<T>(
     val type: String?,
     val items: List<T>?,
     val summaryFields: List<String>? = null,
+    val pagination: PaginationInfo? = null,
 )
 
 // Dynamic item as key-value pairs to preserve all fields from backend
@@ -25,4 +26,14 @@ data class ChatMessageDto(
 data class ChatPayload(
     val messages: List<ChatMessageDto>,
     val context: Map<String, Any?>? = null
+)
+
+data class PaginationInfo(
+    val page: Int? = null,
+    val size: Int? = null,
+    val returned: Int? = null,
+    val hasMore: Boolean? = null,
+    val nextPage: Int? = null,
+    val prevPage: Int? = null,
+    val total: Int? = null
 )

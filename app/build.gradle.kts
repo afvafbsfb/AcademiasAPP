@@ -36,11 +36,13 @@ android {
             dimension = "env"
             buildConfigField("String", "API_WORKER_BASE_URL", "\"http://10.0.2.2:5000\"")
             buildConfigField("String", "CHAT_BASE_URL", "\"http://10.0.2.2:8080\"")
+            buildConfigField("boolean", "FLOW_HTML_TRACE", "true")
         }
         create("prod") {
             dimension = "env"
             buildConfigField("String", "API_WORKER_BASE_URL", "\"https://api-worker.example.com\"")
             buildConfigField("String", "CHAT_BASE_URL", "\"https://chat-backend.example.com\"")
+            buildConfigField("boolean", "FLOW_HTML_TRACE", "false")
         }
     }
     compileOptions {
