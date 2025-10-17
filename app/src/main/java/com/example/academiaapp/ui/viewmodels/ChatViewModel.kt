@@ -32,6 +32,10 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
     private val _ui = MutableStateFlow(ChatUiState())
     val ui: StateFlow<ChatUiState> = _ui
 
+    companion object {
+        private const val MAX_MESSAGES = 75
+    }
+
     fun loadWelcome() {
         if (_ui.value.messages.isNotEmpty()) return
         _ui.update { it.copy(loading = true, error = null) }
@@ -46,8 +50,11 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
     fun sendMessage(text: String) {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return
-        // Add user message immediately
-        _ui.update { it.copy(messages = it.messages + ChatMessage("user", trimmed)) }
+        // Add user message with cap
+        _ui.update { state ->
+            val newList = (state.messages + ChatMessage("user", trimmed)).takeLast(MAX_MESSAGES)
+            state.copy(messages = newList)
+        }
         _ui.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             val conversation = buildConversationPayload(trimmed)
@@ -109,10 +116,11 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
         val text = env.message?.takeIf { it.isNotBlank() } ?: ""
         val assistantMsg = if (text.isNotEmpty()) ChatMessage("assistant", text) else null
         _ui.update { current ->
+            val newMessages = if (assistantMsg != null) (current.messages + assistantMsg).takeLast(MAX_MESSAGES) else current.messages
             current.copy(
                 loading = false,
                 error = null,
-                messages = if (assistantMsg != null) current.messages + assistantMsg else current.messages,
+                messages = newMessages,
                 items = env.data?.items.orEmpty(),
                 suggestions = env.suggestions.orEmpty(),
                 summaryFields = env.data?.summaryFields.orEmpty(),
@@ -120,6 +128,11 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
                 pagination = env.data?.pagination
             )
         }
+    }
+
+    // Limpiar el historial del chat (se usará al cerrar sesión)
+    fun reset() {
+        _ui.value = ChatUiState()
     }
 }
 

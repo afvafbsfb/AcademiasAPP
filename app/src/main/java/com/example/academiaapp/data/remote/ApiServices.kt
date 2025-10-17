@@ -3,6 +3,8 @@ package com.example.academiaapp.data.remote
 import com.example.academiaapp.data.remote.dto.*
 import retrofit2.http.Body
 import retrofit2.http.HeaderMap
+import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.POST
 
 interface AuthApi {
@@ -13,4 +15,9 @@ interface AuthApi {
 interface ChatApi {
     @POST("/chat")
     suspend fun chat(@Body req: ChatPayload, @HeaderMap headers: Map<String, String> = emptyMap()): Envelope<GenericItem>
+}
+
+interface AcademiasApi {
+    @GET("/academias/{id}")
+    suspend fun getAcademia(@Path("id") id: Int): AcademiaDto
 }

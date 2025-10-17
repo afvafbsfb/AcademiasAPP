@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.academiaapp.domain.LoginRepository
+import com.example.academiaapp.domain.ChatRepository
 import com.example.academiaapp.domain.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +19,7 @@ data class LoginUiState(
     val success: Boolean = false
 )
 
-class LoginViewModel(private val repo: LoginRepository) : ViewModel() {
+class LoginViewModel(private val repo: LoginRepository, private val chatRepo: ChatRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState
 
@@ -42,6 +43,14 @@ class LoginViewModel(private val repo: LoginRepository) : ViewModel() {
             when (val res = repo.login(email, pass)) {
                 is Result.Success -> {
                     _uiState.update { it.copy(loading = false, success = true) }
+                    // Lanzar llamada al chat para obtener el mensaje de bienvenida en background sin bloquear la navegación
+                    launch {
+                        try {
+                            chatRepo.welcome()
+                        } catch (_: Throwable) {
+                            // Ignorar errores aquí; ChatViewModel gestionará reintentos si es necesario
+                        }
+                    }
                 }
                 is Result.Error -> _uiState.update { it.copy(loading = false, error = res.message) }
             }
@@ -49,11 +58,11 @@ class LoginViewModel(private val repo: LoginRepository) : ViewModel() {
     }
 }
 
-class LoginViewModelFactory(private val repo: LoginRepository) : ViewModelProvider.Factory {
+class LoginViewModelFactory(private val repo: LoginRepository, private val chatRepo: ChatRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return LoginViewModel(repo) as T
+            return LoginViewModel(repo, chatRepo) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

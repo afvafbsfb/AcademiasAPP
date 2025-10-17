@@ -4,9 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -21,20 +18,17 @@ class MainActivity : ComponentActivity() {
         setContent {
             AcademiaAPPTheme {
                 val navController = rememberNavController()
-                Scaffold(modifier = Modifier) { innerPadding ->
-                    NavHost(
-                        navController = navController,
-                        startDestination = "login",
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
-                        composable("login") { LoginScreen(navController = navController) }
-                        composable("chat?fromLogin={fromLogin}") { backStackEntry ->
-                            val fromLogin = backStackEntry.arguments?.getString("fromLogin")?.toBooleanStrictOrNull() ?: false
-                            ChatScreen(fromLogin = fromLogin)
-                        }
-                        // fallback for direct route without query param
-                        composable("chat") { ChatScreen(fromLogin = false) }
+                NavHost(
+                    navController = navController,
+                    startDestination = "login"
+                ) {
+                    composable("login") { LoginScreen(navController = navController) }
+                    composable("chat?fromLogin={fromLogin}") { backStackEntry ->
+                        val fromLogin = backStackEntry.arguments?.getString("fromLogin")?.toBooleanStrictOrNull() ?: false
+                        ChatScreen(fromLogin = fromLogin, navController = navController)
                     }
+                    // fallback for direct route without query param
+                    composable("chat") { ChatScreen(fromLogin = false, navController = navController) }
                 }
             }
         }

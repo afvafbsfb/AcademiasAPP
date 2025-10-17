@@ -1,16 +1,22 @@
 package com.example.academiaapp.ui.screens
 
+import android.util.Log
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -19,7 +25,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,18 +32,22 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.Surface
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.DrawerValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,131 +58,248 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.academiaapp.AcademiaApp
 import com.example.academiaapp.ui.viewmodels.ChatViewModel
 import com.example.academiaapp.ui.viewmodels.ChatViewModelFactory
+import com.example.academiaapp.ui.components.AppTopBar
 import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun ChatScreen(fromLogin: Boolean = false) {
+fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null) {
     val app = LocalContext.current.applicationContext as AcademiaApp
     val factory = remember { ChatViewModelFactory(app.container.chatRepository) }
-    val vm: ChatViewModel = viewModel(factory = factory)
+    // Use Activity as owner so the ChatViewModel survives navigation and doesn't get recreated (preserves messages)
+    val activityOwner = LocalActivity.current as? ViewModelStoreOwner
+    val owner: ViewModelStoreOwner = activityOwner
+        ?: LocalViewModelStoreOwner.current
+        ?: error("No ViewModelStoreOwner found")
+    val vm: ChatViewModel = viewModel(viewModelStoreOwner = owner, factory = factory)
     val ui by vm.ui.collectAsState()
+    // Si venimos desde el login, solicitar el mensaje de bienvenida
+    LaunchedEffect(fromLogin) {
+        if (fromLogin && ui.messages.isEmpty()) vm.loadWelcome()
+    }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-
-    LaunchedEffect(fromLogin) {
-        if (fromLogin && ui.messages.isEmpty()) {
-            vm.loadWelcome()
-        }
-    }
-
-    // Auto scroll al último mensaje cuando cambia el número de mensajes
-    LaunchedEffect(ui.messages.size) {
-        val lastIndex = ui.messages.lastIndex
-        if (lastIndex >= 0) {
-            try { listState.animateScrollToItem(lastIndex) } catch (_: Throwable) {}
-        }
-    }
 
     var detailsItem by remember { mutableStateOf<Map<String, Any?>?>(null) }
     var input by remember { mutableStateOf("") }
 
-    Scaffold(
-        containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
-        topBar = {
-            TopAppBar(
-                title = { Text("Chat con asistente IA") },
-                navigationIcon = {
-                    IconButton(onClick = { /* TODO: abrir drawer si aplica */ }) {
-                        Icon(imageVector = Icons.Default.Menu, contentDescription = "Menú")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
-                    titleContentColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
-                )
-            )
-        },
-        bottomBar = {
-            Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant) {
-                Row(
+    // Drawer state and session (simple usage)
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val session = app.container.session
+    val userName by session.name.collectAsState(initial = "")
+    val userRole by session.role.collectAsState(initial = "")
+    val academiaName by session.academiaName.collectAsState(initial = null)
+
+    val isDark = isSystemInDarkTheme()
+    val chatBackground = if (isDark) Color(0xFF0B141A) else Color(0xFFECE5DD)
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                // Header: usar color primario y respetar status bar; limitar a su contenido para evitar que ocupe todo el drawer
+                Column(
                     Modifier
                         .fillMaxWidth()
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedTextField(
-                        value = input,
-                        onValueChange = { input = it },
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text("Escribe un mensaje…") }
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color = androidx.compose.material3.MaterialTheme.colorScheme.primary)
+                            .padding(16.dp)
+                    ) {
+                        val displayName = (userName ?: "").ifBlank { "Usuario" }
+                        Text(text = displayName, color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
+                        val roleText = if (userRole.equals("admin_plataforma", ignoreCase = true)) {
+                            "Administrador plataforma"
+                        } else {
+                            academiaName ?: "Academia vinculada"
+                        }
+                        Text(text = roleText, color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                }
+
+                val itemsList = listOf("Inicio", "Chat", "Academias", "Cursos", "Profesores", "Alumnos", "Estadísticas", "Configuración", "Cerrar sesión")
+                itemsList.forEach { label ->
+                    NavigationDrawerItem(
+                        label = { Text(label) },
+                        selected = label == "Chat",
+                        onClick = {
+                            Log.d("NavDrawer", "Clicked item: $label")
+                            when (label) {
+                                "Chat" -> {
+                                    coroutineScope.launch {
+                                        Log.d("NavDrawer", "Closing drawer and navigating to Chat")
+                                        try { drawerState.close() } catch (_: Exception) {}
+                                        navController?.let { nc ->
+                                            Log.d("NavDrawer", "Calling navController.navigate(\"chat\")")
+                                            nc.navigate("chat") {
+                                                // Evitar múltiples instancias y restaurar estado si existía
+                                                launchSingleTop = true
+                                                restoreState = true
+                                                // Guardar estado al hacer pop para permitir restoreState
+                                                popUpTo(nc.graph.startDestinationId) { saveState = true }
+                                            }
+                                        }
+                                    }
+                                }
+                                "Cerrar sesión" -> {
+                                    coroutineScope.launch {
+                                        // cerrar drawer, limpiar sesión y cache, y navegar a login
+                                        try {
+                                            drawerState.close()
+                                        } catch (_: Exception) { }
+                                        try {
+                                            vm.reset()
+                                        } catch (_: Exception) { }
+                                        try {
+                                            app.container.session.clear()
+                                        } catch (_: Exception) { }
+                                        try {
+                                            app.container.chatRepository.clearWelcomeCache()
+                                        } catch (_: Exception) { }
+                                        navController?.navigate("login") { popUpTo("login") { inclusive = true } }
+                                    }
+                                }
+                                else -> {
+                                    // rutas simples: navegar al label en lowercase si existe
+                                    // puedes personalizar el mapeo de rutas aquí
+                                }
+                            }
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(
+                            selectedContainerColor = androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer,
+                            selectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSecondaryContainer,
+                            unselectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+                        ),
+                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
-                    Button(
-                        onClick = { vm.sendMessage(input); input = "" },
-                        enabled = !ui.loading && input.isNotBlank(),
-                        modifier = Modifier.padding(start = 8.dp)
-                    ) { Text(if (ui.loading) "…" else "Enviar") }
                 }
             }
         }
-    ) { innerPadding ->
-        // Mostrar botón "bajar al final" cuando el usuario está desplazado hacia arriba
-        val showScrollToBottom by remember {
-            derivedStateOf { listState.firstVisibleItemIndex < ui.messages.lastIndex - 2 }
-        }
+    ) {
+        Scaffold(
+            containerColor = chatBackground,
+            topBar = {
+                Log.d("ChatScreen", "Scaffold topBar lambda invoked")
+                AppTopBar(
+                    title = "Chat asistente virtual",
+                    showNavIcon = true,
+                    onNavClick = { coroutineScope.launch { drawerState.open() } },
+                    // usar color primario del tema para la cabecera
+                    backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                    contentColor = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary,
+                    centerTitle = false
+                )
+            },
+            bottomBar = {
+                Surface(color = if (isDark) Color(0xFF1F2C34) else Color(0xFFE8E8E8)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = input,
+                            onValueChange = { input = it },
+                            modifier = Modifier.weight(1f),
+                            placeholder = { Text("Escribe un mensaje…") }
+                        )
+                        Button(
+                            onClick = { if (!ui.loading && input.isNotBlank()) { vm.sendMessage(input); input = "" } },
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) { Text(if (ui.loading) "…" else "Enviar") }
+                    }
+                }
+            }
+        ) { innerPadding ->
+            val showScrollToBottom by remember { derivedStateOf { listState.firstVisibleItemIndex < ui.messages.lastIndex - 2 } }
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            LazyColumn(
-                state = listState,
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(innerPadding)
             ) {
-                itemsIndexed(ui.messages) { index, m ->
-                    val isAssistant = m.role == "assistant"
-                    val isLast = index == ui.messages.lastIndex
-                    val showExtras = isAssistant && isLast && (ui.items.isNotEmpty() || ui.suggestions.isNotEmpty())
+                val lastIsAssistant = ui.messages.lastOrNull()?.role == "assistant"
+                val hasExtras = ui.items.isNotEmpty() || ui.suggestions.isNotEmpty()
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    itemsIndexed(ui.messages) { index, m ->
+                        val isAssistant = m.role == "assistant"
+                        val isLast = index == ui.messages.lastIndex
+                        val showExtras = isAssistant && isLast && (ui.items.isNotEmpty() || ui.suggestions.isNotEmpty())
 
-                    val bg = if (!isAssistant) androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer
-                    val align = if (!isAssistant) Alignment.CenterEnd else Alignment.CenterStart
+                        val userBubbleColor = Color(0xFFDCF8C6)
+                        val otherBubbleColor = Color(0xFFFFFFFF)
+                        val bubbleBg = if (!isAssistant) userBubbleColor else otherBubbleColor
+                        val textColor = Color(0xFF000000)
+                        val align = if (!isAssistant) Alignment.CenterEnd else Alignment.CenterStart
+                        // Esquinas asimétricas estilo WhatsApp: la esquina cercana a la "cola" menos redondeada
+                        val bubbleShape = if (isAssistant) {
+                            // Asistente (izquierda): esquina inferior izquierda menos redondeada
+                            RoundedCornerShape(
+                                topStart = 12.dp,
+                                topEnd = 12.dp,
+                                bottomEnd = 12.dp,
+                                bottomStart = 4.dp
+                            )
+                        } else {
+                            // Usuario (derecha): esquina inferior derecha menos redondeada
+                            RoundedCornerShape(
+                                topStart = 12.dp,
+                                topEnd = 12.dp,
+                                bottomStart = 12.dp,
+                                bottomEnd = 4.dp
+                            )
+                        }
 
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = align) {
-                        Column(Modifier.fillMaxWidth()) {
-                            Card(colors = CardDefaults.cardColors(containerColor = bg), shape = RoundedCornerShape(12.dp)) {
-                                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text(m.text)
-                                    if (showExtras) {
-                                        if (ui.items.isNotEmpty()) {
-                                            val typeLabel = ui.type?.let { "Resultados (${it})" } ?: "Resultados:"
-                                            Text(typeLabel)
-                                            CompactList(
-                                                items = ui.items,
-                                                summaryFields = ui.summaryFields,
-                                                onOpenDetails = { detailsItem = it }
-                                            )
-                                        }
-                                        if (ui.suggestions.isNotEmpty()) {
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .horizontalScroll(rememberScrollState()),
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                ui.suggestions.take(5).forEach { s ->
-                                                    SuggestionChip(
-                                                        onClick = { if (!ui.loading) vm.sendMessage(s) },
-                                                        enabled = !ui.loading,
-                                                        label = { Text(s, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                                                    )
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = align) {
+                            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                                val maxBubbleWidth = this.maxWidth * 0.8f
+                                Card(
+                                    modifier = Modifier
+                                        .align(align)
+                                        .widthIn(max = maxBubbleWidth),
+                                    colors = CardDefaults.cardColors(containerColor = bubbleBg),
+                                    shape = bubbleShape
+                                ) {
+                                    Column(
+                                        Modifier
+                                            .padding(12.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(m.text, color = textColor)
+                                        if (showExtras) {
+                                            if (ui.items.isNotEmpty()) {
+                                                val typeLabel = ui.type?.let { "Resultados (${it})" } ?: "Resultados:"
+                                                Text(typeLabel, color = textColor)
+                                                CompactList(items = ui.items, summaryFields = ui.summaryFields, onOpenDetails = { detailsItem = it })
+                                            }
+                                            if (ui.suggestions.isNotEmpty()) {
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .horizontalScroll(rememberScrollState()),
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                ) {
+                                                    ui.suggestions.take(5).forEach { s ->
+                                                        SuggestionChip(onClick = { if (!ui.loading) vm.sendMessage(s) }, enabled = !ui.loading, label = { Text(s, maxLines = 1, overflow = TextOverflow.Ellipsis) })
+                                                    }
                                                 }
                                             }
                                         }
@@ -182,41 +308,60 @@ fun ChatScreen(fromLogin: Boolean = false) {
                             }
                         }
                     }
+
+                    // Si llegaron extras (items/suggestions) pero no hay una burbuja final del asistente que los muestre,
+                    // renderizarlos como bloque aparte al final de la conversación.
+                    if (hasExtras && !lastIsAssistant) {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                if (ui.items.isNotEmpty()) {
+                                    val typeLabel = ui.type?.let { "Resultados (${it})" } ?: "Resultados:"
+                                    Text(typeLabel, color = Color(0xFF000000))
+                                    CompactList(items = ui.items, summaryFields = ui.summaryFields, onOpenDetails = { detailsItem = it })
+                                }
+                                if (ui.suggestions.isNotEmpty()) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        ui.suggestions.take(5).forEach { s ->
+                                            SuggestionChip(onClick = { if (!ui.loading) vm.sendMessage(s) }, enabled = !ui.loading, label = { Text(s, maxLines = 1, overflow = TextOverflow.Ellipsis) })
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
-                if (ui.error != null) {
-                    item { Text(ui.error ?: "", color = Color(0xFFB00020)) }
-                }
-            }
-
-            if (showScrollToBottom && ui.messages.isNotEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd) {
-                    Button(
-                        onClick = {
+                if (showScrollToBottom && ui.messages.isNotEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd) {
+                        Button(onClick = {
                             val lastIndex = ui.messages.lastIndex
                             if (lastIndex >= 0) {
-                                try {
-                                    coroutineScope.launch {
-                                        listState.animateScrollToItem(lastIndex)
-                                    }
-                                } catch (_: Throwable) {}
+                                coroutineScope.launch { listState.animateScrollToItem(lastIndex) }
                             }
-                        },
-                        modifier = Modifier.padding(12.dp)
-                    ) { Text("Bajar") }
+                        }, modifier = Modifier.padding(12.dp)) { Text("Bajar") }
+                    }
                 }
             }
         }
-    }
 
-    // BottomSheet de detalles con todos los campos
-    if (detailsItem != null) {
-        ModalBottomSheet(onDismissRequest = { detailsItem = null }) {
-            Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                detailsItem!!.forEach { (k, v) ->
-                    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                        Text(text = "$k:", modifier = Modifier.weight(0.4f))
-                        Text(text = (v?.toString() ?: ""), modifier = Modifier.weight(0.6f))
+        if (detailsItem != null) {
+            ModalBottomSheet(onDismissRequest = { detailsItem = null }) {
+                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                    detailsItem!!.forEach { (k, v) ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                            Text(text = "$k:", modifier = Modifier.weight(0.4f))
+                            Text(text = (v?.toString() ?: ""), modifier = Modifier.weight(0.6f))
+                        }
                     }
                 }
             }

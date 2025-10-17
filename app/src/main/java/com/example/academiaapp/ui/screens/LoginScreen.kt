@@ -1,6 +1,5 @@
 package com.example.academiaapp.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -31,9 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -41,9 +40,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.academiaapp.AcademiaApp
 import com.example.academiaapp.R
-import com.example.academiaapp.ui.viewmodels.LoginUiState
 import com.example.academiaapp.ui.viewmodels.LoginViewModel
 import com.example.academiaapp.ui.viewmodels.LoginViewModelFactory
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 
 @Composable
 fun LoginScreen(
@@ -51,7 +52,7 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
 ) {
     val app = LocalContext.current.applicationContext as AcademiaApp
-    val factory = remember { LoginViewModelFactory(app.container.loginRepository) }
+    val factory = remember { LoginViewModelFactory(app.container.loginRepository, app.container.chatRepository) }
     val loginViewModel: LoginViewModel = viewModel(factory = factory)
     val uiState by loginViewModel.uiState.collectAsState()
     var passwordVisible by remember { mutableStateOf(false) }
@@ -66,14 +67,12 @@ fun LoginScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color(0xFFEEF2FF), Color(0xFFE8F5E9))
+                )
+            )
     ) {
-        // Fondo con imagen (usa un recurso local, por ejemplo R.drawable.academia_bg)
-        Image(
-            painter = painterResource(id = R.drawable.academia_bg),
-            contentDescription = "Fondo academia",
-            modifier = Modifier.fillMaxSize(),
-            alignment = Alignment.Center
-        )
         // Card central
         Card(
             modifier = Modifier
@@ -110,10 +109,10 @@ fun LoginScreen(
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.Black), // Texto claro al escribir
                     trailingIcon = {
-                        val icon = if (passwordVisible) R.drawable.ic_eye else R.drawable.ic_eye_off
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            val imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                             Icon(
-                                painter = painterResource(id = icon),
+                                imageVector = imageVector,
                                 contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
                                 tint = Color.Black // Icono sin transparencia
                             )

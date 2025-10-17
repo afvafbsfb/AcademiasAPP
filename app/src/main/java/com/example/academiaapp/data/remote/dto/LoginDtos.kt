@@ -15,5 +15,6 @@ data class LoginResponse(
     val tokens: TokensDto?,
     val role: String?,
     val name: String?,
+    val academiaId: Int? = null,
     val error: Any? = null
 )
