@@ -231,7 +231,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                     .padding(innerPadding)
             ) {
                 val lastIsAssistant = ui.messages.lastOrNull()?.role == "assistant"
-                val hasExtras = ui.items.isNotEmpty() || ui.suggestions.isNotEmpty()
+                val hasExtras = ui.items.isNotEmpty() || ui.uiSuggestions.isNotEmpty()  // ✅ ACTUALIZADO
                 LazyColumn(
                     state = listState,
                     modifier = Modifier
@@ -242,7 +242,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                     itemsIndexed(ui.messages) { index, m ->
                         val isAssistant = m.role == "assistant"
                         val isLast = index == ui.messages.lastIndex
-                        val showExtras = isAssistant && isLast && (ui.items.isNotEmpty() || ui.suggestions.isNotEmpty())
+                        val showExtras = isAssistant && isLast && (ui.items.isNotEmpty() || ui.uiSuggestions.isNotEmpty())  // ✅ ACTUALIZADO
 
                         val userBubbleColor = Color(0xFFDCF8C6)
                         val otherBubbleColor = Color(0xFFFFFFFF)
@@ -290,15 +290,19 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                 Text(typeLabel, color = textColor)
                                                 CompactList(items = ui.items, summaryFields = ui.summaryFields, onOpenDetails = { detailsItem = it })
                                             }
-                                            if (ui.suggestions.isNotEmpty()) {
+                                            if (ui.uiSuggestions.isNotEmpty()) {  // ✅ ACTUALIZADO
                                                 Row(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
                                                         .horizontalScroll(rememberScrollState()),
                                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                                 ) {
-                                                    ui.suggestions.take(5).forEach { s ->
-                                                        SuggestionChip(onClick = { if (!ui.loading) vm.sendMessage(s) }, enabled = !ui.loading, label = { Text(s, maxLines = 1, overflow = TextOverflow.Ellipsis) })
+                                                    ui.uiSuggestions.take(5).forEach { suggestion ->
+                                                        SuggestionChip(
+                                                            onClick = { if (!ui.loading) vm.sendMessage(suggestion.displayText) }, 
+                                                            enabled = !ui.loading, 
+                                                            label = { Text(suggestion.displayText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                                                        )
                                                     }
                                                 }
                                             }
@@ -324,15 +328,19 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                     Text(typeLabel, color = Color(0xFF000000))
                                     CompactList(items = ui.items, summaryFields = ui.summaryFields, onOpenDetails = { detailsItem = it })
                                 }
-                                if (ui.suggestions.isNotEmpty()) {
+                                if (ui.uiSuggestions.isNotEmpty()) {  // ✅ ACTUALIZADO
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .horizontalScroll(rememberScrollState()),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        ui.suggestions.take(5).forEach { s ->
-                                            SuggestionChip(onClick = { if (!ui.loading) vm.sendMessage(s) }, enabled = !ui.loading, label = { Text(s, maxLines = 1, overflow = TextOverflow.Ellipsis) })
+                                        ui.uiSuggestions.take(5).forEach { suggestion ->
+                                            SuggestionChip(
+                                                onClick = { if (!ui.loading) vm.sendMessage(suggestion.displayText) }, 
+                                                enabled = !ui.loading, 
+                                                label = { Text(suggestion.displayText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                                            )
                                         }
                                     }
                                 }

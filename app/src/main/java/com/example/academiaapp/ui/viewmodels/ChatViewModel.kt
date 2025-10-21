@@ -22,7 +22,7 @@ data class ChatUiState(
     val error: String? = null,
     val messages: List<ChatMessage> = emptyList(),
     val items: List<GenericItem> = emptyList(),
-    val suggestions: List<String> = emptyList(),
+    val uiSuggestions: List<com.example.academiaapp.data.remote.dto.Suggestion> = emptyList(),  // ✅ NUEVO
     val summaryFields: List<String> = emptyList(),
     val type: String? = null,
     val pagination: PaginationInfo? = null
@@ -122,7 +122,7 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
                 error = null,
                 messages = newMessages,
                 items = env.data?.items.orEmpty(),
-                suggestions = env.suggestions.orEmpty(),
+                uiSuggestions = env.uiSuggestions.orEmpty(),  // ✅ NUEVO
                 summaryFields = env.data?.summaryFields.orEmpty(),
                 type = env.data?.type,
                 pagination = env.data?.pagination
