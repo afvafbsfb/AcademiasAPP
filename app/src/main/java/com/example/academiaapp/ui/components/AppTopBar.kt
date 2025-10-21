@@ -1,14 +1,12 @@
 package com.example.academiaapp.ui.components
 
 import android.app.Activity
-import android.util.Log
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
@@ -42,34 +40,19 @@ fun AppTopBar(
     contentColor: Color = MaterialTheme.colorScheme.onPrimary,
     centerTitle: Boolean = false
 ) {
-    Log.d("AppTopBar", "Composing AppTopBar(title='$title', showNavIcon=$showNavIcon)")
     // Pintar la statusBar con el mismo color del top bar para evitar aumentar el layout
     val view = LocalView.current
     SideEffect {
-        try {
-            val window = (view.context as? Activity)?.window
-            if (window != null) {
-                window.statusBarColor = backgroundColor.toArgb()
-                // Ajustar iconos de status bar según luminancia: true => dark icons on light background
-                val isLightBg = (backgroundColor.red * 0.2126f + backgroundColor.green * 0.7152f + backgroundColor.blue * 0.0722f) > 0.6f
-                try {
-                    val controller = WindowCompat.getInsetsController(window, view)
-                    controller.isAppearanceLightStatusBars = isLightBg
-                } catch (e: Exception) {
-                    Log.w("AppTopBar", "No se pudo ajustar isAppearanceLightStatusBars: ${e.message}")
-                }
-            } else {
-                Log.w("AppTopBar", "No hay window disponible desde el LocalView.context")
-            }
-        } catch (e: Throwable) {
-            Log.e("AppTopBar", "Error en SideEffect al setear statusBarColor", e)
-        }
+        val window = (view.context as? Activity)?.window
+        window?.statusBarColor = backgroundColor.toArgb()
+        // Ajustar iconos de status bar según luminancia: true => dark icons on light background
+        val isLightBg = (backgroundColor.red * 0.2126f + backgroundColor.green * 0.7152f + backgroundColor.blue * 0.0722f) > 0.6f
+        WindowCompat.getInsetsController(window!!, view).isAppearanceLightStatusBars = isLightBg
     }
 
     Surface(
         modifier = modifier
-            .fillMaxWidth()
-            .statusBarsPadding(),
+            .fillMaxWidth(),
         color = backgroundColor,
         contentColor = contentColor
     ) {

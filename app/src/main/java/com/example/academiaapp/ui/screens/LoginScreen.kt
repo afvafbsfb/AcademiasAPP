@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -42,9 +43,6 @@ import com.example.academiaapp.AcademiaApp
 import com.example.academiaapp.R
 import com.example.academiaapp.ui.viewmodels.LoginViewModel
 import com.example.academiaapp.ui.viewmodels.LoginViewModelFactory
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 
 @Composable
 fun LoginScreen(
@@ -109,10 +107,10 @@ fun LoginScreen(
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.Black), // Texto claro al escribir
                     trailingIcon = {
+                        val icon = if (passwordVisible) R.drawable.ic_eye else R.drawable.ic_eye_off
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            val imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                             Icon(
-                                imageVector = imageVector,
+                                painter = painterResource(id = icon),
                                 contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
                                 tint = Color.Black // Icono sin transparencia
                             )
@@ -170,8 +168,9 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.loading,
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = if (isFormFilled) Color(0xFF1565C0) else Color(0xFF1565C0).copy(alpha = 0.5f),
-                        contentColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White,
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                     )
                 ) {
                     Text(if (uiState.loading) "Accediendo..." else "Acceder")
