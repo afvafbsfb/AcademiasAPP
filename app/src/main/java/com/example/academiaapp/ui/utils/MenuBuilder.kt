@@ -108,16 +108,18 @@ object MenuBuilder {
             label = "Cursos",
             icon = Icons.Default.School,
             chatMessage = "Muéstrame todos los cursos de mi academia",
-            contextData = mapOf("resource" to "cursos", "scope" to "academia"),
-            roles = listOf("Admin_academia")
+            contextData = mapOf("screen" to "cursos", "resource" to "cursos", "scope" to "academia"),
+            roles = listOf("Admin_academia"),
+            isMocked = true  // ✅ MOCK ACTIVADO
         ),
         MenuOption(
             id = "alumnos",
             label = "Alumnos",
             icon = Icons.Default.Person,
             chatMessage = "Muéstrame todos los alumnos de mi academia",
-            contextData = mapOf("resource" to "alumnos", "scope" to "academia"),
-            roles = listOf("Admin_academia")
+            contextData = mapOf("screen" to "alumnos", "resource" to "alumnos", "scope" to "academia"),
+            roles = listOf("Admin_academia"),
+            isMocked = true  // ✅ MOCK ACTIVADO
         ),
         MenuOption(
             id = "profesores",

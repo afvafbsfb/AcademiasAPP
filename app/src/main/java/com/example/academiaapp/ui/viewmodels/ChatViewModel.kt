@@ -10,6 +10,8 @@ import com.example.academiaapp.data.remote.dto.PaginationInfo
 import com.example.academiaapp.data.remote.dto.Suggestion
 import com.example.academiaapp.domain.ChatRepository
 import com.example.academiaapp.domain.Result
+import com.example.academiaapp.data.mock.MockChatRepository
+import com.example.academiaapp.data.mock.MockConfig
 import java.text.Normalizer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +39,9 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
     private val _ui = MutableStateFlow(ChatUiState())
     val ui: StateFlow<ChatUiState> = _ui
 
+    // ✅ Mantener el contexto activo para navegación de páginas y sugerencias
+    private var activeContext: Map<String, Any>? = null
+
     companion object {
         private const val MAX_MESSAGES = 75
     }
@@ -45,9 +50,16 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
         if (_ui.value.messages.isNotEmpty()) return
         _ui.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
+            println("🔧 DEBUG: loadWelcome() iniciado")
             when (val res = repo.welcome()) {
-                is Result.Success -> applyEnvelope(res.data)
-                is Result.Error -> _ui.update { it.copy(loading = false, error = res.message) }
+                is Result.Success -> {
+                    println("🔧 DEBUG: Welcome Success - message=${res.data.message?.take(50)}")
+                    applyEnvelope(res.data)
+                }
+                is Result.Error -> {
+                    println("🔧 DEBUG: Welcome Error - ${res.message}")
+                    _ui.update { it.copy(loading = false, error = res.message) }
+                }
             }
         }
     }
@@ -62,8 +74,22 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
         }
         _ui.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
+            // Si hay un contexto activo (ej. desde menú), usarlo también aquí
+            val screen = activeContext?.get("screen") as? String
+            val shouldUseMock = screen != null && MockConfig.isMocked(screen)
+
             val conversation = buildConversationPayload(trimmed)
-            when (val res = repo.sendConversation(conversation)) {
+            
+            // Routing: usar MockChatRepository si hay contexto activo de mock
+            val res = if (shouldUseMock) {
+                println("🔧 DEBUG: sendMessage usando MockChatRepository (contexto activo: $activeContext)")
+                MockChatRepository().sendConversation(conversation, activeContext)
+            } else {
+                println("🔧 DEBUG: sendMessage usando ChatRepository real")
+                repo.sendConversation(conversation)
+            }
+            
+            when (res) {
                 is Result.Success -> applyEnvelope(res.data)
                 is Result.Error -> _ui.update { it.copy(loading = false, error = res.message) }
             }
@@ -74,6 +100,12 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
     fun sendMessageWithContext(text: String, context: Map<String, Any>? = null) {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return
+        
+        // Guardar el contexto para usarlo en llamadas subsiguientes (paginación, etc.)
+        if (context != null) {
+            activeContext = context
+        }
+        
         // Add user message with cap
         _ui.update { state ->
             val newList = (state.messages + ChatMessage("user", trimmed)).takeLast(MAX_MESSAGES)
@@ -81,11 +113,30 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
         }
         _ui.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
+            // Detectar si debemos usar mock basándonos solo en el screen
+            val screen = context?.get("screen") as? String
+            val shouldUseMock = screen != null && MockConfig.isMocked(screen)
+
             val conversation = buildConversationPayload(trimmed)
-            // Enviar con contexto si está disponible
-            when (val res = repo.sendConversation(conversation, context)) {
-                is Result.Success -> applyEnvelope(res.data)
-                is Result.Error -> _ui.update { it.copy(loading = false, error = res.message) }
+
+            // Routing: usar MockChatRepository si es necesario
+            val res = if (shouldUseMock) {
+                println("🔧 DEBUG: Usando MockChatRepository para screen=$screen")
+                MockChatRepository().sendConversation(conversation, context)
+            } else {
+                println("🔧 DEBUG: Usando ChatRepository real para screen=$screen, context=$context")
+                repo.sendConversation(conversation, context)
+            }
+
+            when (res) {
+                is Result.Success -> {
+                    println("🔧 DEBUG: Success - envelope.message=${res.data.message?.take(50)}")
+                    applyEnvelope(res.data)
+                }
+                is Result.Error -> {
+                    println("🔧 DEBUG: Error - ${res.message}")
+                    _ui.update { it.copy(loading = false, error = res.message) }
+                }
             }
         }
     }
@@ -149,8 +200,23 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
         .replace("\\s+".toRegex(), " ")
 
     private fun applyEnvelope(env: Envelope<GenericItem>) {
+        println("🔧 DEBUG: applyEnvelope - message='${env.message}', items=${env.data?.items?.size}, suggestions=${env.uiSuggestions?.size}")
+        
+        // Detectar si es un mensaje de alta exitosa (para actualizar contexto)
+        if (env.message?.contains("Alta de nuevo alumno:", ignoreCase = true) == true && activeContext != null) {
+            println("🔧 DEBUG: Alta exitosa detectada, actualizando activeContext con after_alta=true")
+            activeContext = activeContext?.toMutableMap()?.apply {
+                put("after_alta", true)
+            }
+        }
+        
+        // Si no hay mensaje pero hay items o sugerencias, crear un mensaje vacío pero válido
         val text = env.message?.takeIf { it.isNotBlank() } ?: ""
-        val assistantMsg = if (text.isNotEmpty()) {
+        val hasContent = text.isNotEmpty() || 
+                         env.data?.items?.isNotEmpty() == true || 
+                         env.uiSuggestions?.isNotEmpty() == true
+        
+        val assistantMsg = if (hasContent) {
             ChatMessage(
                 role = "assistant",
                 text = text,
@@ -161,10 +227,14 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
                 pagination = env.data?.pagination,
                 suggestionsEnabled = true
             )
-        } else null
+        } else {
+            println("🔧 DEBUG: applyEnvelope - NO SE CREÓ MENSAJE (sin contenido)")
+            null
+        }
 
         _ui.update { current ->
             val newMessages = if (assistantMsg != null) (current.messages + assistantMsg).takeLast(MAX_MESSAGES) else current.messages
+            println("🔧 DEBUG: applyEnvelope - total messages after update: ${newMessages.size}")
             current.copy(
                 loading = false,
                 error = null,
@@ -173,9 +243,16 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
         }
     }
 
+    // Limpiar el contexto activo (útil al cambiar de pantalla o salir del chat)
+    fun clearContext() {
+        activeContext = null
+        println("🔧 DEBUG: Contexto activo limpiado")
+    }
+
     // Limpiar el historial del chat (se usará al cerrar sesión)
     fun reset() {
         _ui.value = ChatUiState()
+        activeContext = null
     }
 }
 

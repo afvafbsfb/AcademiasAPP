@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
  * @param chatMessage Mensaje que se auto-enviará al chat (null para acciones especiales)
  * @param contextData Datos de contexto adicionales para el mensaje
  * @param roles Lista de roles que pueden ver esta opción
+ * @param isMocked Si true, usa MockChatRepository en lugar del real
  */
 data class MenuOption(
     val id: String,
@@ -17,6 +18,7 @@ data class MenuOption(
     val icon: ImageVector,
     val chatMessage: String?,
     val contextData: Map<String, Any>? = null,
-    val roles: List<String>
+    val roles: List<String>,
+    val isMocked: Boolean = false  // Por defecto false (usa endpoint real)
 )
 

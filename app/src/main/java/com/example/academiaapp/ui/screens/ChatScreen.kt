@@ -59,6 +59,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.runtime.Composable
@@ -73,9 +79,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.text.style.TextOverflow
@@ -496,11 +505,28 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                             Text(m.text, color = textColor)
                                             if (showExtras) {
                                                 if (m.items.isNotEmpty()) {
-                                                    val typeLabel = m.type?.let { "Resultados (${it})" } ?: "Resultados:"
-                                                    Text(typeLabel, color = textColor)
-                                                    CompactList(items = m.items, summaryFields = m.summaryFields, onOpenDetails = { detailsItem = it })
+                                                    // Si es formulario de alta, renderizar formulario editable CON botones
+                                                    if (m.type == "formulario_alta_alumno") {
+                                                        AlumnoAltaForm(
+                                                            formSpec = m.items.firstOrNull() ?: emptyMap(),
+                                                            onCancel = { vm.sendMessageWithContext("cancelar alta", mapOf("screen" to "alumnos")) },
+                                                            onSubmit = { formData ->
+                                                                // Enviar acción de submit al mock mediante contexto
+                                                                vm.sendMessageWithContext("alta nuevo alumno", mapOf(
+                                                                    "screen" to "alumnos",
+                                                                    "action" to "submit_alta",
+                                                                    "form_data" to formData
+                                                                ))
+                                                            }
+                                                        )
+                                                    } else {
+                                                        val typeLabel = m.type?.let { "Resultados (${it})" } ?: "Resultados:"
+                                                        Text(typeLabel, color = textColor)
+                                                        CompactList(items = m.items, summaryFields = m.summaryFields, onOpenDetails = { detailsItem = it })
+                                                    }
                                                 }
-                                                if (m.suggestions.isNotEmpty()) {
+                                                // No mostrar sugerencias si es formulario (ya tiene sus propios botones)
+                                                if (m.suggestions.isNotEmpty() && m.type != "formulario_alta_alumno") {
                                                     // ✅ Mejora 5: Ordenar sugerencias - paginación primero y en la misma línea
                                                     val (paginationSuggestions, otherSuggestions) = m.suggestions.partition {
                                                         it.type.equals("Paginacion", ignoreCase = true)
@@ -775,6 +801,14 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
 
                     // Mostrar cada campo en una tarjeta
                     detailsItem!!.forEach { (k, v) ->
+                        val formattedValue = formatValue(v)
+                        // Si el campo es de tipo deuda/euros, agregar símbolo €
+                        val displayValue = if (k.contains("deuda", ignoreCase = true) || k.contains("euros", ignoreCase = true)) {
+                            if (formattedValue.isNotBlank() && formattedValue != "(vacío)") "${formattedValue}€" else formattedValue
+                        } else {
+                            formattedValue
+                        }
+                        
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -796,7 +830,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                 )
                                 Spacer(Modifier.height(4.dp))
                                 Text(
-                                    text = formatValue(v),
+                                    text = displayValue,
                                     style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
                                     color = Color(0xFF212121)
                                 )
@@ -821,6 +855,237 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AlumnoAltaForm(
+    formSpec: Map<String, Any?>,
+    onSubmit: (Map<String, Any?>) -> Unit,
+    onCancel: () -> Unit
+) {
+    // Extraer cursos disponibles si vienen
+    val cursos = (formSpec["cursos_disponibles"] as? List<Map<String, Any?>>) ?: emptyList()
+
+    var nombre by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var dni by remember { mutableStateOf("") }
+    var telefono by remember { mutableStateOf("") }
+    var fecha by remember { mutableStateOf("") } // DD/MM/YYYY
+    var direccion by remember { mutableStateOf("") }
+    var cursoSeleccionado by remember { mutableStateOf<Int?>(null) }
+    var cursoLabel by remember { mutableStateOf("Seleccionar curso") }
+    var expandedCursos by remember { mutableStateOf(false) }
+
+    // Validation states
+    var nombreError by remember { mutableStateOf(false) }
+    var telefonoError by remember { mutableStateOf(false) }
+    var fechaError by remember { mutableStateOf(false) }
+
+    // Diálogo de confirmación
+    var showConfirmDialog by remember { mutableStateOf(false) }
+
+    // Focus requesters para cada campo obligatorio
+    val nombreFocusRequester = remember { FocusRequester() }
+    val telefonoFocusRequester = remember { FocusRequester() }
+    val fechaFocusRequester = remember { FocusRequester() }
+    
+    // Función de validación
+    fun validateAndShowDialog() {
+        var ok = true
+        var firstErrorField: FocusRequester? = null
+        
+        if (nombre.isBlank()) { 
+            nombreError = true
+            ok = false
+            if (firstErrorField == null) firstErrorField = nombreFocusRequester
+        }
+        if (telefono.isBlank()) { 
+            telefonoError = true
+            ok = false
+            if (firstErrorField == null) firstErrorField = telefonoFocusRequester
+        }
+        val fechaRegex = "^\\d{2}/\\d{2}/\\d{4}$".toRegex()
+        if (!fechaRegex.matches(fecha)) { 
+            fechaError = true
+            ok = false
+            if (firstErrorField == null) firstErrorField = fechaFocusRequester
+        }
+
+        if (!ok) {
+            firstErrorField?.requestFocus()
+            return
+        }
+        
+        // Si validó bien, mostrar diálogo
+        showConfirmDialog = true
+    }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Title
+        Text("Formulario de alta", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+
+        // Nombre (required)
+        OutlinedTextField(
+            value = nombre,
+            onValueChange = { nombre = it; if (it.isNotBlank()) nombreError = false },
+            label = { Text("Nombre completo *") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(nombreFocusRequester)
+                .background(if (nombreError) Color(0xFFFFE0B2) else Color.Transparent),
+            singleLine = true,
+            isError = nombreError
+        )
+
+        // Telefono (required)
+        OutlinedTextField(
+            value = telefono,
+            onValueChange = { telefono = it; if (it.isNotBlank()) telefonoError = false },
+            label = { Text("Teléfono *") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(telefonoFocusRequester)
+                .background(if (telefonoError) Color(0xFFFFE0B2) else Color.Transparent),
+            singleLine = true,
+            isError = telefonoError,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+        )
+
+        // Fecha nacimiento (required) with simple mask
+        OutlinedTextField(
+            value = fecha,
+            onValueChange = { input ->
+                // Allow only digits and '/'
+                val digits = input.filter { it.isDigit() }
+                val masked = buildString {
+                    for (i in digits.indices) {
+                        append(digits[i])
+                        if (i == 1 || i == 3) append('/')
+                        if (i >= 7) break
+                    }
+                }
+                fecha = masked
+                if (masked.isNotBlank()) fechaError = false
+            },
+            label = { Text("Fecha de nacimiento (DD/MM/AAAA) *") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(fechaFocusRequester)
+                .background(if (fechaError) Color(0xFFFFE0B2) else Color.Transparent),
+            singleLine = true,
+            isError = fechaError,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        )
+
+        // Email, DNI, Dirección (optional)
+        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = dni, onValueChange = { dni = it }, label = { Text("DNI") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = direccion, onValueChange = { direccion = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth())
+
+        // Curso (optional) - Dropdown Menu
+        if (cursos.isNotEmpty()) {
+            ExposedDropdownMenuBox(
+                expanded = expandedCursos,
+                onExpandedChange = { expandedCursos = it }
+            ) {
+                OutlinedTextField(
+                    value = cursoLabel,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Curso (opcional)") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCursos) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                )
+                
+                ExposedDropdownMenu(
+                    expanded = expandedCursos,
+                    onDismissRequest = { expandedCursos = false }
+                ) {
+                    cursos.forEach { c ->
+                        val id = (c["id"] as? Number)?.toInt()
+                        val label = c["display_text"] as? String ?: ""
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                cursoSeleccionado = id
+                                cursoLabel = label
+                                expandedCursos = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+        
+        Spacer(Modifier.height(12.dp))
+        
+        // Botones estilizados como sugerencias
+        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Botón Alta
+            Row(modifier = Modifier.fillMaxWidth()) {
+                SuggestionChip(
+                    onClick = { validateAndShowDialog() },
+                    label = { Text("Alta") },
+                    colors = androidx.compose.material3.SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = Color(0xFF81C784),
+                        labelColor = Color.White
+                    ),
+                    border = null,
+                    shape = RoundedCornerShape(20.dp)
+                )
+            }
+            
+            // Botón Cancelar
+            Row(modifier = Modifier.fillMaxWidth()) {
+                SuggestionChip(
+                    onClick = { onCancel() },
+                    label = { Text("Cancelar") },
+                    colors = androidx.compose.material3.SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = Color(0xFF81C784),
+                        labelColor = Color.White
+                    ),
+                    border = null,
+                    shape = RoundedCornerShape(20.dp)
+                )
+            }
+        }
+    }
+    
+    // Diálogo de confirmación
+    if (showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Confirmar alta") },
+            text = { Text("¿Has verificado todos los datos del alumno?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showConfirmDialog = false
+                    // Build form map
+                    val formMap = mapOf(
+                        "nombre" to nombre,
+                        "email" to email,
+                        "dni" to dni,
+                        "telefono" to telefono,
+                        "fecha_nacimiento" to fecha,
+                        "direccion" to direccion,
+                        "curso_id" to cursoSeleccionado
+                    )
+                    onSubmit(formMap)
+                }) {
+                    Text("Sí")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
     }
 }
 
@@ -912,8 +1177,16 @@ private fun CompactList(
                     .padding(vertical = 10.dp, horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Formatear nombres de columnas: capitalizar y limpiar guiones bajos
+                fun formatColumnName(name: String?): String {
+                    if (name == null) return "Campo principal"
+                    return name.replace("_", " ").split(" ").joinToString(" ") { word ->
+                        word.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                    }
+                }
+                
                 Text(
-                    text = primaryKey ?: "Campo principal",
+                    text = formatColumnName(primaryKey),
                     modifier = Modifier.weight(0.6f),
                     style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
                     color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer,
@@ -922,7 +1195,7 @@ private fun CompactList(
                 )
                 Spacer(Modifier.padding(horizontal = 4.dp))
                 Text(
-                    text = secondaryKey ?: "Detalle",
+                    text = formatColumnName(secondaryKey) ?: "Detalle",
                     modifier = Modifier.weight(0.35f),
                     style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
                     color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer,
@@ -955,7 +1228,13 @@ private fun CompactList(
                 fun findKeyIgnoreCase(target: String): String? = keys.firstOrNull { it.equals(target, ignoreCase = true) }
                 fun valueOf(key: String?): String? = key?.let { k ->
                     val rawValue = item[keys.firstOrNull { it.equals(k, ignoreCase = true) }]
-                    formatValue(rawValue)
+                    val formatted = formatValue(rawValue)
+                    // Si el campo es de tipo deuda/euros, agregar símbolo €
+                    if (k.contains("deuda", ignoreCase = true) || k.contains("euros", ignoreCase = true)) {
+                        if (formatted.isNotBlank()) "${formatted}€" else formatted
+                    } else {
+                        formatted
+                    }
                 }
 
                 val summary = summaryFields.take(2)
