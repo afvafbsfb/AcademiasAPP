@@ -46,8 +46,8 @@ class ChatRepository(
         }
     }
 
-    suspend fun sendConversation(messages: List<ChatMessageDto>): Result<Envelope<GenericItem>> = runCatching {
-        val payload = ChatPayload(messages = messages)
+    suspend fun sendConversation(messages: List<ChatMessageDto>, context: Map<String, Any>? = null): Result<Envelope<GenericItem>> = runCatching {
+        val payload = ChatPayload(messages = messages, context = context)
         api.chat(payload, headers = authHeaders())
     }.fold(
         onSuccess = { Result.Success(it) },

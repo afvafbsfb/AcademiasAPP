@@ -70,6 +70,26 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
         }
     }
 
+    // ✅ NUEVO: Enviar mensaje con contexto adicional (para opciones del menú)
+    fun sendMessageWithContext(text: String, context: Map<String, Any>? = null) {
+        val trimmed = text.trim()
+        if (trimmed.isEmpty()) return
+        // Add user message with cap
+        _ui.update { state ->
+            val newList = (state.messages + ChatMessage("user", trimmed)).takeLast(MAX_MESSAGES)
+            state.copy(messages = newList)
+        }
+        _ui.update { it.copy(loading = true, error = null) }
+        viewModelScope.launch {
+            val conversation = buildConversationPayload(trimmed)
+            // Enviar con contexto si está disponible
+            when (val res = repo.sendConversation(conversation, context)) {
+                is Result.Success -> applyEnvelope(res.data)
+                is Result.Error -> _ui.update { it.copy(loading = false, error = res.message) }
+            }
+        }
+    }
+
     // ✅ NUEVO: Deshabilitar sugerencias de un mensaje específico cuando se hace clic en una
     fun disableSuggestionsForMessage(messageIndex: Int) {
         _ui.update { state ->

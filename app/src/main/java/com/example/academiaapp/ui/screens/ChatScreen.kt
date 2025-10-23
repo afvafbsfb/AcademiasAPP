@@ -88,6 +88,7 @@ import com.example.academiaapp.AcademiaApp
 import com.example.academiaapp.ui.viewmodels.ChatViewModel
 import com.example.academiaapp.ui.viewmodels.ChatViewModelFactory
 import com.example.academiaapp.ui.components.AppTopBar
+import com.example.academiaapp.ui.utils.MenuBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -230,51 +231,58 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                     Spacer(Modifier.height(8.dp))
                 }
 
-                val itemsList = listOf("Inicio", "Chat", "Academias", "Cursos", "Profesores", "Alumnos", "Estadísticas", "Configuración", "Cerrar sesión")
-                itemsList.forEach { label ->
+                // ✅ NUEVO: Generar menú dinámico según el rol del usuario
+                val menuOptions = remember(userRole) {
+                    MenuBuilder.getMenuOptions(userRole ?: "")
+                }
+
+                // Renderizar las opciones del menú
+                menuOptions.forEach { option ->
                     NavigationDrawerItem(
-                        label = { Text(label) },
-                        selected = label == "Chat",
+                        label = { Text(option.label) },
+                        icon = { Icon(imageVector = option.icon, contentDescription = "") },
+                        selected = option.id == "chat_libre",
                         onClick = {
-                            Log.d("NavDrawer", "Clicked item: $label")
-                            when (label) {
-                                "Chat" -> {
-                                    coroutineScope.launch {
-                                        Log.d("NavDrawer", "Closing drawer and navigating to Chat")
-                                        try { drawerState.close() } catch (_: Exception) {}
+                            Log.d("NavDrawer", "Clicked item: ${option.id} - ${option.label}")
+                            coroutineScope.launch {
+                                // Cerrar el drawer
+                                try { drawerState.close() } catch (_: Exception) {}
+
+                                when (option.id) {
+                                    "chat_libre" -> {
+                                        // Chat libre: navegar al chat sin mensaje pre-cargado
                                         navController?.let { nc ->
-                                            Log.d("NavDrawer", "Calling navController.navigate(\"chat\")")
                                             nc.navigate("chat") {
-                                                // Evitar múltiples instancias y restaurar estado si existía
                                                 launchSingleTop = true
                                                 restoreState = true
-                                                // Guardar estado al hacer pop para permitir restoreState
                                                 popUpTo(nc.graph.startDestinationId) { saveState = true }
                                             }
                                         }
                                     }
-                                }
-                                "Cerrar sesión" -> {
-                                    coroutineScope.launch {
-                                        // cerrar drawer, limpiar sesión y cache, y navegar a login
-                                        try {
-                                            drawerState.close()
-                                        } catch (_: Exception) { }
-                                        try {
-                                            vm.reset()
-                                        } catch (_: Exception) { }
-                                        try {
-                                            app.container.session.clear()
-                                        } catch (_: Exception) { }
-                                        try {
-                                            app.container.chatRepository.clearWelcomeCache()
-                                        } catch (_: Exception) { }
+                                    "cerrar_sesion" -> {
+                                        // Cerrar sesión: limpiar todo y volver a login
+                                        try { vm.reset() } catch (_: Exception) { }
+                                        try { app.container.session.clear() } catch (_: Exception) { }
+                                        try { app.container.chatRepository.clearWelcomeCache() } catch (_: Exception) { }
                                         navController?.navigate("login") { popUpTo("login") { inclusive = true } }
                                     }
-                                }
-                                else -> {
-                                    // rutas simples: navegar al label en lowercase si existe
-                                    // puedes personalizar el mapeo de rutas aquí
+                                    else -> {
+                                        // Para todas las demás opciones: auto-enviar mensaje al chat
+                                        option.chatMessage?.let { message ->
+                                            // Asegurarnos de estar en el chat
+                                            navController?.let { nc ->
+                                                nc.navigate("chat") {
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                    popUpTo(nc.graph.startDestinationId) { saveState = true }
+                                                }
+                                            }
+                                            // Pequeño delay para que la navegación se complete
+                                            delay(100)
+                                            // Enviar mensaje con contexto
+                                            vm.sendMessageWithContext(message, option.contextData)
+                                        }
+                                    }
                                 }
                             }
                         },
