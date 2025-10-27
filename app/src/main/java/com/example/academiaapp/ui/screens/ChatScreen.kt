@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -87,6 +89,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelStoreOwner
@@ -170,7 +177,7 @@ private fun TypingIndicator(
 @OptIn(ExperimentalMaterial3Api::class)
 fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null) {
     val app = LocalContext.current.applicationContext as AcademiaApp
-    val factory = remember { ChatViewModelFactory(app.container.chatRepository) }
+    val factory = remember { ChatViewModelFactory(app.container.chatRepository, app.container.session) }
     // Use Activity as owner so the ChatViewModel survives navigation and doesn't get recreated (preserves messages)
     val activityOwner = LocalActivity.current as? ViewModelStoreOwner
     val owner: ViewModelStoreOwner = activityOwner
@@ -519,6 +526,9 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                 ))
                                                             }
                                                         )
+                                                    } else if (m.type == "sesiones_dia") {
+                                                        // Renderizador especial para clases del día (cards híbridas)
+                                                        SesionesDelDiaCards(items = m.items)
                                                     } else {
                                                         val typeLabel = m.type?.let { "Resultados (${it})" } ?: "Resultados:"
                                                         Text(typeLabel, color = textColor)
@@ -775,6 +785,30 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                             doubleValue.toString()
                         }
                     }
+                    is Map<*, *> -> {
+                        // NUEVO: Formatear objetos anidados (academia, curso, etc.)
+                        val map = value as? Map<String, Any?>
+                        when {
+                            map == null -> "(vacío)"
+                            map.containsKey("nombre") -> {
+                                // Mostrar: "Academia Central (ID: 2)"
+                                val nombre = map["nombre"] ?: "Sin nombre"
+                                val id = map["id"]
+                                // ✅ Formatear el ID para quitar .0 si es entero
+                                val idFormatted = if (id is Number) {
+                                    val doubleId = id.toDouble()
+                                    if (doubleId % 1.0 == 0.0) doubleId.toLong().toString() else doubleId.toString()
+                                } else {
+                                    id?.toString() ?: ""
+                                }
+                                if (id != null) "$nombre (ID: $idFormatted)" else nombre.toString()
+                            }
+                            else -> {
+                                // Fallback: mostrar pares clave-valor
+                                map.entries.joinToString(", ") { "${it.key}: ${it.value}" }
+                            }
+                        }
+                    }
                     else -> value.toString()
                 }
             }
@@ -800,14 +834,20 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                     )
 
                     // Mostrar cada campo en una tarjeta
-                    detailsItem!!.forEach { (k, v) ->
-                        val formattedValue = formatValue(v)
-                        // Si el campo es de tipo deuda/euros, agregar símbolo €
-                        val displayValue = if (k.contains("deuda", ignoreCase = true) || k.contains("euros", ignoreCase = true)) {
-                            if (formattedValue.isNotBlank() && formattedValue != "(vacío)") "${formattedValue}€" else formattedValue
-                        } else {
-                            formattedValue
-                        }
+                    val itemMap = detailsItem!!
+                    itemMap.forEach { (k, v) ->
+                        // ✅ NUEVO: Skip FKs redundantes cuando existe el objeto expandido
+                        val isRedundantFK = k.endsWith("_id") && 
+                                            itemMap.containsKey(k.removeSuffix("_id"))
+
+                        if (!isRedundantFK) {
+                            val formattedValue = formatValue(v)
+                            // Si el campo es de tipo deuda/euros, agregar símbolo €
+                            val displayValue = if (k.contains("deuda", ignoreCase = true) || k.contains("euros", ignoreCase = true)) {
+                                if (formattedValue.isNotBlank() && formattedValue != "(vacío)") "${formattedValue}€" else formattedValue
+                            } else {
+                                formattedValue
+                            }
                         
                         Card(
                             modifier = Modifier
@@ -836,6 +876,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                 )
                             }
                         }
+                        } // cierre del if (!isRedundantFK)
                     }
 
                     Spacer(Modifier.height(16.dp))
@@ -1095,6 +1136,21 @@ private fun CompactList(
     summaryFields: List<String>,
     onOpenDetails: (Map<String, Any?>) -> Unit
 ) {
+    // ✅ NUEVO: Función para acceder a campos anidados con dot notation
+    fun getNestedValue(item: Map<String, Any?>, path: String): Any? {
+        if (!path.contains(".")) return item[path]
+        
+        val parts = path.split(".")
+        var current: Any? = item
+        
+        for (part in parts) {
+            current = (current as? Map<*, *>)?.get(part)
+            if (current == null) break
+        }
+        
+        return current
+    }
+    
     // ✅ Función auxiliar para formatear valores (eliminar decimales innecesarios)
     fun formatValue(value: Any?): String {
         return when (value) {
@@ -1156,14 +1212,26 @@ private fun CompactList(
 
             val summary = summaryFields.take(2)
             val (primaryKey, secondaryKey) = if (summary.isNotEmpty()) {
-                val first = summary.getOrNull(0)?.let { findKeyIgnoreCase(it) }
-                val second = summary.getOrNull(1)?.let { findKeyIgnoreCase(it) }
+                // ✅ Usar directamente los paths (pueden contener dot notation)
+                val first = summary.getOrNull(0)
+                val second = summary.getOrNull(1)
                 first to second
             } else {
-                // Heurística simple
-                fun pick(vararg candidates: String): String? = candidates.firstOrNull { c -> keys.any { it.equals(c, ignoreCase = true) } }
-                pick("title", "nombre", "name", "full_name", "displayName", "email") to
-                    pick("description", "rol", "role", "estado", "status", "ciudad", "city", "telefono", "phone", "codigo", "id")
+                // ✅ MEJORADO: Heurística que excluye objetos anidados y campos _id
+                // Filtrar claves: solo primitivas (no Maps), no terminan en _id
+                val simpleKeys = keys.filter { key ->
+                    val value = firstItem[key]
+                    value !is Map<*, *> && !key.endsWith("_id", ignoreCase = true)
+                }
+                
+                fun pick(vararg candidates: String): String? = 
+                    candidates.firstOrNull { c -> simpleKeys.any { it.equals(c, ignoreCase = true) } }
+                
+                val primary = pick("descripcion", "nombre", "title", "name", "full_name", "displayName", "email")
+                val secondary = pick("precio_base", "precio", "importe", "rol", "role", "estado", "status", 
+                                    "ciudad", "city", "telefono", "phone", "codigo")
+                
+                primary to secondary
             }
 
             // Fila de cabecera
@@ -1226,11 +1294,17 @@ private fun CompactList(
             itemsIndexed(items.take(itemsToShow)) { index, item ->
                 val keys = item.keys.toList()
                 fun findKeyIgnoreCase(target: String): String? = keys.firstOrNull { it.equals(target, ignoreCase = true) }
-                fun valueOf(key: String?): String? = key?.let { k ->
-                    val rawValue = item[keys.firstOrNull { it.equals(k, ignoreCase = true) }]
+                
+                // ✅ NUEVO: valueOf con soporte para dot notation
+                fun valueOf(path: String?): String? {
+                    if (path == null) return null
+                    
+                    // Usar getNestedValue para soportar "academia.nombre"
+                    val rawValue = getNestedValue(item, path)
                     val formatted = formatValue(rawValue)
+                    
                     // Si el campo es de tipo deuda/euros, agregar símbolo €
-                    if (k.contains("deuda", ignoreCase = true) || k.contains("euros", ignoreCase = true)) {
+                    return if (path.contains("deuda", ignoreCase = true) || path.contains("euros", ignoreCase = true)) {
                         if (formatted.isNotBlank()) "${formatted}€" else formatted
                     } else {
                         formatted
@@ -1239,14 +1313,25 @@ private fun CompactList(
 
                 val summary = summaryFields.take(2)
                 val (primaryKey, secondaryKey) = if (summary.isNotEmpty()) {
-                    val first = summary.getOrNull(0)?.let { findKeyIgnoreCase(it) }
-                    val second = summary.getOrNull(1)?.let { findKeyIgnoreCase(it) }
+                    // ✅ Usar directamente el path de summary_fields (puede contener dot notation)
+                    val first = summary.getOrNull(0)
+                    val second = summary.getOrNull(1)
                     first to second
                 } else {
-                    // Heurística simple
-                    fun pick(vararg candidates: String): String? = candidates.firstOrNull { c -> keys.any { it.equals(c, ignoreCase = true) } }
-                    pick("title", "nombre", "name", "full_name", "displayName", "email") to
-                        pick("description", "rol", "role", "estado", "status", "ciudad", "city", "telefono", "phone", "codigo", "id")
+                    // ✅ MEJORADO: Heurística que excluye objetos anidados y campos _id
+                    val simpleKeys = keys.filter { key ->
+                        val value = item[key]
+                        value !is Map<*, *> && !key.endsWith("_id", ignoreCase = true)
+                    }
+                    
+                    fun pick(vararg candidates: String): String? = 
+                        candidates.firstOrNull { c -> simpleKeys.any { it.equals(c, ignoreCase = true) } }
+                    
+                    val primary = pick("descripcion", "nombre", "title", "name", "full_name", "displayName", "email")
+                    val secondary = pick("precio_base", "precio", "importe", "rol", "role", "estado", "status", 
+                                        "ciudad", "city", "telefono", "phone", "codigo")
+                    
+                    primary to secondary
                 }
 
                 val primary = valueOf(primaryKey) ?: item.values.mapNotNull { formatValue(it).takeIf { it.isNotBlank() } }.firstOrNull() ?: "(sin datos)"
@@ -1345,6 +1430,121 @@ private fun CompactList(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text("Mostrar más registros")
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Renderizador de cards híbridas para sesiones del día
+ * Muestra cada clase como una card con estado, horario, curso y acciones contextuales
+ */
+@Composable
+fun SesionesDelDiaCards(
+    items: List<Map<String, Any?>>
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items.forEach { clase ->
+            val icono = clase["icono"] as? String ?: ""
+            val horaInicio = clase["hora_inicio"] as? String ?: ""
+            val horaFin = clase["hora_fin"] as? String ?: ""
+            val curso = clase["curso"] as? String ?: ""
+            val aula = clase["aula"] as? String ?: ""
+            val estado = clase["estado"] as? String ?: ""
+            val alumnosTotal = clase["alumnos"] as? Number ?: 0
+            val alumnosAsistieron = clase["alumnos_asistieron"] as? Number ?: 0
+            val descripcionEstado = clase["descripcion_estado"] as? String ?: ""
+            @Suppress("UNCHECKED_CAST")
+            val acciones = (clase["acciones_disponibles"] as? List<String>) ?: emptyList()
+            
+            // Formato de asistencia según estado
+            val textoAlumnos = when (estado) {
+                "completada", "en_curso" -> "${alumnosAsistieron.toInt()}/${alumnosTotal.toInt()} alumnos"
+                else -> "${alumnosTotal.toInt()} alumnos"  // Programada: solo capacidad
+            }
+            
+            // Card con borde y padding
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    // Línea 1: Icono + Horario + Aula
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "$icono $horaInicio - $horaFin",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "| $aula",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    // Línea 2: Curso
+                    Text(
+                        text = curso,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                    
+                    // Línea 3: Descripción estado
+                    Text(
+                        text = descripcionEstado,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    // Línea 4: Alumnos (formato según estado)
+                    Text(
+                        text = textoAlumnos,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    // Línea 5: Acciones
+                    if (acciones.isNotEmpty()) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 6.dp),
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            acciones.forEach { accion ->
+                                OutlinedButton(
+                                    onClick = { /* TODO: Implementar acciones */ },
+                                    modifier = Modifier.height(36.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = accion,
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

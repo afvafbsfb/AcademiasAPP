@@ -134,7 +134,13 @@ object MenuBuilder {
             label = "Clases/Sesiones",
             icon = Icons.Default.CalendarToday,
             chatMessage = "Muéstrame las clases de hoy",
-            contextData = mapOf("resource" to "sesiones", "scope" to "academia", "filter" to "hoy"),
+            contextData = mapOf(
+                "resource" to "sesiones",
+                "screen" to "sesiones",
+                "scope" to "academia",
+                "filter" to "hoy"
+            ),
+            isMocked = true,
             roles = listOf("Admin_academia")
         ),
         MenuOption(

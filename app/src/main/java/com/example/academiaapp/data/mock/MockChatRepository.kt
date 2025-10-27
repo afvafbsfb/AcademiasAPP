@@ -1,15 +1,19 @@
 package com.example.academiaapp.data.mock
 
 import com.example.academiaapp.data.remote.dto.*
+import com.example.academiaapp.data.session.SessionStore
 import com.example.academiaapp.domain.Result
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlin.random.Random
 
 /**
  * Repositorio mock que simula las respuestas del backend
  * Usado para desarrollo mientras se implementan los endpoints reales
  */
-class MockChatRepository {
+class MockChatRepository(
+    private val session: SessionStore
+) {
     
     /**
      * Simula el mensaje de bienvenida
@@ -82,6 +86,9 @@ class MockChatRepository {
             
             // Pantalla de cursos
             screen == "cursos" -> handleCursosScreen(lastMessage, context)
+            
+            // Pantalla de sesiones
+            screen == "sesiones" -> handleSesionesScreen(lastMessage, context)
             
             // Consulta genérica
             lastMessage.contains("alumno", ignoreCase = true) -> 
@@ -157,6 +164,102 @@ class MockChatRepository {
                 val cursoId = (context["curso_id"] as? Number)?.toInt() ?: 1
                 MockDataGenerator.generateCursoDetailResponse(cursoId)
             }
+            
+            else -> MockDataGenerator.generateGenericResponse(message)
+        }
+    }
+    
+    /**
+     * Maneja las interacciones en la pantalla de sesiones/clases
+     */
+    private suspend fun handleSesionesScreen(
+        message: String,
+        context: Map<String, Any?>?
+    ): Envelope<GenericItem> {
+        // Obtener nombre del usuario logueado
+        val nombreProfesor = session.name.first().orEmpty().ifBlank { "Profesor" }
+        
+        // Calcular fechas dinámicamente usando java.time
+        val hoy = java.time.LocalDate.now()
+        val ayer = hoy.minusDays(1)
+        val manana = hoy.plusDays(1)
+        
+        // Formatear fechas para consulta (YYYY-MM-DD)
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val fechaHoy = hoy.format(formatter)
+        val fechaAyer = ayer.format(formatter)
+        val fechaManana = manana.format(formatter)
+        
+        // Obtener día de la semana en español
+        val diasSemana = mapOf(
+            java.time.DayOfWeek.MONDAY to "Lunes",
+            java.time.DayOfWeek.TUESDAY to "Martes",
+            java.time.DayOfWeek.WEDNESDAY to "Miércoles",
+            java.time.DayOfWeek.THURSDAY to "Jueves",
+            java.time.DayOfWeek.FRIDAY to "Viernes",
+            java.time.DayOfWeek.SATURDAY to "Sábado",
+            java.time.DayOfWeek.SUNDAY to "Domingo"
+        )
+        
+        val diaSemanaHoy = diasSemana[hoy.dayOfWeek] ?: "Miércoles"
+        val diaSemanaAyer = diasSemana[ayer.dayOfWeek] ?: "Martes"
+        val diaSemanaManana = diasSemana[manana.dayOfWeek] ?: "Jueves"
+        
+        // Formatear fechas legibles
+        val meses = listOf("", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                           "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
+        val fechaLegibleHoy = "$diaSemanaHoy ${hoy.dayOfMonth} de ${meses[hoy.monthValue]} de ${hoy.year}"
+        val fechaLegibleAyer = "$diaSemanaAyer ${ayer.dayOfMonth} de ${meses[ayer.monthValue]} de ${ayer.year}"
+        val fechaLegibleManana = "$diaSemanaManana ${manana.dayOfMonth} de ${meses[manana.monthValue]} de ${manana.year}"
+        
+        // Detectar si es navegación entre días (delay corto) o carga inicial (delay largo)
+        val esNavegacionDia = message.contains("ayer", ignoreCase = true) ||
+                              message.contains("mañana", ignoreCase = true)
+        
+        if (esNavegacionDia) {
+            delay(1000L) // 1 segundo para cambio de día
+        } else {
+            delay(Random.nextLong(4000L, 5000L)) // 4-5 segundos para carga inicial
+        }
+        
+        return when {
+            // Ver clases de toda la semana
+            message.contains("toda la semana", ignoreCase = true) ||
+            message.contains("ver semana", ignoreCase = true) ->
+                MockDataGenerator.generateMisClasesSemanalesResponse(
+                    fechaInicio = fechaHoy,
+                    nombreProfesor = nombreProfesor
+                )
+            
+            // Ver clases de mañana
+            message.contains("mañana", ignoreCase = true) ||
+            message.contains("clases de mañana", ignoreCase = true) ->
+                MockDataGenerator.generateMisClasesHoyResponse(
+                    diaSemana = diaSemanaManana,
+                    fecha = fechaManana,
+                    fechaLegible = fechaLegibleManana,
+                    nombreProfesor = nombreProfesor
+                )
+            
+            // Ver clases de ayer
+            message.contains("ayer", ignoreCase = true) ||
+            message.contains("clases de ayer", ignoreCase = true) ->
+                MockDataGenerator.generateMisClasesHoyResponse(
+                    diaSemana = diaSemanaAyer,
+                    fecha = fechaAyer,
+                    fechaLegible = fechaLegibleAyer,
+                    nombreProfesor = nombreProfesor
+                )
+            
+            // Ver clases de hoy (default)
+            message.contains("hoy", ignoreCase = true) ||
+            message.contains("muéstrame", ignoreCase = true) ->
+                MockDataGenerator.generateMisClasesHoyResponse(
+                    diaSemana = diaSemanaHoy,
+                    fecha = fechaHoy,
+                    fechaLegible = fechaLegibleHoy,
+                    nombreProfesor = nombreProfesor
+                )
             
             else -> MockDataGenerator.generateGenericResponse(message)
         }

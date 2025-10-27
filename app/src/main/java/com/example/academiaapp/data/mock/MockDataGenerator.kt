@@ -357,4 +357,257 @@ object MockDataGenerator {
             uiSuggestions = null
         )
     }
+    
+    // ===============================================
+    // SESIONES - Respuestas de clases del profesor
+    // ===============================================
+    
+    /**
+     * Genera respuesta con las clases del día especificado
+     * @param diaSemana Día de la semana ("Lunes", "Martes", etc.)
+     * @param fecha Fecha en formato "YYYY-MM-DD" (para buscar sesiones)
+     * @param fechaLegible Fecha legible para mostrar ("Miércoles 23 de Octubre de 2025")
+     * @return Envelope con lista de clases con estados y acciones
+     */
+    fun generateMisClasesHoyResponse(
+        diaSemana: String,
+        fecha: String,
+        fechaLegible: String,
+        nombreProfesor: String = "María García"
+    ): Envelope<GenericItem> {
+        val horarios = MockData.getHorariosProfesor(diaSemana)
+        
+        if (horarios.isEmpty()) {
+            return Envelope(
+                status = "success",
+                message = "$fechaLegible\n\nNo tienes clases programadas para este día.",
+                data = null,
+                uiSuggestions = listOf(
+                    Suggestion(
+                        id = "sug_ver_semana",
+                        displayText = "Ver toda la semana",
+                        type = "Generica",
+                        recordAction = null,
+                        record = null,
+                        pagination = null,
+                        contextToken = null
+                    )
+                )
+            )
+        }
+        
+        // Generar items enriquecidos con estado de sesión
+        val clasesConEstado = horarios.map { horario ->
+            val horarioId = horario["id"] as Int
+            val cursoId = horario["curso_id"] as Int
+            val aulaId = horario["aula_id"] as Int
+            val horaInicio = horario["hora_inicio"] as String
+            val horaFin = horario["hora_fin"] as String
+            
+            val curso = MockData.getCurso(cursoId)
+            val aula = MockData.getAula(aulaId)
+            val sesion = MockData.getSesionDinamica(horarioId, fecha)
+            
+            // Extraer datos de asistencia si existe sesión
+            val asistieron = (sesion?.get("alumnos_asistieron") as? Number)?.toInt() ?: 0
+            val total = (sesion?.get("total_alumnos") as? Number)?.toInt() ?: (curso?.get("alumnos_inscritos") as? Number)?.toInt() ?: 0
+            
+            // Determinar estado
+            val (estado, icono, descripcionEstado, acciones) = when {
+                sesion == null -> {
+                    // 🟡 Programada - No se ha iniciado
+                    Quadruple(
+                        "programada",
+                        "🟡",
+                        "No iniciada",
+                        emptyList()  // Sin acciones disponibles
+                    )
+                }
+                sesion["timestamp_baja"] == null -> {
+                    // 🟢 En curso - Iniciada pero no finalizada
+                    val timestampAlta = sesion["timestamp_alta"] as String
+                    val horaInicioReal = timestampAlta.substring(11, 16) // HH:MM
+                    val listaPasada = sesion["lista_pasada"] as? Boolean ?: false
+                    
+                    val listaInfo = if (listaPasada) {
+                        "✅ Lista pasada: $asistieron/$total alumnos"
+                    } else {
+                        "⚠️ Lista pendiente"
+                    }
+                    
+                    Quadruple(
+                        "en_curso",
+                        "🟢",
+                        "$nombreProfesor\nIniciada a las $horaInicioReal | $listaInfo",
+                        listOf("Ver alumnos", "Ver anotaciones")
+                    )
+                }
+                else -> {
+                    // ✅ Completada
+                    val timestampAlta = sesion["timestamp_alta"] as String
+                    val timestampBaja = sesion["timestamp_baja"] as String
+                    val horaInicioReal = timestampAlta.substring(11, 16)
+                    val horaFinReal = timestampBaja.substring(11, 16)
+                    val listaPasada = sesion["lista_pasada"] as? Boolean ?: false
+                    
+                    val listaInfo = if (listaPasada) {
+                        "✅ Lista pasada: $asistieron/$total alumnos"
+                    } else {
+                        "⚠️ Lista no pasada"
+                    }
+                    
+                    Quadruple(
+                        "completada",
+                        "✅",
+                        "$nombreProfesor\nCompletada ($horaInicioReal - $horaFinReal) | $listaInfo",
+                        listOf("Ver alumnos", "Ver anotaciones")
+                    )
+                }
+            }
+            
+            mapOf(
+                "id" to horarioId,
+                "sesion_id" to (sesion?.get("id")),
+                "estado" to estado,
+                "icono" to icono,
+                "hora_inicio" to horaInicio,
+                "hora_fin" to horaFin,
+                "curso" to (curso?.get("nombre") ?: "Curso $cursoId"),
+                "curso_id" to cursoId,
+                "aula" to (aula?.get("nombre") ?: "Aula $aulaId"),
+                "alumnos" to total,  // Total de alumnos de la sesión
+                "alumnos_asistieron" to asistieron,  // Alumnos que asistieron
+                "descripcion_estado" to descripcionEstado,
+                "acciones_disponibles" to acciones
+            )
+        }
+        
+        // Generar sugerencias según el día
+        val suggestions = mutableListOf<Suggestion>()
+        
+        // Sugerencias de navegación temporal
+        if (diaSemana != "Lunes") {
+            suggestions.add(
+                Suggestion(
+                    id = "sug_clases_ayer",
+                    displayText = "Ver clases de ayer",
+                    type = "Generica",
+                    recordAction = null,
+                    record = null,
+                    pagination = null,
+                    contextToken = null
+                )
+            )
+        }
+        
+        if (diaSemana != "Viernes") {
+            suggestions.add(
+                Suggestion(
+                    id = "sug_clases_manana",
+                    displayText = "Ver clases de mañana",
+                    type = "Generica",
+                    recordAction = null,
+                    record = null,
+                    pagination = null,
+                    contextToken = null
+                )
+            )
+        }
+        
+        suggestions.add(
+            Suggestion(
+                id = "sug_ver_semana",
+                displayText = "Ver toda la semana",
+                type = "Generica",
+                recordAction = null,
+                record = null,
+                pagination = null,
+                contextToken = null
+            )
+        )
+        
+        return Envelope(
+            status = "success",
+            message = "$fechaLegible\n\nTienes ${horarios.size} clase(s) programada(s)",
+            data = DataSection(
+                type = "sesiones_dia",
+                items = clasesConEstado,
+                summaryFields = null,
+                pagination = null
+            ),
+            uiSuggestions = suggestions
+        )
+    }
+    
+    /**
+     * Genera respuesta semanal con todas las clases de la semana
+     * @param fechaInicio Fecha de inicio de semana (formato "YYYY-MM-DD")
+     * @param nombreProfesor Nombre del profesor logueado
+     * @return Envelope con calendario semanal
+     */
+    fun generateMisClasesSemanalesResponse(
+        fechaInicio: String,
+        nombreProfesor: String = "María García"
+    ): Envelope<GenericItem> {
+        val diasSemana = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes")
+        
+        val clasesPorDia = diasSemana.map { dia ->
+            val horarios = MockData.getHorariosProfesor(dia)
+            mapOf(
+                "dia" to dia,
+                "cantidad" to horarios.size,
+                "horarios" to horarios
+            )
+        }
+        
+        val totalClases = clasesPorDia.sumOf { it["cantidad"] as Int }
+        
+        // Calcular rango de fechas de la semana
+        val fecha = java.time.LocalDate.parse(fechaInicio)
+        val inicioSemana = fecha.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+        val finSemana = inicioSemana.plusDays(6)
+        
+        val meses = listOf("", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                           "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
+        val mesInicio = meses[inicioSemana.monthValue]
+        val mesFin = meses[finSemana.monthValue]
+        
+        val rangoFecha = if (inicioSemana.month == finSemana.month) {
+            "Semana del ${inicioSemana.dayOfMonth} al ${finSemana.dayOfMonth} de $mesInicio"
+        } else {
+            "Semana del ${inicioSemana.dayOfMonth} de $mesInicio al ${finSemana.dayOfMonth} de $mesFin"
+        }
+        
+        return Envelope(
+            status = "success",
+            message = "$rangoFecha\n\nTienes $totalClases clases esta semana",
+            data = DataSection(
+                type = "sesiones_semana",
+                items = clasesPorDia,
+                summaryFields = null,
+                pagination = null
+            ),
+            uiSuggestions = listOf(
+                Suggestion(
+                    id = "sug_clases_hoy",
+                    displayText = "Ver clases de hoy",
+                    type = "Generica",
+                    recordAction = null,
+                    record = null,
+                    pagination = null,
+                    contextToken = null
+                )
+            )
+        )
+    }
 }
+
+/**
+ * Helper para tuplas de 4 elementos (Kotlin no tiene Quadruple)
+ */
+private data class Quadruple<A, B, C, D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D
+)

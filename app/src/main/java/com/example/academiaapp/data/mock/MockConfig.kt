@@ -9,6 +9,7 @@ object MockConfig {
     // ✅ Flags de activación de mocks (cambiar a false cuando tengamos endpoints reales)
     var mockAlumnos: Boolean = true
     var mockCursos: Boolean = true
+    var mockSesiones: Boolean = true
     
     // ⏱️ Configuración de latencia simulada (milisegundos)
     const val MIN_DELAY_MS = 2500L
@@ -23,6 +24,7 @@ object MockConfig {
         return when (screen) {
             "alumnos" -> mockAlumnos
             "cursos" -> mockCursos
+            "sesiones" -> mockSesiones
             else -> false
         }
     }

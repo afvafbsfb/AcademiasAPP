@@ -8,6 +8,7 @@ import com.example.academiaapp.data.remote.dto.ChatMessageDto
 import com.example.academiaapp.data.remote.dto.GenericItem
 import com.example.academiaapp.data.remote.dto.PaginationInfo
 import com.example.academiaapp.data.remote.dto.Suggestion
+import com.example.academiaapp.data.session.SessionStore
 import com.example.academiaapp.domain.ChatRepository
 import com.example.academiaapp.domain.Result
 import com.example.academiaapp.data.mock.MockChatRepository
@@ -35,7 +36,10 @@ data class ChatUiState(
     val messages: List<ChatMessage> = emptyList()
 )
 
-class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
+class ChatViewModel(
+    private val repo: ChatRepository,
+    private val session: SessionStore
+) : ViewModel() {
     private val _ui = MutableStateFlow(ChatUiState())
     val ui: StateFlow<ChatUiState> = _ui
 
@@ -83,7 +87,7 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
             // Routing: usar MockChatRepository si hay contexto activo de mock
             val res = if (shouldUseMock) {
                 println("🔧 DEBUG: sendMessage usando MockChatRepository (contexto activo: $activeContext)")
-                MockChatRepository().sendConversation(conversation, activeContext)
+                MockChatRepository(session).sendConversation(conversation, activeContext)
             } else {
                 println("🔧 DEBUG: sendMessage usando ChatRepository real")
                 repo.sendConversation(conversation)
@@ -122,7 +126,7 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
             // Routing: usar MockChatRepository si es necesario
             val res = if (shouldUseMock) {
                 println("🔧 DEBUG: Usando MockChatRepository para screen=$screen")
-                MockChatRepository().sendConversation(conversation, context)
+                MockChatRepository(session).sendConversation(conversation, context)
             } else {
                 println("🔧 DEBUG: Usando ChatRepository real para screen=$screen, context=$context")
                 repo.sendConversation(conversation, context)
@@ -256,11 +260,14 @@ class ChatViewModel(private val repo: ChatRepository) : ViewModel() {
     }
 }
 
-class ChatViewModelFactory(private val repo: ChatRepository) : ViewModelProvider.Factory {
+class ChatViewModelFactory(
+    private val repo: ChatRepository,
+    private val session: SessionStore
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return ChatViewModel(repo) as T
+            return ChatViewModel(repo, session) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
