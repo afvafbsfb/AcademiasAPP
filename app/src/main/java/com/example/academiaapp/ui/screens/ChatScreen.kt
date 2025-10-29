@@ -104,7 +104,9 @@ import com.example.academiaapp.AcademiaApp
 import com.example.academiaapp.ui.viewmodels.ChatViewModel
 import com.example.academiaapp.ui.viewmodels.ChatViewModelFactory
 import com.example.academiaapp.ui.components.AppTopBar
+import com.example.academiaapp.ui.components.SuggestionClarificationDialog
 import com.example.academiaapp.ui.utils.MenuBuilder
+import com.example.academiaapp.data.remote.dto.needsClarification
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -194,6 +196,11 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
 
     var detailsItem by remember { mutableStateOf<Map<String, Any?>?>(null) }
     var input by remember { mutableStateOf("") }
+    
+    // ✅ NUEVO: Estado para el diálogo de aclaración de sugerencias
+    var showClarificationDialog by remember { mutableStateOf(false) }
+    var clarificationSuggestion by remember { mutableStateOf<com.example.academiaapp.data.remote.dto.Suggestion?>(null) }
+    var clarificationMessageIndex by remember { mutableStateOf(-1) }
 
     // ✅ Scroll automático al final cuando llegan mensajes nuevos O cuando cambia el estado de loading
     LaunchedEffect(ui.messages.size, ui.loading) {
@@ -642,8 +649,17 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                     SuggestionChip(
                                                                         onClick = {
                                                                             if (!ui.loading && m.suggestionsEnabled) {
-                                                                                vm.disableSuggestionsForMessage(index)
-                                                                                vm.sendMessage(suggestion.displayText)
+                                                                                // ✅ NUEVO: Verificar si necesita aclaración
+                                                                                if (suggestion.needsClarification()) {
+                                                                                    // Mostrar diálogo para pedir más información
+                                                                                    clarificationSuggestion = suggestion
+                                                                                    clarificationMessageIndex = index
+                                                                                    showClarificationDialog = true
+                                                                                } else {
+                                                                                    // Enviar directamente (caso: Generica con requiresClarification=false)
+                                                                                    vm.disableSuggestionsForMessage(index)
+                                                                                    vm.sendMessage(suggestion.displayText)
+                                                                                }
                                                                             }
                                                                         },
                                                                         enabled = !ui.loading && m.suggestionsEnabled,
@@ -896,6 +912,30 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                 }
             }
         }
+    }
+    
+    // ✅ NUEVO: Diálogo de aclaración para sugerencias que necesitan más información
+    if (showClarificationDialog && clarificationSuggestion != null) {
+        SuggestionClarificationDialog(
+            suggestion = clarificationSuggestion!!,
+            onDismiss = {
+                showClarificationDialog = false
+                clarificationSuggestion = null
+                clarificationMessageIndex = -1
+            },
+            onSend = { editedMessage ->
+                // Deshabilitar las sugerencias del mensaje original
+                if (clarificationMessageIndex >= 0) {
+                    vm.disableSuggestionsForMessage(clarificationMessageIndex)
+                }
+                // Enviar el mensaje editado
+                vm.sendMessage(editedMessage)
+                // Cerrar el diálogo
+                showClarificationDialog = false
+                clarificationSuggestion = null
+                clarificationMessageIndex = -1
+            }
+        )
     }
 }
 
