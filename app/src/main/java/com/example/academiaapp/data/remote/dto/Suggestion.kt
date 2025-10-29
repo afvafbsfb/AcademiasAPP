@@ -9,10 +9,6 @@ data class Suggestion(
     val displayText: String,
     val type: String,
     
-    // Indica si el cliente debe pedir más información antes de enviar
-    // Default = true (comportamiento seguro si el backend no lo envía)
-    val requiresClarification: Boolean? = null,
-    
     // Solo si type="Registro"
     val recordAction: String? = null,  // "Alta" | "Baja" | "Modificacion"
     val record: RecordRef? = null,
@@ -42,30 +38,25 @@ data class PaginationSuggestion(
 /**
  * Determina si una sugerencia necesita aclaración del usuario antes de enviarla.
  * 
- * Reglas:
- * - Paginacion: NUNCA (siempre false)
- * - Registro: SIEMPRE (siempre true)
- * - Generica: Depende del flag requiresClarification O del texto
- *   - Si empieza con "Listar/Lista/Listado" (case-insensitive): false
- *   - Si el flag existe: usa su valor
- *   - Si null (no existe): true (fallback seguro)
+ * Lógica determinista (NO depende del backend):
+ * - Paginacion: NUNCA requiere confirmación (tiene toda la info: page, size, direction)
+ * - Registro: SIEMPRE requiere confirmación (necesita identificar registro específico)
+ * - Generica: Depende del contenido del texto:
+ *   - Si contiene palabras de listado ("listar", "lista", "listado"): NO requiere confirmación
+ *   - En cualquier otro caso: SÍ requiere confirmación (buscar, filtrar, etc.)
  */
 fun Suggestion.needsClarification(): Boolean {
     return when (type.lowercase()) {
         "paginacion" -> false  // Paginación nunca necesita aclaración
         "registro" -> true     // Registro SIEMPRE necesita aclaración
         "generica" -> {
-            // Heurística: Si empieza con "Listar", "Lista" o "Listado" (case-insensitive), no necesita aclaración
+            // Heurística: detectar acciones de listado que son autosuficientes
             val text = displayText.trim().lowercase()
-            val isListAction = text.startsWith("listar ") || 
-                               text.startsWith("lista ") || 
-                               text.startsWith("listado ")
+            val isListAction = text.contains("listar") || 
+                               text.contains("lista") || 
+                               text.contains("listado")
             
-            if (isListAction) {
-                false  // Los listados son autosuficientes
-            } else {
-                requiresClarification ?: true  // Usa el flag si existe, sino true (seguro)
-            }
+            !isListAction  // true si NO es listado, false si es listado
         }
         else -> true  // Fallback seguro para tipos desconocidos
     }

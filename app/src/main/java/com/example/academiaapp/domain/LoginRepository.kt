@@ -15,7 +15,7 @@ class LoginRepository(
     private val session: SessionStore,
     private val academiasRepo: AcademiasRepository
 ) {
-    suspend fun login(email: String, password: String): Result<Unit> = try {
+    suspend fun login(email: String, password: String): Result<Boolean> = try {
         val resp = api.login(LoginRequest(email, password))
         if (resp.ok && resp.tokens != null) {
             session.saveSession(
@@ -32,7 +32,8 @@ class LoginRepository(
                     academiasRepo.resolveAndCacheAcademiaName(academiaId)
                 } catch (_: Throwable) { /* ignora errores aquí */ }
             }
-            Result.Success(Unit)
+            // Devolver el flag must_change_password
+            Result.Success(resp.must_change_password)
         } else {
             // Backend devolvió 200 pero ok=false: mapear por código/mensaje si está disponible
             val (code, message) = when (val e = resp.error) {

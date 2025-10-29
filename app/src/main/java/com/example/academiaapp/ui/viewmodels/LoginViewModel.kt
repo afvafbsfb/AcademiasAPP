@@ -16,7 +16,8 @@ data class LoginUiState(
     val password: String = "",
     val loading: Boolean = false,
     val error: String? = null,
-    val success: Boolean = false
+    val success: Boolean = false,
+    val mustChangePassword: Boolean = false
 )
 
 class LoginViewModel(private val repo: LoginRepository, private val chatRepo: ChatRepository) : ViewModel() {
@@ -42,13 +43,16 @@ class LoginViewModel(private val repo: LoginRepository, private val chatRepo: Ch
         viewModelScope.launch {
             when (val res = repo.login(email, pass)) {
                 is Result.Success -> {
-                    _uiState.update { it.copy(loading = false, success = true) }
-                    // Lanzar llamada al chat para obtener el mensaje de bienvenida en background sin bloquear la navegación
-                    launch {
-                        try {
-                            chatRepo.welcome()
-                        } catch (_: Throwable) {
-                            // Ignorar errores aquí; ChatViewModel gestionará reintentos si es necesario
+                    val mustChangePassword = res.data
+                    _uiState.update { it.copy(loading = false, success = true, mustChangePassword = mustChangePassword) }
+                    // Solo lanzar welcome si NO requiere cambio de contraseña
+                    if (!mustChangePassword) {
+                        launch {
+                            try {
+                                chatRepo.welcome()
+                            } catch (_: Throwable) {
+                                // Ignorar errores aquí; ChatViewModel gestionará reintentos si es necesario
+                            }
                         }
                     }
                 }

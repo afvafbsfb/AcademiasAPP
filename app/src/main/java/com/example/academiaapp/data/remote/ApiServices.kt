@@ -6,6 +6,7 @@ import retrofit2.http.HeaderMap
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.POST
+import retrofit2.http.PUT
 
 interface AuthApi {
     @POST("/auth/login")
@@ -20,4 +21,13 @@ interface ChatApi {
 interface AcademiasApi {
     @GET("/academias/{id}")
     suspend fun getAcademia(@Path("id") id: Int): AcademiaDto
+}
+
+interface UsuariosApi {
+    @PUT("/usuarios/{userId}/credentials")
+    suspend fun changePassword(
+        @Path("userId") userId: String,
+        @Body req: ChangePasswordRequest,
+        @HeaderMap headers: Map<String, String> = emptyMap()
+    ): ChangePasswordResponse
 }

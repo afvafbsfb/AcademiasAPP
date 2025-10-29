@@ -56,9 +56,19 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberUser by remember { mutableStateOf(false) }
 
-    LaunchedEffect(uiState.success) {
+    LaunchedEffect(uiState.success, uiState.mustChangePassword) {
         if (uiState.success) {
-            navController.navigate("chat?fromLogin=true") { popUpTo("login") { inclusive = true } }
+            if (uiState.mustChangePassword) {
+                // Navegar a pantalla de cambio de contraseña obligatorio
+                navController.navigate("change_password_required") {
+                    popUpTo("login") { inclusive = true }
+                }
+            } else {
+                // Login normal, ir al chat
+                navController.navigate("chat?fromLogin=true") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
         }
     }
 

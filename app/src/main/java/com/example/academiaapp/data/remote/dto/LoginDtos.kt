@@ -16,5 +16,17 @@ data class LoginResponse(
     val role: String?,
     val name: String?,
     val academiaId: Int? = null,
+    val must_change_password: Boolean = false,
     val error: Any? = null
+)
+
+data class ChangePasswordRequest(
+    val current_password: String,
+    val new_password: String
+)
+
+data class ChangePasswordResponse(
+    val ok: Boolean,
+    val message: String? = null,
+    val error: String? = null
 )

@@ -71,20 +71,23 @@ class ChatViewModel(
     fun sendMessage(text: String) {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return
-        // Add user message with cap
-        _ui.update { state ->
-            val newList = (state.messages + ChatMessage("user", trimmed)).takeLast(MAX_MESSAGES)
-            state.copy(messages = newList)
-        }
+        
         _ui.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             // Si hay un contexto activo (ej. desde menú), usarlo también aquí
             val screen = activeContext?.get("screen") as? String
             val shouldUseMock = screen != null && MockConfig.isMocked(screen)
 
+            // 1. Construir payload CON el mensaje nuevo (pero sin añadirlo al estado todavía)
             val conversation = buildConversationPayload(trimmed)
             
-            // Routing: usar MockChatRepository si hay contexto activo de mock
+            // 2. Ahora sí actualizar UI con el mensaje del usuario
+            _ui.update { state ->
+                val newList = (state.messages + ChatMessage("user", trimmed)).takeLast(MAX_MESSAGES)
+                state.copy(messages = newList)
+            }
+            
+            // 3. Routing: usar MockChatRepository si hay contexto activo de mock
             val res = if (shouldUseMock) {
                 println("🔧 DEBUG: sendMessage usando MockChatRepository (contexto activo: $activeContext)")
                 MockChatRepository(session).sendConversation(conversation, activeContext)
@@ -110,20 +113,22 @@ class ChatViewModel(
             activeContext = context
         }
         
-        // Add user message with cap
-        _ui.update { state ->
-            val newList = (state.messages + ChatMessage("user", trimmed)).takeLast(MAX_MESSAGES)
-            state.copy(messages = newList)
-        }
         _ui.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             // Detectar si debemos usar mock basándonos solo en el screen
             val screen = context?.get("screen") as? String
             val shouldUseMock = screen != null && MockConfig.isMocked(screen)
 
+            // 1. Construir payload CON el mensaje nuevo (pero sin añadirlo al estado todavía)
             val conversation = buildConversationPayload(trimmed)
+            
+            // 2. Ahora sí actualizar UI con el mensaje del usuario
+            _ui.update { state ->
+                val newList = (state.messages + ChatMessage("user", trimmed)).takeLast(MAX_MESSAGES)
+                state.copy(messages = newList)
+            }
 
-            // Routing: usar MockChatRepository si es necesario
+            // 3. Routing: usar MockChatRepository si es necesario
             val res = if (shouldUseMock) {
                 println("🔧 DEBUG: Usando MockChatRepository para screen=$screen")
                 MockChatRepository(session).sendConversation(conversation, context)
@@ -164,7 +169,8 @@ class ChatViewModel(
         val isNav = isNavigationCommand(latestUserText)
         val lastAssistant = state.messages.asReversed().firstOrNull { it.role == "assistant" }
         val userDto = ChatMessageDto(role = "user", content = latestUserText)
-        // Permitir construir contexto aunque items esté vacío, si hay paginación y tipo
+        
+        // Caso especial: navegación de paginación (requiere contexto específico)
         if (isNav && lastAssistant != null && lastAssistant.pagination != null && lastAssistant.type != null) {
             // Construir mensaje de contexto de paginación para que la IA decida 'page' correctamente
             fun esc(s: String?): String = s?.replace("\\", "\\\\")?.replace("\"", "\\\"") ?: ""
@@ -185,7 +191,24 @@ class ChatViewModel(
                 userDto
             )
         }
-        return listOf(userDto)
+        
+        // ✅ Incluir historial completo de conversación (últimos 10 mensajes = ~5 turnos)
+        // Esto permite que OpenAI mantenga el contexto entre múltiples turnos para altas/bajas/modificaciones
+        val maxContextMessages = 10
+        val conversationHistory = state.messages
+            .takeLast(maxContextMessages)  // Toma los últimos N mensajes
+            .map { msg ->
+                ChatMessageDto(
+                    role = msg.role,      // "user" o "assistant" - preserva quién dijo qué
+                    content = msg.text    // Solo el texto, no items/suggestions
+                )
+            }
+            .toMutableList()
+        
+        // Añadir el nuevo mensaje del usuario al final (orden cronológico)
+        conversationHistory.add(userDto)
+        
+        return conversationHistory
     }
 
     private fun isNavigationCommand(text: String): Boolean {

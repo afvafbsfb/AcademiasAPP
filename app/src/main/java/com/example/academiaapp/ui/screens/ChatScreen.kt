@@ -649,14 +649,14 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                     SuggestionChip(
                                                                         onClick = {
                                                                             if (!ui.loading && m.suggestionsEnabled) {
-                                                                                // ✅ NUEVO: Verificar si necesita aclaración
+                                                                                // ✅ Verificar si necesita aclaración (lógica determinista)
                                                                                 if (suggestion.needsClarification()) {
                                                                                     // Mostrar diálogo para pedir más información
                                                                                     clarificationSuggestion = suggestion
                                                                                     clarificationMessageIndex = index
                                                                                     showClarificationDialog = true
                                                                                 } else {
-                                                                                    // Enviar directamente (caso: Generica con requiresClarification=false)
+                                                                                    // Enviar directamente (Paginacion o Generica tipo listado)
                                                                                     vm.disableSuggestionsForMessage(index)
                                                                                     vm.sendMessage(suggestion.displayText)
                                                                                 }

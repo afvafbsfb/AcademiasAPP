@@ -26,6 +26,12 @@ class SessionStore(private val context: Context) {
     val academiaId: Flow<String?> = context.dataStore.data.map { it[Keys.ACADEMIA_ID] }
     val academiaName: Flow<String?> = context.dataStore.data.map { it[Keys.ACADEMIA_NAME] }
 
+    suspend fun getAccessToken(): String? {
+        var token: String? = null
+        context.dataStore.data.map { it[Keys.ACCESS] }.collect { token = it }
+        return token
+    }
+
     suspend fun saveSession(access: String?, refresh: String?, role: String?, name: String?, academiaId: Int? = null, academiaName: String? = null) {
         context.dataStore.edit { prefs ->
             if (access != null) prefs[Keys.ACCESS] = access else prefs.remove(Keys.ACCESS)

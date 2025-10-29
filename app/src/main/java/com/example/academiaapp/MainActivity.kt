@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.academiaapp.ui.screens.ChatScreen
 import com.example.academiaapp.ui.screens.LoginScreen
+import com.example.academiaapp.ui.screens.ChangePasswordRequiredScreen
 import com.example.academiaapp.ui.theme.AcademiaAPPTheme
 
 class MainActivity : ComponentActivity() {
@@ -28,6 +29,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("login") { LoginScreen(navController = navController) }
+                        composable("change_password_required") {
+                            ChangePasswordRequiredScreen(navController = navController)
+                        }
                         composable("chat?fromLogin={fromLogin}") { backStackEntry ->
                             val fromLogin = backStackEntry.arguments?.getString("fromLogin")?.toBooleanStrictOrNull() ?: false
                             ChatScreen(fromLogin = fromLogin, navController = navController)

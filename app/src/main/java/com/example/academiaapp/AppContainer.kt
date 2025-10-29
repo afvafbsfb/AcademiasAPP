@@ -6,6 +6,7 @@ import com.example.academiaapp.data.session.SessionStore
 import com.example.academiaapp.domain.LoginRepository
 import com.example.academiaapp.domain.ChatRepository
 import com.example.academiaapp.domain.AcademiasRepository
+import com.example.academiaapp.domain.UsuariosRepository
 
 class AppContainer(app: Application) {
     // Inicializaciones perezosas para no hacer trabajo potencialmente costoso en el constructor
@@ -13,11 +14,13 @@ class AppContainer(app: Application) {
     private val authApi by lazy { NetworkModule.createAuthApi(okHttp) }
     private val chatApi by lazy { NetworkModule.createChatApi(okHttp) }
     private val academiasApi by lazy { NetworkModule.createAcademiasApi(okHttp) }
+    private val usuariosApi by lazy { NetworkModule.createUsuariosApi(okHttp) }
 
     val session by lazy { SessionStore(app.applicationContext) }
     private val academiasRepository by lazy { AcademiasRepository(academiasApi, session) }
     val loginRepository by lazy { LoginRepository(authApi, session, academiasRepository) }
     val chatRepository by lazy { ChatRepository(chatApi, session) }
+    val usuariosRepository by lazy { UsuariosRepository(usuariosApi, session) }
 }
 
 class AcademiaApp : Application() {

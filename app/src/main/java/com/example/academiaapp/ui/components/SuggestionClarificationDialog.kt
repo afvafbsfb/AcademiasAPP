@@ -15,9 +15,9 @@ import com.example.academiaapp.data.remote.dto.Suggestion
  * Diálogo para pedir al usuario que complete la información de una sugerencia
  * antes de enviarla al backend.
  * 
- * Se usa cuando:
+ * Se usa cuando needsClarification() devuelve true:
  * - type="Registro" (siempre)
- * - type="Generica" con requiresClarification=true o null
+ * - type="Generica" que NO sea de listado (buscar, filtrar, etc.)
  */
 @Composable
 fun SuggestionClarificationDialog(

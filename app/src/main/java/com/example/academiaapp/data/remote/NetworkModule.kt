@@ -51,4 +51,7 @@ object NetworkModule {
 
     fun createAcademiasApi(client: OkHttpClient): AcademiasApi =
         createRetrofit(EnvConfig.apiWorkerBaseUrl, client).create(AcademiasApi::class.java)
+
+    fun createUsuariosApi(client: OkHttpClient): UsuariosApi =
+        createRetrofit(EnvConfig.apiWorkerBaseUrl, client).create(UsuariosApi::class.java)
 }
