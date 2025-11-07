@@ -68,7 +68,9 @@ fun Suggestion.needsClarification(): Boolean {
                                text.contains("lista") || 
                                text.contains("listado") ||
                                text.contains("ver clases") ||  // ✅ Sesiones: "Ver clases de hoy/ayer/mañana"
-                               text.contains("ver toda la semana")  // ✅ Sesiones: vista semanal
+                               text.contains("ver toda la semana") ||  // ✅ Semana actual
+                               text.contains("próxima semana") ||  // ✅ Semana próxima (con acento)
+                               text.contains("proxima semana")  // ✅ Semana próxima (sin acento)
             
             !isListAction  // true si NO es listado, false si es listado
         }

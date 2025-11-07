@@ -275,6 +275,14 @@ class MockChatRepository(
         }
         
         return when {
+            // Ver clases de la próxima semana
+            message.contains("próxima semana", ignoreCase = true) ||
+            message.contains("proxima semana", ignoreCase = true) ->
+                MockDataGenerator.generateMisClasesProximaSemanaResponse(
+                    fechaInicio = fechaHoy,
+                    nombreProfesor = nombreProfesor
+                )
+            
             // Ver clases de toda la semana
             message.contains("toda la semana", ignoreCase = true) ||
             message.contains("ver semana", ignoreCase = true) ->

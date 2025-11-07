@@ -698,6 +698,18 @@ object MockDataGenerator {
             )
         )
         
+        suggestions.add(
+            Suggestion(
+                id = "sug_proxima_semana",
+                displayText = "Ver clases de la próxima semana",
+                type = "Generica",
+                recordAction = null,
+                record = null,
+                pagination = null,
+                contextToken = null
+            )
+        )
+        
         return Envelope(
             status = "success",
             message = "$fechaLegible\n\nTienes ${horarios.size} clase(s) programada(s)",
@@ -763,6 +775,87 @@ object MockDataGenerator {
                 Suggestion(
                     id = "sug_clases_hoy",
                     displayText = "Ver clases de hoy",
+                    type = "Generica",
+                    recordAction = null,
+                    record = null,
+                    pagination = null,
+                    contextToken = null
+                ),
+                Suggestion(
+                    id = "sug_proxima_semana",
+                    displayText = "Ver clases de la próxima semana",
+                    type = "Generica",
+                    recordAction = null,
+                    record = null,
+                    pagination = null,
+                    contextToken = null
+                )
+            )
+        )
+    }
+    
+    /**
+     * Genera respuesta semanal con todas las clases de la PRÓXIMA semana
+     * @param fechaInicio Fecha de referencia (formato "YYYY-MM-DD")
+     * @param nombreProfesor Nombre del profesor logueado
+     * @return Envelope con calendario de la próxima semana
+     */
+    fun generateMisClasesProximaSemanaResponse(
+        fechaInicio: String,
+        nombreProfesor: String = "María García"
+    ): Envelope<GenericItem> {
+        val diasSemana = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes")
+        
+        val clasesPorDia = diasSemana.map { dia ->
+            val horarios = MockData.getHorariosProfesor(dia)
+            mapOf(
+                "dia" to dia,
+                "cantidad" to horarios.size,
+                "horarios" to horarios
+            )
+        }
+        
+        val totalClases = clasesPorDia.sumOf { it["cantidad"] as Int }
+        
+        // Calcular rango de fechas de la PRÓXIMA semana
+        val fecha = java.time.LocalDate.parse(fechaInicio)
+        val inicioSemanaActual = fecha.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+        val inicioProximaSemana = inicioSemanaActual.plusWeeks(1) // +7 días desde el lunes de esta semana
+        val finProximaSemana = inicioProximaSemana.plusDays(6)
+        
+        val meses = listOf("", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                           "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
+        val mesInicio = meses[inicioProximaSemana.monthValue]
+        val mesFin = meses[finProximaSemana.monthValue]
+        
+        val rangoFecha = if (inicioProximaSemana.month == finProximaSemana.month) {
+            "Próxima semana del ${inicioProximaSemana.dayOfMonth} al ${finProximaSemana.dayOfMonth} de $mesInicio"
+        } else {
+            "Próxima semana del ${inicioProximaSemana.dayOfMonth} de $mesInicio al ${finProximaSemana.dayOfMonth} de $mesFin"
+        }
+        
+        return Envelope(
+            status = "success",
+            message = "$rangoFecha\n\nTienes $totalClases clases programadas",
+            data = DataSection(
+                type = "sesiones_semana",
+                items = clasesPorDia,
+                summaryFields = null,
+                pagination = null
+            ),
+            uiSuggestions = listOf(
+                Suggestion(
+                    id = "sug_clases_hoy",
+                    displayText = "Ver clases de hoy",
+                    type = "Generica",
+                    recordAction = null,
+                    record = null,
+                    pagination = null,
+                    contextToken = null
+                ),
+                Suggestion(
+                    id = "sug_semana_actual",
+                    displayText = "Ver toda la semana",
                     type = "Generica",
                     recordAction = null,
                     record = null,
