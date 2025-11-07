@@ -133,12 +133,47 @@ class MockChatRepository(
             message.contains("alta nuevo alumno", ignoreCase = true) ->
                 generateAltaAlumnoForm()
 
+            // Envío de formulario de modificación: si se recibe la acción submit_modificacion
+            message.contains("modificación de alumno", ignoreCase = true) && (context?.get("action") == "submit_modificacion") -> {
+                val alumnoId = (context["alumno_id"] as? Number)?.toInt() ?: 0
+                val form = context["form_data"] as? Map<String, Any?> ?: emptyMap()
+                MockDataGenerator.generateModificacionAlumnoSuccess(alumnoId, form)
+            }
+
+            // Modificación de alumno (mostrar formulario con datos pre-cargados)
+            message.contains("modificación de alumno", ignoreCase = true) -> {
+                val alumnoId = (context?.get("alumno_id") as? Number)?.toInt() ?: 0
+                if (alumnoId > 0) {
+                    MockDataGenerator.generateModificacionAlumnoForm(alumnoId)
+                } else {
+                    MockDataGenerator.generateErrorResponse("No se especificó el alumno a modificar")
+                }
+            }
+
+            // Confirmación de baja: si se recibe la acción confirm_baja
+            message.contains("baja de alumno", ignoreCase = true) && (context?.get("action") == "confirm_baja") -> {
+                val alumnoId = (context["alumno_id"] as? Number)?.toInt() ?: 0
+                MockDataGenerator.generateBajaAlumnoSuccess(alumnoId)
+            }
+
+            // Baja de alumno (mostrar formulario de confirmación)
+            message.contains("baja de alumno", ignoreCase = true) -> {
+                val alumnoId = (context?.get("alumno_id") as? Number)?.toInt() ?: 0
+                if (alumnoId > 0) {
+                    MockDataGenerator.generateBajaAlumnoForm(alumnoId)
+                } else {
+                    MockDataGenerator.generateErrorResponse("No se especificó el alumno a dar de baja")
+                }
+            }
+
             // Filtrar por pagos pendientes
             message.contains("pagos pendientes", ignoreCase = true) ->
                 MockDataGenerator.generateAlumnosPagosPendientesResponse()
 
-            // Ver detalle de alumno
-            context?.containsKey("alumno_id") == true -> {
+            // Ver detalle de alumno (solo si NO es modificación ni baja)
+            context?.containsKey("alumno_id") == true &&
+            !message.contains("modificación", ignoreCase = true) &&
+            !message.contains("baja", ignoreCase = true) -> {
                 val alumnoId = (context["alumno_id"] as? Number)?.toInt() ?: 1
                 MockDataGenerator.generateAlumnoDetailResponse(alumnoId)
             }

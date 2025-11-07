@@ -242,6 +242,48 @@ object MockData {
         }
     }
     
+    /**
+     * Actualiza los datos de un alumno existente
+     * @param alumnoId ID del alumno a actualizar
+     * @param nuevosDatos Nuevos datos del alumno
+     * @return true si se actualizó correctamente, false si no se encontró
+     */
+    fun updateAlumno(alumnoId: Int, nuevosDatos: Map<String, Any?>): Boolean {
+        val index = _alumnos.indexOfFirst { (it["id"] as? Int) == alumnoId }
+        if (index == -1) return false
+
+        val alumnoActual = _alumnos[index].toMutableMap()
+
+        // Actualizar campos (mantener el ID)
+        alumnoActual.putAll(nuevosDatos)
+        alumnoActual["id"] = alumnoId
+
+        // Si cambió el curso_id, actualizar el campo "curso" con el nombre
+        val cursoId = (nuevosDatos["curso_id"] as? Number)?.toInt()
+        if (cursoId != null) {
+            val curso = getCurso(cursoId)
+            if (curso != null) {
+                alumnoActual["curso"] = curso["nombre"]
+            }
+        }
+
+        _alumnos[index] = alumnoActual
+        return true
+    }
+
+    /**
+     * Elimina un alumno (simula baja)
+     * @param alumnoId ID del alumno a eliminar
+     * @return true si se eliminó correctamente, false si no se encontró
+     */
+    fun deleteAlumno(alumnoId: Int): Boolean {
+        val index = _alumnos.indexOfFirst { (it["id"] as? Int) == alumnoId }
+        if (index == -1) return false
+
+        _alumnos.removeAt(index)
+        return true
+    }
+
     // ===============================================
     // AULAS - 5 aulas de la academia
     // ===============================================

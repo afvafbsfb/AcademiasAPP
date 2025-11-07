@@ -1,6 +1,7 @@
 package com.example.academiaapp.ui.screens
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -238,10 +239,16 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
     var detailsItem by remember { mutableStateOf<Map<String, Any?>?>(null) }
     var input by remember { mutableStateOf("") }
     
+    // ✅ NUEVO: Contador de clics para "Modificación de alumno" (mock)
+    var modificacionAlumnoClickCount by remember { mutableStateOf(0) }
+
     // ✅ NUEVO: Estado para el diálogo de aclaración de sugerencias
     var showClarificationDialog by remember { mutableStateOf(false) }
     var clarificationSuggestion by remember { mutableStateOf<com.example.academiaapp.data.remote.dto.Suggestion?>(null) }
     var clarificationMessageIndex by remember { mutableStateOf(-1) }
+
+    // Context para Toast
+    val context = LocalContext.current
 
     // ✅ Scroll automático al final cuando llegan mensajes nuevos O cuando cambia el estado de loading
     LaunchedEffect(ui.messages.size, ui.loading) {
@@ -574,6 +581,21 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                 ))
                                                             }
                                                         )
+                                                    } else if (m.type == "formulario_modificacion_alumno") {
+                                                        // ✅ NUEVO: Formulario de modificación con datos pre-cargados
+                                                        AlumnoModificacionForm(
+                                                            formSpec = m.items.firstOrNull() ?: emptyMap(),
+                                                            onCancel = { vm.sendMessageWithContext("cancelar modificación", mapOf("screen" to "alumnos")) },
+                                                            onSubmit = { formData, alumnoId ->
+                                                                // Enviar acción de submit de modificación al mock
+                                                                vm.sendMessageWithContext("modificación de alumno", mapOf(
+                                                                    "screen" to "alumnos",
+                                                                    "action" to "submit_modificacion",
+                                                                    "alumno_id" to alumnoId,
+                                                                    "form_data" to formData
+                                                                ))
+                                                            }
+                                                        )
                                                     } else if (m.type == "sesiones_dia") {
                                                         // Renderizador especial para clases del día (cards híbridas)
                                                         SesionesDelDiaCards(items = m.items)
@@ -584,7 +606,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                     }
                                                 }
                                                 // No mostrar sugerencias si es formulario (ya tiene sus propios botones)
-                                                if (m.suggestions.isNotEmpty() && m.type != "formulario_alta_alumno") {
+                                                if (m.suggestions.isNotEmpty() && m.type != "formulario_alta_alumno" && m.type != "formulario_modificacion_alumno") {
                                                     // ✅ Mejora 5: Ordenar sugerencias - paginación primero y en la misma línea
                                                     val (paginationSuggestions, otherSuggestions) = m.suggestions.partition {
                                                         it.type.equals("Paginacion", ignoreCase = true)
@@ -695,16 +717,44 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                     SuggestionChip(
                                                                         onClick = {
                                                                             if (!ui.loading && m.suggestionsEnabled) {
-                                                                                // ✅ Verificar si necesita aclaración (lógica determinista)
-                                                                                if (suggestion.needsClarification()) {
-                                                                                    // Mostrar diálogo para pedir más información
-                                                                                    clarificationSuggestion = suggestion
-                                                                                    clarificationMessageIndex = index
-                                                                                    showClarificationDialog = true
+                                                                                // ✅ MOCK: Lógica especial para "Modificación de alumno"
+                                                                                if (suggestion.displayText.equals("Modificación de alumno", ignoreCase = true)) {
+                                                                                    modificacionAlumnoClickCount++
+
+                                                                                    if (modificacionAlumnoClickCount == 1) {
+                                                                                        // Primera vez: mostrar Toast
+                                                                                        Toast.makeText(
+                                                                                            context,
+                                                                                            "Debes seleccionar el registro que deseas modificar",
+                                                                                            Toast.LENGTH_LONG
+                                                                                        ).show()
+                                                                                    } else {
+                                                                                        // Segunda vez: simular selección y enviar mensaje automático
+                                                                                        vm.disableSuggestionsForMessage(index)
+                                                                                        // Mock: simular que se seleccionó el alumno ID=3 (Pedro Fernández Pérez)
+                                                                                        val mockAlumnoId = 3
+                                                                                        vm.sendMessageWithContext(
+                                                                                            "modificación de alumno",
+                                                                                            mapOf(
+                                                                                                "screen" to "alumnos",
+                                                                                                "alumno_id" to mockAlumnoId
+                                                                                            )
+                                                                                        )
+                                                                                        // Resetear contador para próximas veces
+                                                                                        modificacionAlumnoClickCount = 0
+                                                                                    }
                                                                                 } else {
-                                                                                    // Enviar directamente (Paginacion o Generica tipo listado)
-                                                                                    vm.disableSuggestionsForMessage(index)
-                                                                                    vm.sendMessage(suggestion.displayText)
+                                                                                    // ✅ Lógica normal para otras sugerencias
+                                                                                    if (suggestion.needsClarification()) {
+                                                                                        // Mostrar diálogo para pedir más información
+                                                                                        clarificationSuggestion = suggestion
+                                                                                        clarificationMessageIndex = index
+                                                                                        showClarificationDialog = true
+                                                                                    } else {
+                                                                                        // Enviar directamente (Paginacion o Generica tipo listado)
+                                                                                        vm.disableSuggestionsForMessage(index)
+                                                                                        vm.sendMessage(suggestion.displayText)
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         },
@@ -1177,6 +1227,268 @@ private fun AlumnoAltaForm(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AlumnoModificacionForm(
+    formSpec: Map<String, Any?>,
+    onSubmit: (Map<String, Any?>, Int) -> Unit,
+    onCancel: () -> Unit
+) {
+    // Extraer cursos disponibles y datos del alumno desde formSpec
+    val cursos = (formSpec["cursos_disponibles"] as? List<Map<String, Any?>>) ?: emptyList()
+    val alumnoData = (formSpec["alumno_data"] as? Map<String, Any?>) ?: emptyMap()
+
+    // ✅ Función para convertir fecha de YYYY-MM-DD a DD/MM/YYYY
+    fun convertDateFormat(dateStr: String?): String {
+        if (dateStr.isNullOrBlank()) return ""
+        // Si ya está en formato DD/MM/YYYY, devolver tal cual
+        if (dateStr.matches(Regex("^\\d{2}/\\d{2}/\\d{4}$"))) return dateStr
+        // Si está en formato YYYY-MM-DD, convertir
+        if (dateStr.matches(Regex("^\\d{4}-\\d{2}-\\d{2}$"))) {
+            val parts = dateStr.split("-")
+            if (parts.size == 3) {
+                return "${parts[2]}/${parts[1]}/${parts[0]}"
+            }
+        }
+        return dateStr
+    }
+
+    // ✅ CORREGIDO: Inicializar como String desde alumnoData con conversión de formato de fecha
+    var nombre by remember { mutableStateOf((alumnoData["nombre"] as? String) ?: "") }
+    var email by remember { mutableStateOf((alumnoData["email"] as? String) ?: "") }
+    var dni by remember { mutableStateOf((alumnoData["dni"] as? String) ?: "") }
+    var telefono by remember { mutableStateOf((alumnoData["telefono"] as? String) ?: "") }
+    var fecha by remember { mutableStateOf(convertDateFormat(alumnoData["fecha_nacimiento"] as? String)) }
+    var direccion by remember { mutableStateOf((alumnoData["direccion"] as? String) ?: "") }
+
+    // ✅ Pre-cargar curso seleccionado si existe
+    val cursoIdInicial = (alumnoData["curso_id"] as? Number)?.toInt()
+    var cursoSeleccionado by remember { mutableStateOf(cursoIdInicial) }
+    var cursoLabel by remember {
+        mutableStateOf(
+            if (cursoIdInicial != null) {
+                cursos.find { (it["id"] as? Number)?.toInt() == cursoIdInicial }
+                    ?.get("display_text") as? String ?: "Seleccionar curso"
+            } else {
+                "Seleccionar curso"
+            }
+        )
+    }
+    var expandedCursos by remember { mutableStateOf(false) }
+
+    // Validation states
+    var nombreError by remember { mutableStateOf(false) }
+    var telefonoError by remember { mutableStateOf(false) }
+    var fechaError by remember { mutableStateOf(false) }
+
+    // Diálogo de confirmación
+    var showConfirmDialog by remember { mutableStateOf(false) }
+
+    // Focus requesters para cada campo obligatorio
+    val nombreFocusRequester = remember { FocusRequester() }
+    val telefonoFocusRequester = remember { FocusRequester() }
+    val fechaFocusRequester = remember { FocusRequester() }
+
+    // Función de validación
+    fun validateAndShowDialog() {
+        var ok = true
+        var firstErrorField: FocusRequester? = null
+
+        if (nombre.isBlank()) {
+            nombreError = true
+            ok = false
+            if (firstErrorField == null) firstErrorField = nombreFocusRequester
+        }
+        if (telefono.isBlank()) {
+            telefonoError = true
+            ok = false
+            if (firstErrorField == null) firstErrorField = telefonoFocusRequester
+        }
+        val fechaRegex = "^\\d{2}/\\d{2}/\\d{4}$".toRegex()
+        if (!fechaRegex.matches(fecha)) {
+            fechaError = true
+            ok = false
+            if (firstErrorField == null) firstErrorField = fechaFocusRequester
+        }
+
+        if (!ok) {
+            firstErrorField?.requestFocus()
+            return
+        }
+
+        // Si validó bien, mostrar diálogo
+        showConfirmDialog = true
+    }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Title
+        Text("Formulario de modificación", style = MaterialTheme.typography.titleMedium)
+
+        // Nombre (required)
+        OutlinedTextField(
+            value = nombre,
+            onValueChange = { nombre = it; if (it.isNotBlank()) nombreError = false },
+            label = { Text("Nombre completo *") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(nombreFocusRequester)
+                .background(if (nombreError) Color(0xFFFFE0B2) else Color.Transparent),
+            singleLine = true,
+            isError = nombreError
+        )
+
+        // Telefono (required)
+        OutlinedTextField(
+            value = telefono,
+            onValueChange = { telefono = it; if (it.isNotBlank()) telefonoError = false },
+            label = { Text("Teléfono *") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(telefonoFocusRequester)
+                .background(if (telefonoError) Color(0xFFFFE0B2) else Color.Transparent),
+            singleLine = true,
+            isError = telefonoError,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+        )
+
+        // Fecha nacimiento (required) with simple mask
+        OutlinedTextField(
+            value = fecha,
+            onValueChange = { input ->
+                // Allow only digits and '/'
+                val digits = input.filter { it.isDigit() }
+                val masked = buildString {
+                    for (i in digits.indices) {
+                        append(digits[i])
+                        if (i == 1 || i == 3) append('/')
+                        if (i >= 7) break
+                    }
+                }
+                fecha = masked
+                if (masked.isNotBlank()) fechaError = false
+            },
+            label = { Text("Fecha de nacimiento (DD/MM/AAAA) *") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(fechaFocusRequester)
+                .background(if (fechaError) Color(0xFFFFE0B2) else Color.Transparent),
+            singleLine = true,
+            isError = fechaError,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        )
+
+        // Email, DNI, Dirección (optional)
+        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = dni, onValueChange = { dni = it }, label = { Text("DNI") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = direccion, onValueChange = { direccion = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth())
+
+        // Curso (optional) - Dropdown Menu
+        if (cursos.isNotEmpty()) {
+            ExposedDropdownMenuBox(
+                expanded = expandedCursos,
+                onExpandedChange = { expandedCursos = it }
+            ) {
+                OutlinedTextField(
+                    value = cursoLabel,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Curso (opcional)") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCursos) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expandedCursos,
+                    onDismissRequest = { expandedCursos = false }
+                ) {
+                    cursos.forEach { c ->
+                        val id = (c["id"] as? Number)?.toInt()
+                        val label = c["display_text"] as? String ?: ""
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                cursoSeleccionado = id
+                                cursoLabel = label
+                                expandedCursos = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        // Botones estilizados como sugerencias
+        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Botón Modificar
+            Row(modifier = Modifier.fillMaxWidth()) {
+                SuggestionChip(
+                    onClick = { validateAndShowDialog() },
+                    label = { Text("Modificar") },
+                    colors = androidx.compose.material3.SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = Color(0xFF81C784),
+                        labelColor = Color.White
+                    ),
+                    border = null,
+                    shape = RoundedCornerShape(20.dp)
+                )
+            }
+
+            // Botón Cancelar
+            Row(modifier = Modifier.fillMaxWidth()) {
+                SuggestionChip(
+                    onClick = { onCancel() },
+                    label = { Text("Cancelar") },
+                    colors = androidx.compose.material3.SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = Color(0xFF81C784),
+                        labelColor = Color.White
+                    ),
+                    border = null,
+                    shape = RoundedCornerShape(20.dp)
+                )
+            }
+        }
+    }
+
+    // Diálogo de confirmación
+    if (showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Confirmar modificación") },
+            text = { Text("¿Has verificado todos los datos del alumno?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showConfirmDialog = false
+                    // Build form map
+                    val formMap = mapOf(
+                        "nombre" to nombre,
+                        "email" to email,
+                        "dni" to dni,
+                        "telefono" to telefono,
+                        "fecha_nacimiento" to fecha,
+                        "direccion" to direccion,
+                        "curso_id" to cursoSeleccionado
+                    )
+                    // Obtener ID del alumno desde alumnoData
+                    val alumnoId = (alumnoData["id"] as? Number)?.toInt() ?: -1
+                    onSubmit(formMap, alumnoId)
+                }) {
+                    Text("Sí")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
+    }
+}
+
 @Composable
 private fun CompactList(
     items: List<Map<String, Any?>>,
@@ -1612,3 +1924,4 @@ fun SesionesDelDiaCards(
         }
     }
 }
+

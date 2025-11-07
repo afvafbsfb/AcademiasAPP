@@ -274,7 +274,162 @@ object MockDataGenerator {
             )
         )
     }
-    
+
+    /**
+     * Genera formulario de modificación de alumno con datos pre-cargados
+     * @param alumnoId ID del alumno a modificar
+     * @return Envelope con formulario y datos del alumno
+     */
+    fun generateModificacionAlumnoForm(alumnoId: Int): Envelope<GenericItem> {
+        val alumno = MockData.getAlumno(alumnoId)
+            ?: return generateErrorResponse("Alumno no encontrado")
+
+        val cursosCombo = MockData.getCursos().map { curso ->
+            mapOf(
+                "id" to curso["id"],
+                "display_text" to "${curso["nombre"]} (${curso["fecha_inicio"]} - ${curso["fecha_fin"]})"
+            )
+        }
+
+        return Envelope(
+            status = "success",
+            message = "Modificación de alumno - ${alumno["nombre"]}",
+            data = DataSection(
+                type = "formulario_modificacion_alumno",
+                items = listOf(
+                    mapOf(
+                        "field_type" to "form",
+                        "alumno_data" to alumno,
+                        "cursos_disponibles" to cursosCombo
+                    )
+                ),
+                summaryFields = null,
+                pagination = null
+            ),
+            uiSuggestions = null  // El formulario tendrá sus propios botones
+        )
+    }
+
+    /**
+     * Genera respuesta de confirmación de modificación de alumno
+     * @param alumnoId ID del alumno modificado
+     * @param nuevosDatos Datos actualizados del alumno
+     * @return Envelope con confirmación de modificación
+     */
+    fun generateModificacionAlumnoSuccess(alumnoId: Int, nuevosDatos: Map<String, Any?>): Envelope<GenericItem> {
+        val alumnoActual = MockData.getAlumno(alumnoId)
+            ?: return generateErrorResponse("Alumno no encontrado")
+
+        // Actualizar alumno en el mock
+        MockData.updateAlumno(alumnoId, nuevosDatos)
+
+        val mensajeExito = buildString {
+            append("Modificación de alumno completada:\n\n")
+            nuevosDatos["nombre"]?.let { append("Nombre: $it\n") }
+            nuevosDatos["email"]?.let { if (it.toString().isNotBlank()) append("Email: $it\n") }
+            nuevosDatos["dni"]?.let { if (it.toString().isNotBlank()) append("DNI: $it\n") }
+            nuevosDatos["telefono"]?.let { append("Teléfono: $it\n") }
+            nuevosDatos["fecha_nacimiento"]?.let { append("Fecha de nacimiento: $it\n") }
+            nuevosDatos["direccion"]?.let { if (it.toString().isNotBlank()) append("Dirección: $it\n") }
+            nuevosDatos["curso_id"]?.let {
+                val cursoId = (it as? Number)?.toInt()
+                if (cursoId != null) {
+                    val curso = MockData.getCurso(cursoId)
+                    curso?.let { c -> append("Curso: ${c["nombre"]}\n") }
+                }
+            }
+            append("\n✓ Los datos del alumno han sido actualizados correctamente")
+        }
+
+        return Envelope(
+            status = "success",
+            message = mensajeExito,
+            data = null,
+            uiSuggestions = listOf(
+                Suggestion(
+                    id = "sug_ver_alumno",
+                    displayText = "Ver detalle del alumno",
+                    type = "Registro",
+                    recordAction = "Consulta",
+                    record = RecordRef(
+                        resource = "alumnos",
+                        id = alumnoId.toString()
+                    ),
+                    pagination = null,
+                    contextToken = null
+                ),
+                Suggestion(
+                    id = "sug_volver_lista",
+                    displayText = "Volver a lista de alumnos",
+                    type = "Generica",
+                    recordAction = null,
+                    record = null,
+                    pagination = null,
+                    contextToken = null
+                )
+            )
+        )
+    }
+
+    /**
+     * Genera formulario de confirmación de baja de alumno
+     * @param alumnoId ID del alumno a dar de baja
+     * @return Envelope con datos del alumno para confirmación
+     */
+    fun generateBajaAlumnoForm(alumnoId: Int): Envelope<GenericItem> {
+        val alumno = MockData.getAlumno(alumnoId)
+            ?: return generateErrorResponse("Alumno no encontrado")
+
+        return Envelope(
+            status = "success",
+            message = "⚠️ Confirmación de baja de alumno\n\n¿Estás seguro de dar de baja a este alumno?",
+            data = DataSection(
+                type = "formulario_baja_alumno",
+                items = listOf(
+                    mapOf(
+                        "field_type" to "form_readonly",
+                        "alumno_data" to alumno
+                    )
+                ),
+                summaryFields = null,
+                pagination = null
+            ),
+            uiSuggestions = null  // El formulario tendrá sus propios botones
+        )
+    }
+
+    /**
+     * Genera respuesta de confirmación de baja de alumno
+     * @param alumnoId ID del alumno dado de baja
+     * @return Envelope con confirmación de baja
+     */
+    fun generateBajaAlumnoSuccess(alumnoId: Int): Envelope<GenericItem> {
+        val alumno = MockData.getAlumno(alumnoId)
+            ?: return generateErrorResponse("Alumno no encontrado")
+
+        val nombreAlumno = alumno["nombre"] as? String ?: "Alumno $alumnoId"
+
+        // Simular baja en el mock (marcar como inactivo o eliminar)
+        MockData.deleteAlumno(alumnoId)
+
+        return Envelope(
+            status = "success",
+            message = "✓ Baja de alumno completada\n\nEl alumno $nombreAlumno ha sido dado de baja correctamente.\n\nSus datos han sido archivados.",
+            data = null,
+            uiSuggestions = listOf(
+                Suggestion(
+                    id = "sug_volver_lista",
+                    displayText = "Volver a lista de alumnos",
+                    type = "Generica",
+                    recordAction = null,
+                    record = null,
+                    pagination = null,
+                    contextToken = null
+                )
+            )
+        )
+    }
+
     // ===============================================
     // CURSOS - Respuestas (sin paginación)
     // ===============================================
