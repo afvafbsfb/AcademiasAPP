@@ -62,11 +62,13 @@ fun Suggestion.needsClarification(): Boolean {
             }
         }
         "generica" -> {
-            // Heurística: detectar acciones de listado que son autosuficientes
+            // Heurística: detectar acciones de listado/visualización que son autosuficientes
             val text = displayText.trim().lowercase()
             val isListAction = text.contains("listar") || 
                                text.contains("lista") || 
-                               text.contains("listado")
+                               text.contains("listado") ||
+                               text.contains("ver clases") ||  // ✅ Sesiones: "Ver clases de hoy/ayer/mañana"
+                               text.contains("ver toda la semana")  // ✅ Sesiones: vista semanal
             
             !isListAction  // true si NO es listado, false si es listado
         }
