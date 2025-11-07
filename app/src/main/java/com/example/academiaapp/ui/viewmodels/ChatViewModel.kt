@@ -108,15 +108,20 @@ class ChatViewModel(
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return
         
-        // Guardar el contexto para usarlo en llamadas subsiguientes (paginación, etc.)
+        // ✅ MEJORADO: Combinar el nuevo contexto con el activo, preservando el screen
         if (context != null) {
-            activeContext = context
+            activeContext = if (activeContext != null) {
+                // Combinar: mantiene campos del contexto activo y agrega/sobreescribe con los nuevos
+                activeContext!! + context
+            } else {
+                context
+            }
         }
-        
+
         _ui.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
-            // Detectar si debemos usar mock basándonos solo en el screen
-            val screen = context?.get("screen") as? String
+            // Detectar si debemos usar mock basándonos en el screen del contexto activo
+            val screen = activeContext?.get("screen") as? String
             val shouldUseMock = screen != null && MockConfig.isMocked(screen)
 
             // 1. Construir payload CON el mensaje nuevo (pero sin añadirlo al estado todavía)
@@ -130,11 +135,11 @@ class ChatViewModel(
 
             // 3. Routing: usar MockChatRepository si es necesario
             val res = if (shouldUseMock) {
-                println("🔧 DEBUG: Usando MockChatRepository para screen=$screen")
-                MockChatRepository(session).sendConversation(conversation, context)
+                println("🔧 DEBUG: Usando MockChatRepository para screen=$screen, activeContext=$activeContext")
+                MockChatRepository(session).sendConversation(conversation, activeContext)
             } else {
-                println("🔧 DEBUG: Usando ChatRepository real para screen=$screen, context=$context")
-                repo.sendConversation(conversation, context)
+                println("🔧 DEBUG: Usando ChatRepository real para screen=$screen, activeContext=$activeContext")
+                repo.sendConversation(conversation, activeContext)
             }
 
             when (res) {

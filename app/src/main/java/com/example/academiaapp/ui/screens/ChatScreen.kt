@@ -622,7 +622,12 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                         onClick = {
                                                                             if (!ui.loading && m.suggestionsEnabled) {
                                                                                 vm.disableSuggestionsForMessage(index)
-                                                                                vm.sendMessage(suggestion.displayText)
+                                                                                // ✅ Pasar el número de página en el contexto para que la paginación funcione
+                                                                                val paginationContext = mapOf(
+                                                                                    "page" to (suggestion.pagination?.page ?: 1),
+                                                                                    "size" to (suggestion.pagination?.size ?: 50)
+                                                                                )
+                                                                                vm.sendMessageWithContext(suggestion.displayText, paginationContext)
                                                                             }
                                                                         },
                                                                         enabled = !ui.loading && m.suggestionsEnabled,

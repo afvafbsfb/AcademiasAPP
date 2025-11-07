@@ -40,7 +40,11 @@ data class PaginationSuggestion(
  * 
  * Lógica determinista (NO depende del backend):
  * - Paginacion: NUNCA requiere confirmación (tiene toda la info: page, size, direction)
- * - Registro: SIEMPRE requiere confirmación (necesita identificar registro específico)
+ * - Registro: Depende del tipo de acción y si hay registro específico:
+ *   - Alta sin registro específico: NO requiere confirmación (mock autónomo)
+ *   - Consulta sin registro específico: NO requiere confirmación (listado filtrado)
+ *   - Baja/Modificación: SIEMPRE requiere confirmación (seguridad)
+ *   - Cualquiera con registro específico: SIEMPRE requiere confirmación
  * - Generica: Depende del contenido del texto:
  *   - Si contiene palabras de listado ("listar", "lista", "listado"): NO requiere confirmación
  *   - En cualquier otro caso: SÍ requiere confirmación (buscar, filtrar, etc.)
@@ -48,7 +52,15 @@ data class PaginationSuggestion(
 fun Suggestion.needsClarification(): Boolean {
     return when (type.lowercase()) {
         "paginacion" -> false  // Paginación nunca necesita aclaración
-        "registro" -> true     // Registro SIEMPRE necesita aclaración
+        "registro" -> {
+            // ✅ MEJORADO: Distinguir entre acciones autónomas (mock) y específicas (backend real)
+            when (recordAction?.lowercase()) {
+                "alta" -> record != null  // Alta sin registro específico es autónoma (mock)
+                "consulta" -> record != null  // Consulta sin registro es listado filtrado (mock)
+                "baja", "modificacion" -> true  // Estas siempre necesitan confirmación (seguridad)
+                else -> true  // Fallback seguro para acciones desconocidas
+            }
+        }
         "generica" -> {
             // Heurística: detectar acciones de listado que son autosuficientes
             val text = displayText.trim().lowercase()
