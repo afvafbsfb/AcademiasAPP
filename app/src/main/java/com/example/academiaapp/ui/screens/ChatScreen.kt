@@ -1001,7 +1001,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
         )
     }
 
-    // ✅ PASO 2: Diálogo de confirmación para baja de alumno
+    // ✅ PASO 2: Diálogo de confirmación para baja de alumno (ID=1: Juan García García)
     if (showBajaAlumnoDialog) {
         AlertDialog(
             onDismissRequest = { showBajaAlumnoDialog = false },
@@ -1010,9 +1010,9 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                 Column {
                     Text("¿Estás seguro de que deseas dar de baja al siguiente alumno?")
                     Spacer(Modifier.height(12.dp))
-                    Text("Nombre: Pedro Fernández Pérez")
-                    Text("Email: pedro.fernandez@email.com")
-                    Text("DNI: 12345678A")
+                    Text("Nombre: Juan García García")
+                    Text("Email: juan.garcia1@example.com")
+                    Text("DNI: 10000001A")
                     Text("ID: 1")
                 }
             },
@@ -1020,14 +1020,14 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                 TextButton(
                     onClick = {
                         showBajaAlumnoDialog = false
-                        // ✅ PASO 4: Enviar mensaje con contexto simulando la baja
+                        // ✅ PASO 4: Enviar mensaje con contexto simulando la baja del alumno ID=1
                         vm.sendMessageWithContext(
-                            "Baja del alumno: Nombre: Pedro Fernández Pérez, DNI: 12345678A, Email: pedro.fernandez@email.com, Teléfono: 654321987, Fecha Nacimiento: 15/03/1998, Dirección: Calle Secundaria 456, ID: 1",
+                            "Baja del alumno: Nombre: Juan García García, DNI: 10000001A, Email: juan.garcia1@example.com, Teléfono: 6100000001, Fecha Nacimiento: 01/01/1986, Dirección: Calle Ejemplo 1, Madrid, ID: 1",
                             mapOf(
                                 "screen" to "alumnos",
                                 "action" to "baja_alumno",
                                 "alumno_id" to 1,
-                                "alumno_nombre" to "Pedro Fernández Pérez"
+                                "alumno_nombre" to "Juan García García"
                             )
                         )
                     }

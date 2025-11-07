@@ -157,12 +157,15 @@ object MockData {
             val deudasPosibles = listOf(30, 60, 100, 120, 90, 150, 180)
             val deudaEuros = if (tienePendiente) deudasPosibles[i % deudasPosibles.size] else 0
             
+            // ✅ Para el alumno ID=1, usar letra fija 'A' en DNI (coincide con el mock de baja)
+            val letraDNI = if (i == 1) "A" else "${('A'..'Z').random()}"
+            
             _alumnos.add(
                 mapOf(
                     "id" to i,
                     "nombre" to "$nombre $apellido1 $apellido2",
                     "email" to "${nombre.lowercase()}.${apellido1.lowercase()}$i@example.com",
-                    "dni" to "${10000000 + i}${('A'..'Z').random()}",
+                    "dni" to "${10000000 + i}$letraDNI",
                     "telefono" to "6${String.format("%08d", 100000000 + i)}",
                     "fecha_nacimiento" to "$añoNacimiento-${String.format("%02d", (i % 12) + 1)}-${String.format("%02d", (i % 28) + 1)}",
                     "direccion" to "Calle Ejemplo $i, Madrid",

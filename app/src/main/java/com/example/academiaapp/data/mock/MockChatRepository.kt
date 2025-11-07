@@ -112,15 +112,15 @@ class MockChatRepository(
         page: Int
     ): Envelope<GenericItem> {
         return when {
-            // Volver a lista después de alta (incluye el nuevo alumno)
+            // Volver a lista después de alta
             message.contains("volver", ignoreCase = true) && message.contains("lista", ignoreCase = true) ->
-                MockDataGenerator.generateAlumnosListResponse(page = 1, includeNewAlumno = true)
+                MockDataGenerator.generateAlumnosListResponse(page = 1)
 
             // Lista de alumnos (inicial o paginación)
             message.contains("muéstrame", ignoreCase = true) ||
+            message.contains("listar alumnos", ignoreCase = true) ||
             message.contains("página", ignoreCase = true) -> {
-                val includeNew = context?.get("after_alta") == true
-                MockDataGenerator.generateAlumnosListResponse(page, includeNewAlumno = includeNew)
+                MockDataGenerator.generateAlumnosListResponse(page)
             }
 
             // Envío de formulario de alta: si se recibe la acción submit en el contexto
@@ -151,7 +151,8 @@ class MockChatRepository(
             }
 
             // ✅ PASO 5: Baja de alumno - procesar confirmación y eliminar de memoria
-            message.contains("baja del alumno", ignoreCase = true) && (context?.get("action") == "baja_alumno") -> {
+            // IMPORTANTE: Esta condición debe ir ANTES que las más genéricas
+            (context?.get("action") == "baja_alumno") -> {
                 val alumnoId = (context["alumno_id"] as? Number)?.toInt() ?: 0
                 val alumnoNombre = context["alumno_nombre"] as? String ?: "Alumno"
                 

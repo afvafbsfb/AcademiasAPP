@@ -15,11 +15,10 @@ object MockDataGenerator {
     /**
      * Genera respuesta de lista de alumnos paginada
      * @param page Número de página (1-indexed)
-     * @param includeNewAlumno Si true, cuenta el nuevo alumno en el total (55 en vez de 54)
      * @return Envelope con lista de alumnos y sugerencias de paginación
      */
-    fun generateAlumnosListResponse(page: Int = 1, includeNewAlumno: Boolean = false): Envelope<GenericItem> {
-        val totalAlumnos = if (includeNewAlumno) 55 else 54
+    fun generateAlumnosListResponse(page: Int = 1): Envelope<GenericItem> {
+        val totalAlumnos = MockData.getAlumnos().size
         val (alumnos, returned, hasMore) = MockData.getAlumnosPagina(page, size = 50)
         
         // Generar sugerencias de paginación
