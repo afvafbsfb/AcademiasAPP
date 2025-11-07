@@ -737,10 +737,24 @@ object MockDataGenerator {
         
         val clasesPorDia = diasSemana.map { dia ->
             val horarios = MockData.getHorariosProfesor(dia)
+            
+            // Enriquecer horarios con nombres de curso y aula
+            val horariosEnriquecidos = horarios.map { horario ->
+                val cursoId = horario["curso_id"] as Int
+                val aulaId = horario["aula_id"] as Int
+                val curso = MockData.getCurso(cursoId)
+                val aula = MockData.getAula(aulaId)
+                
+                horario.toMutableMap().apply {
+                    put("curso", curso?.get("nombre") ?: "Curso $cursoId")
+                    put("aula", aula?.get("nombre") ?: "Aula $aulaId")
+                }
+            }
+            
             mapOf(
                 "dia" to dia,
-                "cantidad" to horarios.size,
-                "horarios" to horarios
+                "cantidad" to horariosEnriquecidos.size,
+                "horarios" to horariosEnriquecidos
             )
         }
         
@@ -808,10 +822,24 @@ object MockDataGenerator {
         
         val clasesPorDia = diasSemana.map { dia ->
             val horarios = MockData.getHorariosProfesor(dia)
+            
+            // Enriquecer horarios con nombres de curso y aula
+            val horariosEnriquecidos = horarios.map { horario ->
+                val cursoId = horario["curso_id"] as Int
+                val aulaId = horario["aula_id"] as Int
+                val curso = MockData.getCurso(cursoId)
+                val aula = MockData.getAula(aulaId)
+                
+                horario.toMutableMap().apply {
+                    put("curso", curso?.get("nombre") ?: "Curso $cursoId")
+                    put("aula", aula?.get("nombre") ?: "Aula $aulaId")
+                }
+            }
+            
             mapOf(
                 "dia" to dia,
-                "cantidad" to horarios.size,
-                "horarios" to horarios
+                "cantidad" to horariosEnriquecidos.size,
+                "horarios" to horariosEnriquecidos
             )
         }
         
