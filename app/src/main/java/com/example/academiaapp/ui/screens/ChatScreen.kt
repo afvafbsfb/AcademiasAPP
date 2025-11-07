@@ -247,6 +247,9 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
     var clarificationSuggestion by remember { mutableStateOf<com.example.academiaapp.data.remote.dto.Suggestion?>(null) }
     var clarificationMessageIndex by remember { mutableStateOf(-1) }
 
+    // ✅ PASO 2: Estado para el diálogo de baja de alumno
+    var showBajaAlumnoDialog by remember { mutableStateOf(false) }
+
     // Context para Toast
     val context = LocalContext.current
 
@@ -743,6 +746,9 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                                         // Resetear contador para próximas veces
                                                                                         modificacionAlumnoClickCount = 0
                                                                                     }
+                                                                                } else if (suggestion.displayText.equals("Baja de alumno", ignoreCase = true)) {
+                                                                                    // ✅ PASO 1-2: Detectar "Baja de alumno" y mostrar diálogo de confirmación
+                                                                                    showBajaAlumnoDialog = true
                                                                                 } else {
                                                                                     // ✅ Lógica normal para otras sugerencias
                                                                                     if (suggestion.needsClarification()) {
@@ -991,6 +997,39 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                 showClarificationDialog = false
                 clarificationSuggestion = null
                 clarificationMessageIndex = -1
+            }
+        )
+    }
+
+    // ✅ PASO 2: Diálogo de confirmación para baja de alumno
+    if (showBajaAlumnoDialog) {
+        AlertDialog(
+            onDismissRequest = { showBajaAlumnoDialog = false },
+            title = { Text("Confirmar baja de alumno") },
+            text = {
+                Column {
+                    Text("¿Estás seguro de que deseas dar de baja al siguiente alumno?")
+                    Spacer(Modifier.height(12.dp))
+                    Text("Nombre: Pedro Fernández Pérez")
+                    Text("Email: pedro.fernandez@email.com")
+                    Text("DNI: 12345678A")
+                    Text("ID: 1")
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showBajaAlumnoDialog = false
+                        // TODO Paso 4: Enviar mensaje con contexto
+                    }
+                ) {
+                    Text("Confirmar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBajaAlumnoDialog = false }) {
+                    Text("Cancelar")
+                }
             }
         )
     }
