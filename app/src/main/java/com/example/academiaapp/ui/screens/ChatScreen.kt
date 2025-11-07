@@ -61,7 +61,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
@@ -89,7 +88,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -109,6 +107,48 @@ import com.example.academiaapp.ui.utils.MenuBuilder
 import com.example.academiaapp.data.remote.dto.needsClarification
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+// ✅ Función auxiliar global para formatear valores (eliminar decimales innecesarios)
+private fun formatValue(value: Any?): String {
+    return when (value) {
+        null -> "(vacío)"
+        is Number -> {
+            val doubleValue = value.toDouble()
+            // Si el número es entero (no tiene decimales), mostrarlo sin .0
+            if (doubleValue % 1.0 == 0.0) {
+                doubleValue.toLong().toString()
+            } else {
+                doubleValue.toString()
+            }
+        }
+        is Map<*, *> -> {
+            // NUEVO: Formatear objetos anidados (academia, curso, etc.)
+            @Suppress("UNCHECKED_CAST")
+            val map = value as? Map<String, Any?>
+            when {
+                map == null -> "(vacío)"
+                map.containsKey("nombre") -> {
+                    // Mostrar: "Academia Central (ID: 2)"
+                    val nombre = map["nombre"] ?: "Sin nombre"
+                    val id = map["id"]
+                    // ✅ Formatear el ID para quitar .0 si es entero
+                    val idFormatted = if (id is Number) {
+                        val doubleId = id.toDouble()
+                        if (doubleId % 1.0 == 0.0) doubleId.toLong().toString() else doubleId.toString()
+                    } else {
+                        id?.toString() ?: ""
+                    }
+                    if (id != null) "$nombre (ID: $idFormatted)" else nombre.toString()
+                }
+                else -> {
+                    // Fallback: mostrar pares clave-valor
+                    map.entries.joinToString(", ") { "${it.key}: ${it.value}" }
+                }
+            }
+        }
+        else -> value.toString()
+    }
+}
 
 // ✅ NUEVO: Composable para los puntos suspensivos animados estilo WhatsApp con efecto de ola
 @Composable
@@ -788,46 +828,6 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
         }
 
         if (detailsItem != null) {
-            // ✅ Función auxiliar para formatear valores (eliminar decimales innecesarios)
-            fun formatValue(value: Any?): String {
-                return when (value) {
-                    null -> "(vacío)"
-                    is Number -> {
-                        val doubleValue = value.toDouble()
-                        // Si el número es entero (no tiene decimales), mostrarlo sin .0
-                        if (doubleValue % 1.0 == 0.0) {
-                            doubleValue.toLong().toString()
-                        } else {
-                            doubleValue.toString()
-                        }
-                    }
-                    is Map<*, *> -> {
-                        // NUEVO: Formatear objetos anidados (academia, curso, etc.)
-                        val map = value as? Map<String, Any?>
-                        when {
-                            map == null -> "(vacío)"
-                            map.containsKey("nombre") -> {
-                                // Mostrar: "Academia Central (ID: 2)"
-                                val nombre = map["nombre"] ?: "Sin nombre"
-                                val id = map["id"]
-                                // ✅ Formatear el ID para quitar .0 si es entero
-                                val idFormatted = if (id is Number) {
-                                    val doubleId = id.toDouble()
-                                    if (doubleId % 1.0 == 0.0) doubleId.toLong().toString() else doubleId.toString()
-                                } else {
-                                    id?.toString() ?: ""
-                                }
-                                if (id != null) "$nombre (ID: $idFormatted)" else nombre.toString()
-                            }
-                            else -> {
-                                // Fallback: mostrar pares clave-valor
-                                map.entries.joinToString(", ") { "${it.key}: ${it.value}" }
-                            }
-                        }
-                    }
-                    else -> value.toString()
-                }
-            }
 
             ModalBottomSheet(onDismissRequest = { detailsItem = null }) {
                 Column(
