@@ -78,6 +78,30 @@ object MockDataGenerator {
         
         suggestions.add(
             Suggestion(
+                id = "sug_modificacion_alumno",
+                displayText = "Modificación de alumno",
+                type = "Registro",
+                recordAction = "Modificacion",
+                record = null,
+                pagination = null,
+                contextToken = null
+            )
+        )
+
+        suggestions.add(
+            Suggestion(
+                id = "sug_baja_alumno",
+                displayText = "Baja de alumno",
+                type = "Registro",
+                recordAction = "Baja",
+                record = null,
+                pagination = null,
+                contextToken = null
+            )
+        )
+
+        suggestions.add(
+            Suggestion(
                 id = "sug_pagos_pendientes",
                 displayText = "Alumnos con pagos pendientes",
                 type = "Registro",
