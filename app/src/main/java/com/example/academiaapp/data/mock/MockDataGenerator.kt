@@ -545,7 +545,7 @@ object MockDataGenerator {
         diaSemana: String,
         fecha: String,
         fechaLegible: String,
-        nombreProfesor: String = "María García"
+        nombreProfesor: String = "Profesor"  // ✅ Default genérico, se sobrescribe con usuario logueado
     ): Envelope<GenericItem> {
         val horarios = MockData.getHorariosProfesor(diaSemana)
         
@@ -726,12 +726,12 @@ object MockDataGenerator {
     /**
      * Genera respuesta semanal con todas las clases de la semana
      * @param fechaInicio Fecha de inicio de semana (formato "YYYY-MM-DD")
-     * @param nombreProfesor Nombre del profesor logueado
+     * @param nombreProfesor Nombre del profesor logueado (obtenido de SessionStore en runtime)
      * @return Envelope con calendario semanal
      */
     fun generateMisClasesSemanalesResponse(
         fechaInicio: String,
-        nombreProfesor: String = "María García"
+        nombreProfesor: String = "Profesor"  // ✅ Default genérico, se sobrescribe con usuario logueado
     ): Envelope<GenericItem> {
         val diasSemana = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes")
         
@@ -811,12 +811,12 @@ object MockDataGenerator {
     /**
      * Genera respuesta semanal con todas las clases de la PRÓXIMA semana
      * @param fechaInicio Fecha de referencia (formato "YYYY-MM-DD")
-     * @param nombreProfesor Nombre del profesor logueado
+     * @param nombreProfesor Nombre del profesor logueado (obtenido de SessionStore en runtime)
      * @return Envelope con calendario de la próxima semana
      */
     fun generateMisClasesProximaSemanaResponse(
         fechaInicio: String,
-        nombreProfesor: String = "María García"
+        nombreProfesor: String = "Profesor"  // ✅ Default genérico, se sobrescribe con usuario logueado
     ): Envelope<GenericItem> {
         val diasSemana = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes")
         

@@ -10,6 +10,7 @@ object MockData {
     // CURSOS - 8 cursos compartidos
     // ===============================================
     
+    // ✅ COHERENCIA: 54 alumnos distribuidos en 8 cursos (7+7+7+7+7+7+6+6=54)
     private val _cursos = mutableListOf(
         mapOf(
             "id" to 1,
@@ -19,7 +20,7 @@ object MockData {
             "fecha_fin" to "2025-06-30",
             "acepta_nuevos_alumnos" to true,
             "capacidad_maxima" to 20,
-            "alumnos_inscritos" to 18,
+            "alumnos_inscritos" to 7,  // ✅ Ajustado: alumnos 1,9,17,25,33,41,49
             "tipo_alumno" to "Adultos",
             "estado" to "Activo"
         ),
@@ -31,7 +32,7 @@ object MockData {
             "fecha_fin" to "2025-06-30",
             "acepta_nuevos_alumnos" to true,
             "capacidad_maxima" to 15,
-            "alumnos_inscritos" to 12,
+            "alumnos_inscritos" to 7,  // ✅ Ajustado: alumnos 2,10,18,26,34,42,50
             "tipo_alumno" to "Juvenil",
             "estado" to "Activo"
         ),
@@ -43,7 +44,7 @@ object MockData {
             "fecha_fin" to "2025-05-31",
             "acepta_nuevos_alumnos" to true,
             "capacidad_maxima" to 12,
-            "alumnos_inscritos" to 8,
+            "alumnos_inscritos" to 7,  // ✅ Ajustado: alumnos 3,11,19,27,35,43,51
             "tipo_alumno" to "Adultos",
             "estado" to "Activo"
         ),
@@ -55,7 +56,7 @@ object MockData {
             "fecha_fin" to "2025-06-20",
             "acepta_nuevos_alumnos" to true,
             "capacidad_maxima" to 20,
-            "alumnos_inscritos" to 18,
+            "alumnos_inscritos" to 7,  // ✅ Ajustado: alumnos 4,12,20,28,36,44,52
             "tipo_alumno" to "Juvenil",
             "estado" to "Activo"
         ),
@@ -67,7 +68,7 @@ object MockData {
             "fecha_fin" to "2025-06-20",
             "acepta_nuevos_alumnos" to true,
             "capacidad_maxima" to 18,
-            "alumnos_inscritos" to 15,
+            "alumnos_inscritos" to 7,  // ✅ Ajustado: alumnos 5,13,21,29,37,45,53
             "tipo_alumno" to "Juvenil",
             "estado" to "Activo"
         ),
@@ -79,7 +80,7 @@ object MockData {
             "fecha_fin" to "2025-06-15",
             "acepta_nuevos_alumnos" to true,
             "capacidad_maxima" to 12,
-            "alumnos_inscritos" to 10,
+            "alumnos_inscritos" to 7,  // ✅ Ajustado: alumnos 6,14,22,30,38,46,54
             "tipo_alumno" to "Infantil",
             "estado" to "Activo"
         ),
@@ -89,9 +90,9 @@ object MockData {
             "anio_academico" to "2024-2025",
             "fecha_inicio" to "2024-09-05",
             "fecha_fin" to "2025-05-30",
-            "acepta_nuevos_alumnos" to false,
+            "acepta_nuevos_alumnos" to true,  // ✅ Cambiado a true (tiene espacio)
             "capacidad_maxima" to 20,
-            "alumnos_inscritos" to 20,
+            "alumnos_inscritos" to 6,  // ✅ Ajustado: alumnos 7,15,23,31,39,47
             "tipo_alumno" to "Adultos",
             "estado" to "Activo"
         ),
@@ -103,7 +104,7 @@ object MockData {
             "fecha_fin" to "2025-06-30",
             "acepta_nuevos_alumnos" to true,
             "capacidad_maxima" to 15,
-            "alumnos_inscritos" to 5,
+            "alumnos_inscritos" to 6,  // ✅ Ajustado: alumnos 8,16,24,32,40,48
             "tipo_alumno" to "Adultos",
             "estado" to "Activo"
         )
@@ -427,18 +428,20 @@ object MockData {
     
     // ===============================================
     // SESIONES - Clases ya realizadas
-    // curso_profesor_id = 1 (María García con sus cursos)
+    // ✅ IMPORTANTE: curso_profesor_id = 1 representa al profesor LOGUEADO
+    // El nombre del profesor se obtiene de SessionStore en runtime
     // ===============================================
     
     private val _sesiones: MutableList<Map<String, Any?>> = mutableListOf(
         // ========== AYER (22 Oct - Martes) - TODAS COMPLETADAS ==========
         
-        // 1. Martes 08:00-10:00 Matemáticas (horario_id=3)
+        // 1. Martes 08:00-10:00 Matemáticas 1º ESO (horario_id=3)
+        // ✅ Curso 4 tiene 7 alumnos inscritos (IDs: 4,12,20,28,36,44,52)
         mapOf(
             "id" to 1,
             "horario_curso_id" to 3,
             "aula_id" to 3,
-            "curso_profesor_id" to 1,
+            "curso_profesor_id" to 1,  // ✅ Profesor logueado
             "timestamp_alta" to "2025-10-22 08:02:00",
             "hora_inicio" to "08:00",
             "hora_fin" to "10:00",
@@ -446,16 +449,17 @@ object MockData {
             "notas_sesion" to "Clase sobre ecuaciones de segundo grado. Buen aprovechamiento general.",
             "notas_materia" to "Completado tema 3.2",
             "lista_pasada" to true,
-            "alumnos_asistieron" to 23,
-            "total_alumnos" to 25
+            "alumnos_asistieron" to 6,  // ✅ AJUSTADO: 6 de 7 alumnos
+            "total_alumnos" to 7        // ✅ AJUSTADO: total real del curso
         ),
         
-        // 2. Martes 15:30-17:30 Física (horario_id=4)
+        // 2. Martes 15:30-17:30 Física 2º ESO (horario_id=4)
+        // ✅ Curso 5 tiene 7 alumnos inscritos (IDs: 5,13,21,29,37,45,53)
         mapOf(
             "id" to 2,
             "horario_curso_id" to 4,
             "aula_id" to 5,
-            "curso_profesor_id" to 1,
+            "curso_profesor_id" to 1,  // ✅ Profesor logueado
             "timestamp_alta" to "2025-10-22 15:32:00",
             "hora_inicio" to "15:30",
             "hora_fin" to "17:30",
@@ -463,18 +467,19 @@ object MockData {
             "notas_sesion" to "Prácticas de laboratorio: ley de Ohm.",
             "notas_materia" to "Tema 5 finalizado",
             "lista_pasada" to true,
-            "alumnos_asistieron" to 18,
-            "total_alumnos" to 20
+            "alumnos_asistieron" to 7,  // ✅ AJUSTADO: 7 de 7 alumnos (todos asistieron)
+            "total_alumnos" to 7        // ✅ AJUSTADO: total real del curso
         ),
         
         // ========== HOY (23 Oct - Miércoles) ==========
         
-        // 3. Miércoles 08:00-10:00 Matemáticas (horario_id=5) - COMPLETADA
+        // 3. Miércoles 08:00-10:00 Matemáticas 1º ESO (horario_id=5) - COMPLETADA
+        // ✅ Curso 4 tiene 7 alumnos inscritos
         mapOf(
             "id" to 3,
             "horario_curso_id" to 5,
             "aula_id" to 3,
-            "curso_profesor_id" to 1,
+            "curso_profesor_id" to 1,  // ✅ Profesor logueado
             "timestamp_alta" to "2025-10-23 08:01:00",
             "hora_inicio" to "08:00",
             "hora_fin" to "10:00",
@@ -482,16 +487,17 @@ object MockData {
             "notas_sesion" to "Repaso general antes del examen.",
             "notas_materia" to "Tema 3 revisado",
             "lista_pasada" to true,
-            "alumnos_asistieron" to 24,
-            "total_alumnos" to 25
+            "alumnos_asistieron" to 7,  // ✅ AJUSTADO: 7 de 7 alumnos (todos asistieron)
+            "total_alumnos" to 7        // ✅ AJUSTADO: total real del curso
         ),
         
-        // 4. Miércoles 11:00-13:00 Física (horario_id=6) - EN CURSO
+        // 4. Miércoles 11:00-13:00 Física 2º ESO (horario_id=6) - EN CURSO
+        // ✅ Curso 5 tiene 7 alumnos inscritos
         mapOf(
             "id" to 4,
             "horario_curso_id" to 6,
             "aula_id" to 5,
-            "curso_profesor_id" to 1,
+            "curso_profesor_id" to 1,  // ✅ Profesor logueado
             "timestamp_alta" to "2025-10-23 11:03:00",
             "hora_inicio" to "11:00",
             "hora_fin" to "13:00",
@@ -499,8 +505,8 @@ object MockData {
             "notas_sesion" to null,
             "notas_materia" to null,
             "lista_pasada" to true,
-            "alumnos_asistieron" to 19,
-            "total_alumnos" to 20
+            "alumnos_asistieron" to 6,  // ✅ AJUSTADO: 6 de 7 alumnos (1 ausente)
+            "total_alumnos" to 7        // ✅ AJUSTADO: total real del curso
         )
         
         // 5. Miércoles 21:00-23:00 Matemáticas (horario_id=7) - SIN INICIAR (no tiene sesión)
@@ -547,7 +553,7 @@ object MockData {
             "id" to newId,
             "horario_curso_id" to horarioCursoId,
             "aula_id" to aulaId,
-            "curso_profesor_id" to 1,  // María García
+            "curso_profesor_id" to 1,  // ✅ Profesor logueado
             "timestamp_alta" to timestampAlta,
             "hora_inicio" to horaInicio,
             "hora_fin" to horaFin,
@@ -655,8 +661,16 @@ object MockData {
                                       horaInicio.isBefore(horaActual.plusMinutes(15)) && 
                                       horaFin.isAfter(horaActual)
                     
-                    val totalAlumnos = kotlin.random.Random.nextInt(18, 26)
-                    val asistieron = kotlin.random.Random.nextInt((totalAlumnos * 0.85).toInt(), totalAlumnos + 1)
+                    // ✅ COHERENCIA: Obtener el número REAL de alumnos del curso
+                    val cursoId = horario["curso_id"] as Int
+                    val curso = getCurso(cursoId)
+                    val totalAlumnos = (curso?.get("alumnos_inscritos") as? Int) ?: 7
+                    
+                    // Asistencia: entre 70% y 100% de los alumnos inscritos
+                    val asistieron = kotlin.random.Random.nextInt(
+                        (totalAlumnos * 0.7).toInt().coerceAtLeast(totalAlumnos - 2), 
+                        totalAlumnos + 1
+                    )
                     
                     // Timestamp de inicio: fecha + hora_inicio con variación ±5 minutos
                     val variacionMinutos = kotlin.random.Random.nextInt(-5, 6)
@@ -678,12 +692,12 @@ object MockData {
                         "id" to sesionId++,
                         "horario_curso_id" to horarioId,
                         "aula_id" to (horario["aula_id"] as Int),
-                        "curso_profesor_id" to 1,
+                        "curso_profesor_id" to 1,  // ✅ Profesor logueado
                         "timestamp_alta" to timestampAlta,
                         "timestamp_baja" to timestampBaja,
                         "lista_pasada" to true,  // Siempre pasada en mocks
                         "alumnos_asistieron" to asistieron,
-                        "total_alumnos" to totalAlumnos
+                        "total_alumnos" to totalAlumnos  // ✅ COHERENTE con alumnos_inscritos del curso
                     ))
                 }
             }

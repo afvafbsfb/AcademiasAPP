@@ -1016,6 +1016,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                     Text("Nombre: Juan García García")
                     Text("Email: juan.garcia1@example.com")
                     Text("DNI: 10000001A")
+                    Text("Curso: Inglés B1 - Mañanas")
                     Text("ID: 1")
                 }
             },
