@@ -217,6 +217,14 @@ object MockData {
             if (!containsKey("deuda_euros")) {
                 put("deuda_euros", 0)
             }
+            // ✅ CORREGIDO: Si tiene curso_id, buscar el curso y añadir el campo "curso" con el nombre
+            val cursoId = (get("curso_id") as? Number)?.toInt()
+            if (cursoId != null && !containsKey("curso")) {
+                val curso = getCurso(cursoId)
+                if (curso != null) {
+                    put("curso", curso["nombre"])
+                }
+            }
         }
         // Insertar al PRINCIPIO para que aparezca primero en las búsquedas
         _alumnos.add(0, alumnoConId)
@@ -649,4 +657,3 @@ object MockData {
         }
     }
 }
-

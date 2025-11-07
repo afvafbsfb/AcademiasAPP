@@ -88,6 +88,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -838,6 +839,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                 Column(
                     Modifier
                         .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
                         .padding(16.dp)
                 ) {
                     // Título del modal
