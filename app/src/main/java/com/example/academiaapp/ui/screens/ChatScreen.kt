@@ -860,7 +860,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                     val itemMap = detailsItem!!
                     itemMap.forEach { (k, v) ->
                         // ✅ NUEVO: Skip FKs redundantes cuando existe el objeto expandido
-                        val isRedundantFK = k.endsWith("_id") && 
+                        val isRedundantFK = k.endsWith("_id") &&
                                             itemMap.containsKey(k.removeSuffix("_id"))
 
                         if (!isRedundantFK) {
@@ -871,7 +871,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                             } else {
                                 formattedValue
                             }
-                        
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -920,7 +920,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
             }
         }
     }
-    
+
     // ✅ NUEVO: Diálogo de aclaración para sugerencias que necesitan más información
     if (showClarificationDialog && clarificationSuggestion != null) {
         SuggestionClarificationDialog(
@@ -978,24 +978,24 @@ private fun AlumnoAltaForm(
     val nombreFocusRequester = remember { FocusRequester() }
     val telefonoFocusRequester = remember { FocusRequester() }
     val fechaFocusRequester = remember { FocusRequester() }
-    
+
     // Función de validación
     fun validateAndShowDialog() {
         var ok = true
         var firstErrorField: FocusRequester? = null
-        
-        if (nombre.isBlank()) { 
+
+        if (nombre.isBlank()) {
             nombreError = true
             ok = false
             if (firstErrorField == null) firstErrorField = nombreFocusRequester
         }
-        if (telefono.isBlank()) { 
+        if (telefono.isBlank()) {
             telefonoError = true
             ok = false
             if (firstErrorField == null) firstErrorField = telefonoFocusRequester
         }
         val fechaRegex = "^\\d{2}/\\d{2}/\\d{4}$".toRegex()
-        if (!fechaRegex.matches(fecha)) { 
+        if (!fechaRegex.matches(fecha)) {
             fechaError = true
             ok = false
             if (firstErrorField == null) firstErrorField = fechaFocusRequester
@@ -1005,7 +1005,7 @@ private fun AlumnoAltaForm(
             firstErrorField?.requestFocus()
             return
         }
-        
+
         // Si validó bien, mostrar diálogo
         showConfirmDialog = true
     }
@@ -1089,7 +1089,7 @@ private fun AlumnoAltaForm(
                         .menuAnchor(),
                     colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                 )
-                
+
                 ExposedDropdownMenu(
                     expanded = expandedCursos,
                     onDismissRequest = { expandedCursos = false }
@@ -1109,9 +1109,9 @@ private fun AlumnoAltaForm(
                 }
             }
         }
-        
+
         Spacer(Modifier.height(12.dp))
-        
+
         // Botones estilizados como sugerencias
         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             // Botón Alta
@@ -1127,7 +1127,7 @@ private fun AlumnoAltaForm(
                     shape = RoundedCornerShape(20.dp)
                 )
             }
-            
+
             // Botón Cancelar
             Row(modifier = Modifier.fillMaxWidth()) {
                 SuggestionChip(
@@ -1143,7 +1143,7 @@ private fun AlumnoAltaForm(
             }
         }
     }
-    
+
     // Diálogo de confirmación
     if (showConfirmDialog) {
         AlertDialog(
@@ -1179,25 +1179,25 @@ private fun AlumnoAltaForm(
 
 @Composable
 private fun CompactList(
-    items: List<Map<String, Any?>>, 
+    items: List<Map<String, Any?>>,
     summaryFields: List<String>,
     onOpenDetails: (Map<String, Any?>) -> Unit
 ) {
     // ✅ NUEVO: Función para acceder a campos anidados con dot notation
     fun getNestedValue(item: Map<String, Any?>, path: String): Any? {
         if (!path.contains(".")) return item[path]
-        
+
         val parts = path.split(".")
         var current: Any? = item
-        
+
         for (part in parts) {
             current = (current as? Map<*, *>)?.get(part)
             if (current == null) break
         }
-        
+
         return current
     }
-    
+
     // ✅ Función auxiliar para formatear valores (eliminar decimales innecesarios)
     fun formatValue(value: Any?): String {
         return when (value) {
@@ -1218,6 +1218,9 @@ private fun CompactList(
     // Estado para controlar cuántos items mostrar (por defecto 5)
     var itemsToShow by remember { mutableStateOf(5) }
     val allItemsShown = itemsToShow >= items.size
+
+    // ✅ NUEVO: Estado para el item seleccionado
+    var selectedItemId by remember { mutableStateOf<Int?>(null) }
 
     // Estado para el scroll de la LazyColumn de la tabla
     val tableListState = rememberLazyListState()
@@ -1270,14 +1273,14 @@ private fun CompactList(
                     val value = firstItem[key]
                     value !is Map<*, *> && !key.endsWith("_id", ignoreCase = true)
                 }
-                
-                fun pick(vararg candidates: String): String? = 
+
+                fun pick(vararg candidates: String): String? =
                     candidates.firstOrNull { c -> simpleKeys.any { it.equals(c, ignoreCase = true) } }
-                
+
                 val primary = pick("descripcion", "nombre", "title", "name", "full_name", "displayName", "email")
-                val secondary = pick("precio_base", "precio", "importe", "rol", "role", "estado", "status", 
+                val secondary = pick("precio_base", "precio", "importe", "rol", "role", "estado", "status",
                                     "ciudad", "city", "telefono", "phone", "codigo")
-                
+
                 primary to secondary
             }
 
@@ -1299,7 +1302,7 @@ private fun CompactList(
                         word.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
                     }
                 }
-                
+
                 Text(
                     text = formatColumnName(primaryKey),
                     modifier = Modifier.weight(0.6f),
@@ -1341,15 +1344,15 @@ private fun CompactList(
             itemsIndexed(items.take(itemsToShow)) { index, item ->
                 val keys = item.keys.toList()
                 fun findKeyIgnoreCase(target: String): String? = keys.firstOrNull { it.equals(target, ignoreCase = true) }
-                
+
                 // ✅ NUEVO: valueOf con soporte para dot notation
                 fun valueOf(path: String?): String? {
                     if (path == null) return null
-                    
+
                     // Usar getNestedValue para soportar "academia.nombre"
                     val rawValue = getNestedValue(item, path)
                     val formatted = formatValue(rawValue)
-                    
+
                     // Si el campo es de tipo deuda/euros, agregar símbolo €
                     return if (path.contains("deuda", ignoreCase = true) || path.contains("euros", ignoreCase = true)) {
                         if (formatted.isNotBlank()) "${formatted}€" else formatted
@@ -1370,27 +1373,39 @@ private fun CompactList(
                         val value = item[key]
                         value !is Map<*, *> && !key.endsWith("_id", ignoreCase = true)
                     }
-                    
-                    fun pick(vararg candidates: String): String? = 
+
+                    fun pick(vararg candidates: String): String? =
                         candidates.firstOrNull { c -> simpleKeys.any { it.equals(c, ignoreCase = true) } }
-                    
+
                     val primary = pick("descripcion", "nombre", "title", "name", "full_name", "displayName", "email")
-                    val secondary = pick("precio_base", "precio", "importe", "rol", "role", "estado", "status", 
+                    val secondary = pick("precio_base", "precio", "importe", "rol", "role", "estado", "status",
                                         "ciudad", "city", "telefono", "phone", "codigo")
-                    
+
                     primary to secondary
                 }
 
                 val primary = valueOf(primaryKey) ?: item.values.mapNotNull { formatValue(it).takeIf { it.isNotBlank() } }.firstOrNull() ?: "(sin datos)"
                 val secondary = valueOf(secondaryKey) ?: item.values.mapNotNull { formatValue(it).takeIf { it.isNotBlank() } }.distinct().drop(1).firstOrNull()
 
-                // Colores alternos más profesionales: gris muy claro para pares, blanco para impares
-                val rowColor = if (index % 2 == 0) Color(0xFFF5F5F5) else Color(0xFFFFFFFF)
+                // ✅ PASO 2: Obtener ID del item y determinar si está seleccionado
+                val itemId = (item["id"] as? Number)?.toInt()
+                val isSelected = itemId != null && itemId == selectedItemId
+
+                // ✅ PASO 3: Color de fila según estado de selección
+                val rowColor = when {
+                    isSelected -> Color(0xFFBBDEFB) // Azul claro cuando está seleccionado
+                    index % 2 == 0 -> Color(0xFFF5F5F5) // Gris muy claro para pares
+                    else -> Color(0xFFFFFFFF) // Blanco para impares
+                }
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(rowColor)
+                        .clickable {
+                            // Toggle selección: si ya está seleccionado, deseleccionar
+                            selectedItemId = if (isSelected) null else itemId
+                        }
                         .padding(vertical = 10.dp, horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -1507,13 +1522,13 @@ fun SesionesDelDiaCards(
             val descripcionEstado = clase["descripcion_estado"] as? String ?: ""
             @Suppress("UNCHECKED_CAST")
             val acciones = (clase["acciones_disponibles"] as? List<String>) ?: emptyList()
-            
+
             // Formato de asistencia según estado
             val textoAlumnos = when (estado) {
                 "completada", "en_curso" -> "${alumnosAsistieron.toInt()}/${alumnosTotal.toInt()} alumnos"
                 else -> "${alumnosTotal.toInt()} alumnos"  // Programada: solo capacidad
             }
-            
+
             // Card con borde y padding
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -1546,28 +1561,28 @@ fun SesionesDelDiaCards(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    
+
                     // Línea 2: Curso
                     Text(
                         text = curso,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )
-                    
+
                     // Línea 3: Descripción estado
                     Text(
                         text = descripcionEstado,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
+
                     // Línea 4: Alumnos (formato según estado)
                     Text(
                         text = textoAlumnos,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
+
                     // Línea 5: Acciones
                     if (acciones.isNotEmpty()) {
                         HorizontalDivider(
