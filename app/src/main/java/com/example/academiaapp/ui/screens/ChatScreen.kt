@@ -1020,7 +1020,16 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                 TextButton(
                     onClick = {
                         showBajaAlumnoDialog = false
-                        // TODO Paso 4: Enviar mensaje con contexto
+                        // ✅ PASO 4: Enviar mensaje con contexto simulando la baja
+                        vm.sendMessageWithContext(
+                            "Baja del alumno: Nombre: Pedro Fernández Pérez, DNI: 12345678A, Email: pedro.fernandez@email.com, Teléfono: 654321987, Fecha Nacimiento: 15/03/1998, Dirección: Calle Secundaria 456, ID: 1",
+                            mapOf(
+                                "screen" to "alumnos",
+                                "action" to "baja_alumno",
+                                "alumno_id" to 1,
+                                "alumno_nombre" to "Pedro Fernández Pérez"
+                            )
+                        )
                     }
                 ) {
                     Text("Confirmar")

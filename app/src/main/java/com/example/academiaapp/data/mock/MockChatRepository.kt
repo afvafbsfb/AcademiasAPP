@@ -150,10 +150,26 @@ class MockChatRepository(
                 }
             }
 
-            // Confirmación de baja: si se recibe la acción confirm_baja
+            // ✅ PASO 5: Baja de alumno - procesar confirmación y eliminar de memoria
+            message.contains("baja del alumno", ignoreCase = true) && (context?.get("action") == "baja_alumno") -> {
+                val alumnoId = (context["alumno_id"] as? Number)?.toInt() ?: 0
+                val alumnoNombre = context["alumno_nombre"] as? String ?: "Alumno"
+                
+                // Eliminar alumno de la lista en memoria
+                val eliminado = MockData.deleteAlumno(alumnoId)
+                
+                if (eliminado) {
+                    MockDataGenerator.generateBajaAlumnoSuccess(alumnoNombre, alumnoId)
+                } else {
+                    MockDataGenerator.generateErrorResponse("No se pudo eliminar el alumno (ID: $alumnoId)")
+                }
+            }
+
+            // Confirmación de baja: si se recibe la acción confirm_baja (legacy - no usado actualmente)
             message.contains("baja de alumno", ignoreCase = true) && (context?.get("action") == "confirm_baja") -> {
                 val alumnoId = (context["alumno_id"] as? Number)?.toInt() ?: 0
-                MockDataGenerator.generateBajaAlumnoSuccess(alumnoId)
+                val alumnoNombre = context["alumno_nombre"] as? String ?: "Alumno"
+                MockDataGenerator.generateBajaAlumnoSuccess(alumnoNombre, alumnoId)
             }
 
             // Baja de alumno (mostrar formulario de confirmación)

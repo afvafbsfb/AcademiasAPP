@@ -400,26 +400,20 @@ object MockDataGenerator {
 
     /**
      * Genera respuesta de confirmación de baja de alumno
+     * @param alumnoNombre Nombre del alumno dado de baja
      * @param alumnoId ID del alumno dado de baja
      * @return Envelope con confirmación de baja
+     * ✅ PASO 5: Actualizada para aceptar nombre como parámetro y mostrar mensaje personalizado
      */
-    fun generateBajaAlumnoSuccess(alumnoId: Int): Envelope<GenericItem> {
-        val alumno = MockData.getAlumno(alumnoId)
-            ?: return generateErrorResponse("Alumno no encontrado")
-
-        val nombreAlumno = alumno["nombre"] as? String ?: "Alumno $alumnoId"
-
-        // Simular baja en el mock (marcar como inactivo o eliminar)
-        MockData.deleteAlumno(alumnoId)
-
+    fun generateBajaAlumnoSuccess(alumnoNombre: String, alumnoId: Int): Envelope<GenericItem> {
         return Envelope(
             status = "success",
-            message = "✓ Baja de alumno completada\n\nEl alumno $nombreAlumno ha sido dado de baja correctamente.\n\nSus datos han sido archivados.",
+            message = "Baja procesada correctamente. El alumno $alumnoNombre (ID: $alumnoId) ha sido eliminado del sistema.",
             data = null,
             uiSuggestions = listOf(
                 Suggestion(
-                    id = "sug_volver_lista",
-                    displayText = "Volver a lista de alumnos",
+                    id = "sug_listar_alumnos",
+                    displayText = "Listar alumnos",
                     type = "Generica",
                     recordAction = null,
                     record = null,

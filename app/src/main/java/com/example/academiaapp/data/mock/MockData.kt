@@ -190,6 +190,7 @@ object MockData {
      * @param page Número de página (empezando en 1)
      * @param size Tamaño de página (por defecto 50)
      * @return Triple con (lista de alumnos, cantidad devuelta, hay más páginas)
+     * ✅ FIXED: Devuelve copia inmutable para evitar ConcurrentModificationException
      */
     fun getAlumnosPagina(page: Int, size: Int = 50): Triple<List<Map<String, Any?>>, Int, Boolean> {
         val totalItems = _alumnos.size
@@ -198,7 +199,8 @@ object MockData {
         val startIndex = (validPage - 1) * size
         val endIndex = (startIndex + size).coerceAtMost(totalItems)
         
-        val items = _alumnos.subList(startIndex, endIndex)
+        // ✅ Usar toList() para crear una copia inmutable en lugar de subList()
+        val items = _alumnos.subList(startIndex, endIndex).toList()
         val hasMore = validPage < totalPages
         
         return Triple(items, items.size, hasMore)
