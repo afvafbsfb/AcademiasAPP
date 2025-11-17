@@ -1,5 +1,6 @@
 package com.example.academiaapp.domain
 
+import android.util.Log
 import com.example.academiaapp.data.remote.AuthApi
 import com.example.academiaapp.data.remote.AcademiasApi
 import com.example.academiaapp.data.remote.dto.LoginResponse
@@ -27,10 +28,16 @@ class LoginRepository(
             )
             // Si viene academiaId, intentar resolver el nombre (no bloqueante para login)
             val academiaId = resp.academiaId
+            Log.d("LoginRepo", "Login successful. academiaId from response: $academiaId")
             if (academiaId != null && academiaId > 0) {
                 try {
+                    Log.d("LoginRepo", "Calling resolveAndCacheAcademiaName for ID: $academiaId")
                     academiasRepo.resolveAndCacheAcademiaName(academiaId)
-                } catch (_: Throwable) { /* ignora errores aquí */ }
+                } catch (e: Throwable) { 
+                    Log.e("LoginRepo", "Failed to resolve academia name: ${e.message}", e)
+                }
+            } else {
+                Log.w("LoginRepo", "No academiaId in login response or academiaId <= 0")
             }
             // Devolver el flag must_change_password
             Result.Success(resp.must_change_password)

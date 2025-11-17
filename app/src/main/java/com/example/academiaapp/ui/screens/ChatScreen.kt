@@ -45,6 +45,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.UnfoldMore
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -59,6 +60,10 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
@@ -103,10 +108,15 @@ import androidx.navigation.NavController
 import com.example.academiaapp.AcademiaApp
 import com.example.academiaapp.ui.viewmodels.ChatViewModel
 import com.example.academiaapp.ui.viewmodels.ChatViewModelFactory
+import com.example.academiaapp.ui.components.AlumnosListView
+import com.example.academiaapp.ui.components.AlumnoItem
+import com.example.academiaapp.ui.components.VerAnotacionesDialog
+import com.example.academiaapp.ui.components.NuevaAnotacionDialog
 import com.example.academiaapp.ui.components.AppTopBar
 import com.example.academiaapp.ui.components.SuggestionClarificationDialog
 import com.example.academiaapp.ui.utils.MenuBuilder
 import com.example.academiaapp.data.remote.dto.needsClarification
+import com.example.academiaapp.data.mock.MockData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -252,6 +262,9 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
 
     // Context para Toast
     val context = LocalContext.current
+    
+    // SnackbarHost para mostrar avisos con icono
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // ✅ Scroll automático al final cuando llegan mensajes nuevos O cuando cambia el estado de loading
     LaunchedEffect(ui.messages.size, ui.loading) {
@@ -338,6 +351,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                         try { vm.reset() } catch (_: Exception) { }
                                         try { app.container.session.clear() } catch (_: Exception) { }
                                         try { app.container.chatRepository.clearWelcomeCache() } catch (_: Exception) { }
+                                        try { MockData.resetSesionesDinamicas() } catch (_: Exception) { }
                                         navController?.navigate("login") { popUpTo("login") { inclusive = true } }
                                     }
                                     else -> {
@@ -373,6 +387,15 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
     ) {
         Scaffold(
             containerColor = chatBackground,
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState) { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            },
             topBar = {
                 Log.d("ChatScreen", "Scaffold topBar lambda invoked")
                 AppTopBar(
@@ -396,7 +419,9 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                         OutlinedTextField(
                             value = input,
                             onValueChange = { input = it },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 56.dp, max = 120.dp),
                             placeholder = { Text("Escribe un mensaje…") },
                             enabled = !ui.loading,
                             keyboardOptions = KeyboardOptions.Default.copy(
@@ -411,8 +436,8 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                     }
                                 }
                             ),
-                            maxLines = 1,
-                            singleLine = true
+                            maxLines = 5,
+                            singleLine = false
                         )
 
                         // IconButton con icono Send y efecto visual
@@ -601,10 +626,323 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                         )
                                                     } else if (m.type == "sesiones_dia") {
                                                         // Renderizador especial para clases del día (cards híbridas)
-                                                        SesionesDelDiaCards(items = m.items)
+                                                        SesionesDelDiaCards(
+                                                            items = m.items,
+                                                            onVerAlumnos = { id ->
+                                                                println("🔧 DEBUG onVerAlumnos - id recibido: $id")
+                                                                
+                                                                // ✅ Buscar la clase completa en los items
+                                                                val clase = m.items.find { 
+                                                                    (it["sesion_id"] as? Number)?.toInt() == id ||
+                                                                    (it["id"] as? Number)?.toInt() == id
+                                                                }
+                                                                
+                                                                if (clase != null) {
+                                                                    // ✅ Extraer TODOS los datos de la sesión
+                                                                    val sesionId = (clase["sesion_id"] as? Number)?.toInt()
+                                                                    val horarioId = (clase["id"] as? Number)?.toInt()
+                                                                    val estado = clase["estado"] as? String
+                                                                    val fecha = clase["fecha"] as? String ?: java.time.LocalDate.now().toString()
+                                                                    val horaInicio = clase["hora_inicio"] as? String
+                                                                    val horaFin = clase["hora_fin"] as? String
+                                                                    val curso = clase["curso"] as? String
+                                                                    val aula = clase["aula"] as? String
+                                                                    val alumnos = (clase["alumnos"] as? Number)?.toInt()
+                                                                    
+                                                                    // ✅ Construir mensaje descriptivo con todos los datos
+                                                                    val mensajeCompleto = buildString {
+                                                                        append("Ver alumnos de la sesión:\n")
+                                                                        append("• Curso: $curso\n")
+                                                                        append("• Fecha: $fecha\n")
+                                                                        append("• Horario: $horaInicio - $horaFin\n")
+                                                                        append("• Aula: $aula\n")
+                                                                        append("• Alumnos inscritos: $alumnos")
+                                                                    }
+                                                                    
+                                                                    println("🔧 DEBUG onVerAlumnos - Mensaje: $mensajeCompleto")
+                                                                    
+                                                                    // ✅ Construir contexto completo con TODOS los datos
+                                                                    val context = mutableMapOf<String, Any>()
+                                                                    
+                                                                    if (sesionId != null) context["sesion_id"] = sesionId
+                                                                    if (horarioId != null) context["horario_curso_id"] = horarioId
+                                                                    if (estado != null) context["estado"] = estado
+                                                                    context["fecha"] = fecha
+                                                                    if (horaInicio != null) context["hora_inicio"] = horaInicio
+                                                                    if (horaFin != null) context["hora_fin"] = horaFin
+                                                                    if (curso != null) context["curso"] = curso
+                                                                    if (aula != null) context["aula"] = aula
+                                                                    if (alumnos != null) context["total_alumnos"] = alumnos
+                                                                    
+                                                                    println("🔧 DEBUG Callback - context completo enviado: $context")
+                                                                    
+                                                                    vm.sendMessageWithContext(
+                                                                        mensajeCompleto,
+                                                                        context
+                                                                    )
+                                                                }
+                                                            },
+                                                            onVerAnotaciones = { sesionId ->
+                                                                // TODO FASE 4: Implementar diálogo de anotaciones
+                                                            },
+                                                            onPasarLista = { sesionId ->
+                                                                // TODO FASE 4: Implementar pasar lista
+                                                            },
+                                                            onIniciar = { horarioId ->
+                                                                // ✅ Buscar la clase completa en los items
+                                                                val clase = m.items.find { 
+                                                                    (it["id"] as? Number)?.toInt() == horarioId
+                                                                }
+                                                                
+                                                                if (clase != null) {
+                                                                    // ✅ Extraer TODOS los datos de la sesión
+                                                                    val sesionId = (clase["sesion_id"] as? Number)?.toInt()
+                                                                    val estado = clase["estado"] as? String
+                                                                    val fecha = clase["fecha"] as? String ?: java.time.LocalDate.now().toString()
+                                                                    val horaInicio = clase["hora_inicio"] as? String
+                                                                    val horaFin = clase["hora_fin"] as? String
+                                                                    val curso = clase["curso"] as? String
+                                                                    val aula = clase["aula"] as? String
+                                                                    val alumnos = (clase["alumnos"] as? Number)?.toInt()
+                                                                    val cursoId = (clase["curso_id"] as? Number)?.toInt()
+                                                                    val aulaId = (clase["aula_id"] as? Number)?.toInt()
+                                                                    val cursoProfesorId = (clase["curso_profesor_id"] as? Number)?.toInt()
+                                                                    
+                                                                    // ✅ Construir mensaje descriptivo con todos los datos
+                                                                    val mensajeCompleto = buildString {
+                                                                        append("Iniciar sesión:\n")
+                                                                        append("• Curso: $curso\n")
+                                                                        append("• Fecha: $fecha\n")
+                                                                        append("• Horario: $horaInicio - $horaFin\n")
+                                                                        append("• Aula: $aula\n")
+                                                                        append("• Alumnos inscritos: $alumnos")
+                                                                    }
+                                                                    
+                                                                    println("🔧 DEBUG onIniciar - Mensaje: $mensajeCompleto")
+                                                                    
+                                                                    // ✅ Construir contexto completo con TODOS los datos
+                                                                    val context = mutableMapOf<String, Any>()
+                                                                    
+                                                                    context["horario_curso_id"] = horarioId
+                                                                    if (cursoId != null) context["curso_id"] = cursoId
+                                                                    if (aulaId != null) context["aula_id"] = aulaId
+                                                                    if (cursoProfesorId != null) context["curso_profesor_id"] = cursoProfesorId
+                                                                    if (sesionId != null) context["sesion_id"] = sesionId
+                                                                    if (estado != null) context["estado"] = estado
+                                                                    context["fecha"] = fecha
+                                                                    if (horaInicio != null) context["hora_inicio"] = horaInicio
+                                                                    if (horaFin != null) context["hora_fin"] = horaFin
+                                                                    if (curso != null) context["curso"] = curso
+                                                                    if (aula != null) context["aula"] = aula
+                                                                    if (alumnos != null) context["total_alumnos"] = alumnos
+                                                                    
+                                                                    println("🔧 DEBUG onIniciar - context completo enviado: $context")
+                                                                    
+                                                                    vm.sendMessageWithContext(
+                                                                        mensajeCompleto,
+                                                                        context
+                                                                    )
+                                                                }
+                                                            }
+                                                        )
                                                     } else if (m.type == "sesiones_semana") {
                                                         // Renderizador especial para vista semanal
                                                         SesionesSemanalesTable(items = m.items)
+                                                    } else if (m.type == "alumnos_sesion") {
+                                                        // Renderizador especial para alumnos de una sesión
+                                                        val dataItem = m.items.firstOrNull() ?: emptyMap()
+                                                        val sesionInfo = dataItem["sesion_info"] as? Map<String, Any?> ?: emptyMap()
+                                                        val alumnos = dataItem["alumnos"] as? List<Map<String, Any?>> ?: emptyList()
+                                                        
+                                                        // Extraer campos de sesionInfo
+                                                        val sesionEditable = sesionInfo["editable"] as? Boolean ?: false
+                                                        val listaPasada = sesionInfo["lista_pasada"] as? Boolean ?: false
+                                                        val alumnosInscritos = (sesionInfo["alumnos_inscritos"] as? Number)?.toInt() ?: alumnos.size
+                                                        val sesionId = (sesionInfo["sesion_id"] as? Number)?.toInt() ?: 0
+                                                        
+                                                        // ✅ Estado local para checkboxes de ausencias
+                                                        // Inicializar desde alumnos que ya tienen asistio=false (ausentes)
+                                                        val ausenciasInicialesMap = alumnos
+                                                            .filter { (it["asistio"] as? Boolean) == false }
+                                                            .associate { ((it["id"] as? Number)?.toInt() ?: 0) to true }
+                                                        
+                                                        var ausenciasMap by remember(index) { 
+                                                            mutableStateOf(ausenciasInicialesMap) 
+                                                        }
+                                                        
+                                                        // ✅ Estado para diálogos de anotaciones
+                                                        var showVerAnotacionesDialog by remember(index) { mutableStateOf(false) }
+                                                        var showNuevaAnotacionDialog by remember(index) { mutableStateOf(false) }
+                                                        var selectedAlumnoId by remember(index) { mutableStateOf<Int?>(null) }
+                                                        var selectedAlumnoNombre by remember(index) { mutableStateOf("") }
+                                                        var anotacionesAlumno by remember(index) { mutableStateOf<List<Map<String, Any?>>>(emptyList()) }
+                                                        
+                                                        AlumnosListView(
+                                                            alumnos = alumnos.map { alumno ->
+                                                                AlumnoItem(
+                                                                    id = (alumno["id"] as? Number)?.toInt() ?: 0,
+                                                                    nombre = alumno["nombre"] as? String ?: "",
+                                                                    asistio = alumno["asistio"] as? Boolean,
+                                                                    tieneAnotaciones = alumno["tiene_anotaciones"] as? Boolean ?: false
+                                                                )
+                                                            },
+                                                            sesionEditable = sesionEditable,
+                                                            listaPasada = listaPasada,
+                                                            alumnosInscritos = alumnosInscritos,
+                                                            ausenciasMap = ausenciasMap,
+                                                            onAusenciaChanged = { alumnoId, ausente -> 
+                                                                // ✅ Actualizar estado local
+                                                                ausenciasMap = if (ausente) {
+                                                                    ausenciasMap + (alumnoId to true)
+                                                                } else {
+                                                                    ausenciasMap - alumnoId
+                                                                }
+                                                                println("🔧 DEBUG onAusenciaChanged - alumnoId=$alumnoId, ausente=$ausente, map=$ausenciasMap")
+                                                            },
+                                                            onVerAnotaciones = { alumnoId ->
+                                                                // ✅ Buscar nombre del alumno
+                                                                val alumno = alumnos.find { (it["id"] as? Number)?.toInt() == alumnoId }
+                                                                selectedAlumnoId = alumnoId
+                                                                selectedAlumnoNombre = alumno?.get("nombre") as? String ?: "Alumno"
+                                                                
+                                                                // ✅ Consultar anotaciones del alumno en esta sesión (excluyendo Ausencia)
+                                                                anotacionesAlumno = MockData.getAnotacionesBySesionAndAlumno(sesionId, alumnoId)
+                                                                
+                                                                println("🔧 DEBUG onVerAnotaciones - alumnoId=$alumnoId, anotaciones=${anotacionesAlumno.size}")
+                                                                
+                                                                showVerAnotacionesDialog = true
+                                                            },
+                                                            onNuevaAnotacion = { alumnoId ->
+                                                                // ✅ Buscar nombre del alumno
+                                                                val alumno = alumnos.find { (it["id"] as? Number)?.toInt() == alumnoId }
+                                                                selectedAlumnoId = alumnoId
+                                                                selectedAlumnoNombre = alumno?.get("nombre") as? String ?: "Alumno"
+                                                                
+                                                                println("🔧 DEBUG onNuevaAnotacion - alumnoId=$alumnoId, nombre=$selectedAlumnoNombre")
+                                                                
+                                                                showNuevaAnotacionDialog = true
+                                                            },
+                                                            onPasarLista = { ausentes ->
+                                                                // ✅ Construir lista de nombres de alumnos ausentes
+                                                                val alumnosData = alumnos.map { alumno ->
+                                                                    AlumnoItem(
+                                                                        id = (alumno["id"] as? Number)?.toInt() ?: 0,
+                                                                        nombre = alumno["nombre"] as? String ?: "",
+                                                                        asistio = alumno["asistio"] as? Boolean,
+                                                                        tieneAnotaciones = alumno["tiene_anotaciones"] as? Boolean ?: false
+                                                                    )
+                                                                }
+                                                                
+                                                                val nombresAusentes = ausentes.mapNotNull { id ->
+                                                                    alumnosData.find { it.id == id }?.nombre
+                                                                }
+                                                                
+                                                                // ✅ Extraer datos de la sesión
+                                                                val curso = sesionInfo["curso"] as? String ?: ""
+                                                                val horaInicio = sesionInfo["hora_inicio"] as? String ?: ""
+                                                                val horaFin = sesionInfo["hora_fin"] as? String ?: ""
+                                                                val aula = sesionInfo["aula"] as? String ?: ""
+                                                                val fecha = sesionInfo["fecha"] as? String ?: ""
+                                                                val totalAlumnos = (sesionInfo["alumnos_inscritos"] as? Number)?.toInt() ?: alumnos.size
+                                                                
+                                                                // ✅ Construir mensaje descriptivo
+                                                                val mensajeCompleto = buildString {
+                                                                    append("Pasar lista de la sesión (ID: $sesionId):\n")
+                                                                    append("• Curso: $curso\n")
+                                                                    append("• Fecha: $fecha\n")
+                                                                    append("• Horario: $horaInicio - $horaFin\n")
+                                                                    append("• Aula: $aula\n")
+                                                                    append("• Total alumnos: $totalAlumnos\n\n")
+                                                                    
+                                                                    if (nombresAusentes.isNotEmpty()) {
+                                                                        append("Alumnos ausentes:\n")
+                                                                        ausentes.forEachIndexed { index, alumnoId ->
+                                                                            val nombre = nombresAusentes.getOrNull(index) ?: "Alumno"
+                                                                            append("  - $nombre (ID: $alumnoId)\n")
+                                                                        }
+                                                                    } else {
+                                                                        append("Todos los alumnos presentes")
+                                                                    }
+                                                                }
+                                                                
+                                                                // ✅ Construir contexto
+                                                                val context = mutableMapOf<String, Any>(
+                                                                    "sesion_id" to sesionId,
+                                                                    "alumnosAusentes" to ausentes,
+                                                                    "curso" to curso,
+                                                                    "fecha" to fecha,
+                                                                    "hora_inicio" to horaInicio,
+                                                                    "hora_fin" to horaFin,
+                                                                    "aula" to aula
+                                                                )
+                                                                
+                                                                println("🔧 DEBUG onPasarLista - sesionId=$sesionId, ausentes=$ausentes, nombresAusentes=$nombresAusentes")
+                                                                
+                                                                vm.sendMessageWithContext(
+                                                                    mensajeCompleto,
+                                                                    context
+                                                                )
+                                                            }
+                                                        )
+                                                        
+                                                        // ✅ Diálogos de anotaciones
+                                                        if (showVerAnotacionesDialog && selectedAlumnoId != null) {
+                                                            VerAnotacionesDialog(
+                                                                alumnoNombre = selectedAlumnoNombre,
+                                                                anotaciones = anotacionesAlumno,
+                                                                onDismiss = { 
+                                                                    showVerAnotacionesDialog = false
+                                                                }
+                                                            )
+                                                        }
+                                                        
+                                                        if (showNuevaAnotacionDialog && selectedAlumnoId != null) {
+                                                            NuevaAnotacionDialog(
+                                                                alumnoNombre = selectedAlumnoNombre,
+                                                                onConfirm = { tipo, descripcion ->
+                                                                    // ✅ Construir mensaje completo
+                                                                    val alumnoId = selectedAlumnoId ?: return@NuevaAnotacionDialog
+                                                                    val curso = sesionInfo["curso"] as? String ?: ""
+                                                                    val horaInicio = sesionInfo["hora_inicio"] as? String ?: ""
+                                                                    val horaFin = sesionInfo["hora_fin"] as? String ?: ""
+                                                                    val aula = sesionInfo["aula"] as? String ?: ""
+                                                                    val fecha = sesionInfo["fecha"] as? String ?: ""
+                                                                    
+                                                                    val mensajeCompleto = buildString {
+                                                                        append("Alta de anotación para el alumno $selectedAlumnoNombre (ID: $alumnoId):\n")
+                                                                        append("• Sesión ID: $sesionId\n")
+                                                                        append("• Curso: $curso\n")
+                                                                        append("• Fecha: $fecha\n")
+                                                                        append("• Horario: $horaInicio - $horaFin\n")
+                                                                        append("• Aula: $aula\n\n")
+                                                                        append("Tipo: $tipo\n")
+                                                                        append("Texto: $descripcion")
+                                                                    }
+                                                                    
+                                                                    // ✅ Construir contexto
+                                                                    val context = mutableMapOf<String, Any>(
+                                                                        "sesion_id" to sesionId,
+                                                                        "alumno_id" to alumnoId,
+                                                                        "tipo_anotacion" to tipo,
+                                                                        "descripcion" to descripcion,
+                                                                        "curso" to curso,
+                                                                        "fecha" to fecha,
+                                                                        "hora_inicio" to horaInicio,
+                                                                        "hora_fin" to horaFin,
+                                                                        "aula" to aula
+                                                                    )
+                                                                    
+                                                                    println("🔧 DEBUG onConfirmAnotacion - sesionId=$sesionId, alumnoId=$alumnoId, tipo=$tipo")
+                                                                    
+                                                                    vm.sendMessageWithContext(mensajeCompleto, context)
+                                                                    
+                                                                    showNuevaAnotacionDialog = false
+                                                                },
+                                                                onDismiss = { 
+                                                                    showNuevaAnotacionDialog = false
+                                                                }
+                                                            )
+                                                        }
                                                     } else {
                                                         val typeLabel = m.type?.let { "Resultados (${it})" } ?: "Resultados:"
                                                         Text(typeLabel, color = textColor)
@@ -728,19 +1066,22 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                                     modificacionAlumnoClickCount++
 
                                                                                     if (modificacionAlumnoClickCount == 1) {
-                                                                                        // Primera vez: mostrar Toast
-                                                                                        Toast.makeText(
-                                                                                            context,
-                                                                                            "Debes seleccionar el registro que deseas modificar",
-                                                                                            Toast.LENGTH_LONG
-                                                                                        ).show()
+                                                                                        // Primera vez: mostrar Snackbar con icono de advertencia
+                                                                                        coroutineScope.launch {
+                                                                                            snackbarHostState.showSnackbar(
+                                                                                                message = "⚠️ Debes seleccionar el registro que deseas modificar",
+                                                                                                duration = SnackbarDuration.Short
+                                                                                            )
+                                                                                        }
                                                                                     } else {
-                                                                                        // Segunda vez: simular selección y enviar mensaje automático
+                                                                                        // Segunda vez: simular selección y enviar mensaje personalizado
                                                                                         vm.disableSuggestionsForMessage(index)
                                                                                         // Mock: simular que se seleccionó el alumno ID=3 (Pedro Fernández Pérez)
                                                                                         val mockAlumnoId = 3
+                                                                                        val alumno = com.example.academiaapp.data.mock.MockData.getAlumno(mockAlumnoId)
+                                                                                        val alumnoNombre = alumno?.get("nombre") as? String ?: "Alumno"
                                                                                         vm.sendMessageWithContext(
-                                                                                            "modificación de alumno",
+                                                                                            "Modificación del alumno $alumnoNombre (ID: $mockAlumnoId)",
                                                                                             mapOf(
                                                                                                 "screen" to "alumnos",
                                                                                                 "alumno_id" to mockAlumnoId
@@ -1024,14 +1365,16 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                 TextButton(
                     onClick = {
                         showBajaAlumnoDialog = false
-                        // ✅ PASO 4: Enviar mensaje con contexto simulando la baja del alumno ID=1
+                        // ✅ PASO 4: Enviar mensaje simplificado con nombre e ID del alumno
+                        val alumnoId = 1
+                        val alumnoNombre = "Juan García García"
                         vm.sendMessageWithContext(
-                            "Baja del alumno: Nombre: Juan García García, DNI: 10000001A, Email: juan.garcia1@example.com, Teléfono: 6100000001, Fecha Nacimiento: 01/01/1986, Dirección: Calle Ejemplo 1, Madrid, ID: 1",
+                            "Baja del alumno $alumnoNombre (ID: $alumnoId)",
                             mapOf(
                                 "screen" to "alumnos",
                                 "action" to "baja_alumno",
-                                "alumno_id" to 1,
-                                "alumno_nombre" to "Juan García García"
+                                "alumno_id" to alumnoId,
+                                "alumno_nombre" to alumnoNombre
                             )
                         )
                     }
@@ -1868,7 +2211,11 @@ private fun CompactList(
  */
 @Composable
 fun SesionesDelDiaCards(
-    items: List<Map<String, Any?>>
+    items: List<Map<String, Any?>>,
+    onVerAlumnos: (sesionId: Int) -> Unit = {},
+    onVerAnotaciones: (sesionId: Int) -> Unit = {},
+    onPasarLista: (sesionId: Int) -> Unit = {},
+    onIniciar: (horarioId: Int) -> Unit = {}
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1908,13 +2255,13 @@ fun SesionesDelDiaCards(
                         .padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    // Línea 1: Icono + Horario + Aula
+                    // Línea 1: Horario + Aula (sin icono)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "$icono $horaInicio - $horaFin",
+                            text = "$horaInicio - $horaFin",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -1959,7 +2306,28 @@ fun SesionesDelDiaCards(
                         ) {
                             acciones.forEach { accion ->
                                 OutlinedButton(
-                                    onClick = { /* TODO: Implementar acciones */ },
+                                    onClick = {
+                                        // 🔧 DEBUG: Ver qué contiene clase
+                                        println("🔧 DEBUG onClick - clase completa: $clase")
+                                        
+                                        // ✅ Extraer ambos IDs disponibles
+                                        val sesionId = (clase["sesion_id"] as? Number)?.toInt()
+                                        val horarioId = (clase["id"] as? Number)?.toInt() ?: 0
+                                        
+                                        println("🔧 DEBUG onClick - sesionId=$sesionId, horarioId=$horarioId")
+                                        
+                                        // ✅ Para "Ver alumnos": priorizar sesionId, sino usar horarioId
+                                        val idParaAlumnos = sesionId ?: horarioId
+                                        
+                                        println("🔧 DEBUG onClick - idParaAlumnos=$idParaAlumnos, accion=$accion")
+                                        
+                                        when (accion) {
+                                            "Ver alumnos" -> onVerAlumnos(idParaAlumnos)
+                                            "Ver anotaciones" -> onVerAnotaciones(sesionId ?: 0)
+                                            "Pasar lista" -> onPasarLista(sesionId ?: 0)
+                                            "Iniciar" -> onIniciar(horarioId)
+                                        }
+                                    },
                                     modifier = Modifier.height(36.dp),
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                                 ) {
@@ -2127,18 +2495,18 @@ fun SesionesSemanalesTable(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            text = "⏰ $horaInicio - $horaFin",
+                                            text = "$horaInicio - $horaFin",
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
                                     Text(
-                                        text = "📚 $cursoNombre",
+                                        text = "$cursoNombre",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium
                                     )
                                     Text(
-                                        text = "🏫 $aulaNombre",
+                                        text = "$aulaNombre",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -2155,5 +2523,4 @@ fun SesionesSemanalesTable(
         }
     }
 }
-
 

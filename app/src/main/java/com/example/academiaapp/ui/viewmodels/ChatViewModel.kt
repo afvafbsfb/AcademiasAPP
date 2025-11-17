@@ -76,7 +76,9 @@ class ChatViewModel(
         viewModelScope.launch {
             // Si hay un contexto activo (ej. desde menú), usarlo también aquí
             val screen = activeContext?.get("screen") as? String
-            val shouldUseMock = screen != null && MockConfig.isMocked(screen)
+            // ✅ Bypass de mocks: mensajes que empiezan por "ok," van siempre al backend real
+            val forceBackend = trimmed.startsWith("ok,", ignoreCase = true)
+            val shouldUseMock = !forceBackend && screen != null && MockConfig.isMocked(screen)
 
             // 1. Construir payload CON el mensaje nuevo (pero sin añadirlo al estado todavía)
             val conversation = buildConversationPayload(trimmed)
@@ -122,7 +124,9 @@ class ChatViewModel(
         viewModelScope.launch {
             // Detectar si debemos usar mock basándonos en el screen del contexto activo
             val screen = activeContext?.get("screen") as? String
-            val shouldUseMock = screen != null && MockConfig.isMocked(screen)
+            // ✅ Bypass de mocks: mensajes que empiezan por "ok," van siempre al backend real
+            val forceBackend = trimmed.startsWith("ok,", ignoreCase = true)
+            val shouldUseMock = !forceBackend && screen != null && MockConfig.isMocked(screen)
 
             // 1. Construir payload CON el mensaje nuevo (pero sin añadirlo al estado todavía)
             val conversation = buildConversationPayload(trimmed)

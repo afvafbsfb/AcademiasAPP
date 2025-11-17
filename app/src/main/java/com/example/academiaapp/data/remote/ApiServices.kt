@@ -20,7 +20,10 @@ interface ChatApi {
 
 interface AcademiasApi {
     @GET("/academias/{id}")
-    suspend fun getAcademia(@Path("id") id: Int): AcademiaDto
+    suspend fun getAcademia(
+        @Path("id") id: Int,
+        @HeaderMap headers: Map<String, String> = emptyMap()
+    ): AcademiaResponse
 }
 
 interface UsuariosApi {

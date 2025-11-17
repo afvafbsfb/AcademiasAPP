@@ -18,9 +18,20 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Optimizaciones para el emulador
+        ndk {
+            abiFilters.clear()
+            abiFilters.addAll(listOf("x86_64", "armeabi-v7a", "arm64-v8a"))
+        }
     }
 
     buildTypes {
+        debug {
+            // Deshabilitar minify en debug para builds más rápidas
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -48,6 +59,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = false
     }
     kotlinOptions {
         jvmTarget = "17"
@@ -66,6 +78,8 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/LICENSE.md"
+            excludes += "/META-INF/LICENSE-notice.md"
         }
     }
 }

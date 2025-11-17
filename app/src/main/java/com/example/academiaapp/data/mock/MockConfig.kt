@@ -13,7 +13,7 @@ object MockConfig {
     
     // ⏱️ Configuración de latencia simulada (milisegundos)
     const val MIN_DELAY_MS = 2500L
-    const val MAX_DELAY_MS = 3500L
+    const val MAX_DELAY_MS = 5500L
     
     /**
      * Verifica si una pantalla específica debe usar mocks

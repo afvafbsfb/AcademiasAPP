@@ -375,19 +375,37 @@ object MockDataGenerator {
      * @param alumnoId ID del alumno a dar de baja
      * @return Envelope con datos del alumno para confirmación
      */
-    fun generateBajaAlumnoForm(alumnoId: Int): Envelope<GenericItem> {
-        val alumno = MockData.getAlumno(alumnoId)
-            ?: return generateErrorResponse("Alumno no encontrado")
+    fun generateBajaAlumnoForm(): Envelope<GenericItem> {
+        val alumno = MockData.getAlumnos().firstOrNull()
+            ?: return generateErrorResponse("No hay alumnos disponibles para dar de baja")
+
+        val alumnoId = (alumno["id"] as? Int) ?: 0
+        val alumnoNombre = alumno["nombre"] as? String ?: "Alumno"
+        val alumnoEmail = alumno["email"] as? String ?: ""
+        val alumnoDni = alumno["dni"] as? String ?: ""
+        val alumnoTelefono = alumno["telefono"] as? String ?: ""
+        val alumnoCurso = alumno["curso"] as? String ?: ""
+
+        val detallesAlumno = buildString {
+            append("Baja de alumno:\n\n")
+            append("ID: $alumnoId\n")
+            append("Nombre: $alumnoNombre\n")
+            if (alumnoDni.isNotBlank()) append("DNI: $alumnoDni\n")
+            if (alumnoEmail.isNotBlank()) append("Email: $alumnoEmail\n")
+            if (alumnoTelefono.isNotBlank()) append("Teléfono: $alumnoTelefono\n")
+            if (alumnoCurso.isNotBlank()) append("Curso: $alumnoCurso\n")
+        }
 
         return Envelope(
             status = "success",
-            message = "⚠️ Confirmación de baja de alumno\n\n¿Estás seguro de dar de baja a este alumno?",
+            message = "Confirmación de baja Alumno",
             data = DataSection(
                 type = "formulario_baja_alumno",
                 items = listOf(
                     mapOf(
                         "field_type" to "form_readonly",
-                        "alumno_data" to alumno
+                        "alumno_data" to alumno,
+                        "texto_confirmacion" to detallesAlumno
                     )
                 ),
                 summaryFields = null,
@@ -407,7 +425,7 @@ object MockDataGenerator {
     fun generateBajaAlumnoSuccess(alumnoNombre: String, alumnoId: Int): Envelope<GenericItem> {
         return Envelope(
             status = "success",
-            message = "Baja procesada correctamente. El alumno $alumnoNombre (ID: $alumnoId) ha sido eliminado del sistema.",
+            message = "Baja del alumno $alumnoNombre realizada correctamente.",
             data = null,
             uiSuggestions = listOf(
                 Suggestion(
@@ -556,6 +574,24 @@ object MockDataGenerator {
                 data = null,
                 uiSuggestions = listOf(
                     Suggestion(
+                        id = "sug_clases_manana",
+                        displayText = "Ver clases de mañana",
+                        type = "Generica",
+                        recordAction = null,
+                        record = null,
+                        pagination = null,
+                        contextToken = null
+                    ),
+                    Suggestion(
+                        id = "sug_proxima_semana",
+                        displayText = "Ver clases de la próxima semana",
+                        type = "Generica",
+                        recordAction = null,
+                        record = null,
+                        pagination = null,
+                        contextToken = null
+                    ),
+                    Suggestion(
                         id = "sug_ver_semana",
                         displayText = "Ver toda la semana",
                         type = "Generica",
@@ -580,19 +616,49 @@ object MockDataGenerator {
             val aula = MockData.getAula(aulaId)
             val sesion = MockData.getSesionDinamica(horarioId, fecha)
             
+            // 🔧 DEBUG: Ver qué sesión se obtuvo
+            println("🔧 DEBUG generateMisClasesHoyResponse - horarioId=$horarioId, fecha=$fecha")
+            println("🔧 DEBUG - sesion obtenida: ${sesion?.get("id")}, timestamp_alta=${sesion?.get("timestamp_alta")}")
+            
             // Extraer datos de asistencia si existe sesión
             val asistieron = (sesion?.get("alumnos_asistieron") as? Number)?.toInt() ?: 0
             val total = (sesion?.get("total_alumnos") as? Number)?.toInt() ?: (curso?.get("alumnos_inscritos") as? Number)?.toInt() ?: 0
             
+            // ✅ USAR HORAS DEMO si existen (sesión testeable con hora actual)
+            val horaInicioStr = (sesion?.get("hora_inicio_demo") as? String) ?: horaInicio
+            val horaFinStr = (sesion?.get("hora_fin_demo") as? String) ?: horaFin
+            
+            // ✅ NUEVO: Calcular si estamos dentro de la ventana de ±1h para poder iniciar
+            val ahora = java.time.LocalDateTime.now()
+            val fechaHoy = ahora.toLocalDate()
+            val horaActual = ahora.toLocalTime()
+            val fechaBuscada = java.time.LocalDate.parse(fecha)
+            
+            val horaInicioTime = java.time.LocalTime.parse(horaInicioStr)
+            val horaFinTime = java.time.LocalTime.parse(horaFinStr)
+            
+            // Ventana de inicio: 1h antes de inicio hasta 1h después de fin
+            val esHoy = fechaBuscada.isEqual(fechaHoy)
+            val dentroVentana = esHoy && 
+                horaActual.isAfter(horaInicioTime.minusHours(1)) && 
+                horaActual.isBefore(horaFinTime.plusHours(1))
+            
             // Determinar estado
             val (estado, icono, descripcionEstado, acciones) = when {
-                sesion == null -> {
-                    // 🟡 Programada - No se ha iniciado
+                sesion == null || sesion["timestamp_alta"] == null -> {
+                    // 🟡 Programada - No se ha iniciado (incluye sesión DEMO)
+                    // Mostrar botón "Iniciar" SOLO si está dentro de la ventana ±1h
+                    val accionesDisponibles = if (dentroVentana) {
+                        listOf("Iniciar", "Ver alumnos", "Ver anotaciones")
+                    } else {
+                        listOf("Ver alumnos", "Ver anotaciones") // Futura: sin iniciar
+                    }
+                    
                     Quadruple(
                         "programada",
                         "🟡",
                         "No iniciada",
-                        emptyList()  // Sin acciones disponibles
+                        accionesDisponibles
                     )
                 }
                 sesion["timestamp_baja"] == null -> {
@@ -642,8 +708,9 @@ object MockDataGenerator {
                 "sesion_id" to (sesion?.get("id")),
                 "estado" to estado,
                 "icono" to icono,
-                "hora_inicio" to horaInicio,
-                "hora_fin" to horaFin,
+                "fecha" to fecha,  // ✅ Fecha de la sesión
+                "hora_inicio" to horaInicioStr,  // ✅ Usar hora demo si existe
+                "hora_fin" to horaFinStr,        // ✅ Usar hora demo si existe
                 "curso" to (curso?.get("nombre") ?: "Curso $cursoId"),
                 "curso_id" to cursoId,
                 "aula" to (aula?.get("nombre") ?: "Aula $aulaId"),
@@ -651,40 +718,39 @@ object MockDataGenerator {
                 "alumnos_asistieron" to asistieron,  // Alumnos que asistieron
                 "descripcion_estado" to descripcionEstado,
                 "acciones_disponibles" to acciones
-            )
+            ).also { item ->
+                // 🔧 DEBUG: Ver qué se devuelve en cada item
+                println("🔧 DEBUG - Item generado: id=${item["id"]}, sesion_id=${item["sesion_id"]}, curso=${item["curso"]}, estado=${item["estado"]}")
+            }
         }
         
         // Generar sugerencias según el día
         val suggestions = mutableListOf<Suggestion>()
         
-        // Sugerencias de navegación temporal
-        if (diaSemana != "Lunes") {
-            suggestions.add(
-                Suggestion(
-                    id = "sug_clases_ayer",
-                    displayText = "Ver clases de ayer",
-                    type = "Generica",
-                    recordAction = null,
-                    record = null,
-                    pagination = null,
-                    contextToken = null
-                )
+        // Sugerencias de navegación temporal - SIEMPRE mostrar opciones de ayer/mañana
+        suggestions.add(
+            Suggestion(
+                id = "sug_clases_ayer",
+                displayText = "Ver clases de ayer",
+                type = "Generica",
+                recordAction = null,
+                record = null,
+                pagination = null,
+                contextToken = null
             )
-        }
+        )
         
-        if (diaSemana != "Viernes") {
-            suggestions.add(
-                Suggestion(
-                    id = "sug_clases_manana",
-                    displayText = "Ver clases de mañana",
-                    type = "Generica",
-                    recordAction = null,
-                    record = null,
-                    pagination = null,
-                    contextToken = null
-                )
+        suggestions.add(
+            Suggestion(
+                id = "sug_clases_manana",
+                displayText = "Ver clases de mañana",
+                type = "Generica",
+                recordAction = null,
+                record = null,
+                pagination = null,
+                contextToken = null
             )
-        }
+        )
         
         suggestions.add(
             Suggestion(
@@ -893,6 +959,310 @@ object MockDataGenerator {
             )
         )
     }
+    
+    // ===============================================
+    // ALUMNOS DE SESIÓN - Lista de asistencias
+    // ===============================================
+    
+    /**
+     * Genera respuesta con los alumnos de una sesión específica
+     * Incluye información de asistencia y anotaciones por alumno
+     * 
+     * @param sesionId ID de la sesión
+     * @param nombreProfesor Nombre del profesor logueado
+     * @return Envelope con cabecera de sesión y lista de alumnos con asistencias
+     */
+    /**
+     * Genera respuesta de alumnos de una sesión.
+     * Acepta sesionId (sesión ya creada) O horarioCursoId (sesión futura).
+     * 
+     * @param sesionId ID de sesión completada/en curso (opcional)
+     * @param horarioCursoId ID de horario para sesión futura (opcional)
+     * @param nombreProfesor Nombre del profesor
+     * @return Envelope con lista de alumnos y datos de sesión/horario
+     */
+    fun generateAlumnosSesionResponse(
+        sesionId: Int? = null,
+        horarioCursoId: Int? = null,
+        nombreProfesor: String = "Profesor"
+    ): Envelope<GenericItem> {
+        
+        // VALIDACIÓN: Debe recibir sesionId O horarioCursoId (no ambos, no ninguno)
+        if (sesionId == null && horarioCursoId == null) {
+            return Envelope(
+                status = "error",
+                message = "Debe proporcionar sesionId o horarioCursoId",
+                data = null,
+                uiSuggestions = emptyList()
+            )
+        }
+        
+        // ========== CASO 1: SESIÓN EXISTENTE (completada o en curso) ==========
+        if (sesionId != null) {
+            val sesion = MockData.getSesionById(sesionId)
+                ?: return Envelope(
+                    status = "error",
+                    message = "No se encontró la sesión con ID $sesionId",
+                    data = null,
+                    uiSuggestions = emptyList()
+                )
+            
+            val horarioId = sesion["horario_curso_id"] as Int
+            val horario = MockData.getHorarioById(horarioId)
+                ?: return Envelope(
+                    status = "error",
+                    message = "No se encontró el horario de la sesión",
+                    data = null,
+                    uiSuggestions = emptyList()
+                )
+            
+            val cursoId = horario["curso_id"] as Int
+            val aulaId = horario["aula_id"] as Int
+            val curso = MockData.getCurso(cursoId)
+            val aula = MockData.getAula(aulaId)
+            val alumnosDelCurso = MockData.getAlumnosByCursoId(cursoId)
+            
+            // Determinar estado de la sesión
+            val timestampAlta = sesion["timestamp_alta"] as? String
+            val timestampBaja = sesion["timestamp_baja"] as? String
+            val listaPasada = sesion["lista_pasada"] as? Boolean ?: false
+            
+            // ✅ CALCULAR asistencia desde anotaciones (en lugar de usar campos precalculados)
+            val asistenciaInfo = MockData.calcularAsistenciaSesion(sesionId)
+            val (asistieron, ausentes, totalAlumnos) = asistenciaInfo ?: Triple(0, 0, alumnosDelCurso.size)
+            
+            // ✅ Extraer fecha: de timestamp_alta (si iniciada) o de fecha_sesion (si programada)
+            val fecha = when {
+                timestampAlta != null -> timestampAlta.substring(0, 10)  // Sesión iniciada: usar timestamp
+                else -> sesion["fecha_sesion"] as? String ?: ""  // Sesión programada: usar fecha_sesion
+            }
+            
+            // Determinar estado textual
+            val estado = when {
+                timestampBaja != null -> "completada"
+                timestampAlta != null -> "en_curso"
+                else -> "programada"
+            }
+            
+            // ✅ GENERAR lista de alumnos usando anotaciones reales de tipo 'Ausencia'
+            val alumnosConAsistencia = when {
+                // SESIÓN FUTURA o SIN LISTA PASADA
+                !listaPasada -> {
+                    alumnosDelCurso.map { alumno ->
+                        mapOf(
+                            "id" to alumno["id"],
+                            "nombre" to alumno["nombre"],
+                            "asistio" to null,  // Sin marcar aún
+                            "tiene_anotaciones" to false
+                        )
+                    }
+                }
+                
+                // SESIÓN CON LISTA PASADA (en curso o completada)
+                else -> {
+                    // Obtener anotaciones de esta sesión
+                    val anotacionesSesion = MockData.getAnotacionesBySesion(sesionId)
+                    
+                    // IDs de alumnos con anotaciones de tipo 'Ausencia'
+                    val alumnosAusentes = anotacionesSesion
+                        .filter { (it["tipo_anotacion"] as? String) == "Ausencia" }
+                        .map { it["alumno_id"] as Int }
+                        .toSet()
+                    
+                    // IDs de alumnos con otras anotaciones (Evaluacion, Comportamiento)
+                    val alumnosConOtrasAnotaciones = anotacionesSesion
+                        .filter { (it["tipo_anotacion"] as? String) != "Ausencia" }
+                        .map { it["alumno_id"] as Int }
+                        .toSet()
+                    
+                    alumnosDelCurso.map { alumno ->
+                        val alumnoId = alumno["id"] as Int
+                        val asistio = alumnoId !in alumnosAusentes  // ✅ Presente = NO tiene ausencia
+                        val tieneAnotaciones = alumnoId in alumnosConOtrasAnotaciones
+                        
+                        mapOf(
+                            "id" to alumnoId,
+                            "nombre" to alumno["nombre"],
+                            "asistio" to asistio,
+                            "tiene_anotaciones" to tieneAnotaciones
+                        )
+                    }
+                }
+            }
+            
+            // Construir información de cabecera de sesión
+            // ✅ Usar horas demo si existen (sesión demo programada), sino usar horas del horario
+            val horaInicio = (sesion["hora_inicio_demo"] as? String) ?: (horario["hora_inicio"] as? String ?: "")
+            val horaFin = (sesion["hora_fin_demo"] as? String) ?: (horario["hora_fin"] as? String ?: "")
+            
+            val sesionInfo = mapOf(
+                "sesion_id" to sesionId,
+                "hora_inicio" to horaInicio,
+                "hora_fin" to horaFin,
+                "curso" to (curso?.get("nombre") ?: "Curso $cursoId"),
+                "curso_id" to cursoId,
+                "aula" to (aula?.get("nombre") ?: "Aula $aulaId"),
+                "aula_id" to aulaId,
+                "profesor" to nombreProfesor,
+                "estado" to estado,
+                "fecha" to fecha,
+                "alumnos_total" to totalAlumnos,
+                "alumnos_asistieron" to asistieron,
+                "lista_pasada" to listaPasada,
+                "editable" to (estado == "en_curso"),  // ✅ Solo editable si está EN CURSO (iniciada pero no completada)
+                "alumnos_inscritos" to (curso?.get("alumnos_inscritos") as? Int ?: totalAlumnos)  // ✅ Total inscritos
+            )
+            
+            // Construir item completo (sesion_info + alumnos)
+            val dataItem = mapOf(
+                "sesion_info" to sesionInfo,
+                "alumnos" to alumnosConAsistencia
+            )
+            
+            // Generar sugerencias
+            val suggestions = mutableListOf<Suggestion>()
+            
+            suggestions.add(
+                Suggestion(
+                    id = "sug_volver_clases_hoy",
+                    displayText = "Volver a clases de hoy",
+                    type = "Generica",
+                    recordAction = null,
+                    record = null,
+                    pagination = null,
+                    contextToken = null
+                )
+            )
+            
+            suggestions.add(
+                Suggestion(
+                    id = "sug_ver_clases_semana",
+                    displayText = "Ver toda la semana",
+                    type = "Generica",
+                    recordAction = null,
+                    record = null,
+                    pagination = null,
+                    contextToken = null
+                )
+            )
+            
+            val message = """
+                Alumnos de la sesión
+                
+                Curso: ${curso?.get("nombre")}
+                Fecha: $fecha
+                Horario: $horaInicio - $horaFin
+                Aula: ${aula?.get("nombre")}
+                Profesor: $nombreProfesor
+                Estado: ${when(estado) {
+                    "completada" -> "Completada"
+                    "en_curso" -> "En curso"
+                    else -> "Programada"
+                }}
+            """.trimIndent()
+            
+            return Envelope(
+                status = "success",
+                message = message,
+                data = DataSection(
+                    type = "alumnos_sesion",
+                    items = listOf(dataItem),
+                    summaryFields = null,
+                    pagination = null
+                ),
+                uiSuggestions = suggestions
+            )
+        }
+        
+        // ========== CASO 2: SESIÓN FUTURA (solo horarioCursoId) ==========
+        else {
+            val horarioIdFutura = horarioCursoId!!  // Ya validamos que no es null
+            val horario = MockData.getHorarioById(horarioIdFutura)
+                ?: return Envelope(
+                    status = "error",
+                    message = "No se encontró el horario con ID $horarioIdFutura",
+                    data = null,
+                    uiSuggestions = emptyList()
+                )
+            
+            val cursoId = horario["curso_id"] as Int
+            val aulaId = horario["aula_id"] as Int
+            val curso = MockData.getCurso(cursoId)
+            val aula = MockData.getAula(aulaId)
+            val alumnosDelCurso = MockData.getAlumnosByCursoId(cursoId)
+            
+            // Sesión futura: todos los alumnos sin marcar asistencia
+            val alumnosConAsistencia = alumnosDelCurso.map { alumno ->
+                mapOf(
+                    "id" to alumno["id"],
+                    "nombre" to alumno["nombre"],
+                    "asistio" to null,  // Sin marcar aún
+                    "tiene_anotaciones" to false
+                )
+            }
+            
+            // Construir información de cabecera (sin sesion_id)
+            val sesionInfo = mapOf(
+                "sesion_id" to null,  // ✅ No existe sesión aún
+                "horario_curso_id" to horarioIdFutura,
+                "hora_inicio" to (horario["hora_inicio"] as? String ?: ""),
+                "hora_fin" to (horario["hora_fin"] as? String ?: ""),
+                "curso" to (curso?.get("nombre") ?: "Curso $cursoId"),
+                "curso_id" to cursoId,
+                "aula" to (aula?.get("nombre") ?: "Aula $aulaId"),
+                "aula_id" to aulaId,
+                "profesor" to nombreProfesor,
+                "estado" to "programada",
+                "fecha" to "",  // Sin fecha específica (es recurrente)
+                "alumnos_total" to alumnosDelCurso.size,
+                "alumnos_asistieron" to 0,
+                "lista_pasada" to false,
+                "editable" to true,  // ✅ Sesión programada es editable (se puede iniciar)
+                "alumnos_inscritos" to (curso?.get("alumnos_inscritos") as? Int ?: alumnosDelCurso.size)  // ✅ Total inscritos
+            )
+            
+            val dataItem = mapOf(
+                "sesion_info" to sesionInfo,
+                "alumnos" to alumnosConAsistencia
+            )
+            
+            val suggestions = mutableListOf<Suggestion>()
+            suggestions.add(
+                Suggestion(
+                    id = "sug_volver_clases_hoy",
+                    displayText = "Volver a clases de hoy",
+                    type = "Generica",
+                    recordAction = null,
+                    record = null,
+                    pagination = null,
+                    contextToken = null
+                )
+            )
+            
+            val message = """
+                📋 Alumnos inscritos en el curso
+                
+                Curso: ${curso?.get("nombre")}
+                Horario: ${horario["hora_inicio"]} - ${horario["hora_fin"]}
+                Aula: ${aula?.get("nombre")}
+                Profesor: $nombreProfesor
+                
+                Total de alumnos: ${alumnosDelCurso.size}
+            """.trimIndent()
+            
+            return Envelope(
+                status = "success",
+                message = message,
+                data = DataSection(
+                    type = "alumnos_sesion",
+                    items = listOf(dataItem),
+                    summaryFields = null,
+                    pagination = null
+                ),
+                uiSuggestions = suggestions
+            )
+        }
+    }
 }
 
 /**
@@ -904,3 +1274,4 @@ private data class Quadruple<A, B, C, D>(
     val third: C,
     val fourth: D
 )
+

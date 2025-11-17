@@ -1,5 +1,6 @@
 package com.example.academiaapp.ui.screens
 
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,11 +35,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.academiaapp.AcademiaApp
@@ -55,6 +61,16 @@ fun LoginScreen(
     val uiState by loginViewModel.uiState.collectAsState()
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberUser by remember { mutableStateOf(false) }
+
+    // Configurar la barra de estado con el color primario
+    val view = LocalView.current
+    val primaryColor = MaterialTheme.colorScheme.primary
+    SideEffect {
+        val window = (view.context as? Activity)?.window
+        window?.statusBarColor = primaryColor.toArgb()
+        // Iconos claros en barra de estado (el color primario es oscuro)
+        WindowCompat.getInsetsController(window!!, view).isAppearanceLightStatusBars = false
+    }
 
     LaunchedEffect(uiState.success, uiState.mustChangePassword) {
         if (uiState.success) {
@@ -77,17 +93,53 @@ fun LoginScreen(
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFFEEF2FF), Color(0xFFE8F5E9))
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        Color(0xFFE8F5E9)
+                    )
                 )
             )
     ) {
+        // Círculos decorativos de fondo
+        Box(
+            modifier = Modifier
+                .size(300.dp)
+                .align(Alignment.TopStart)
+                .offset(x = (-100).dp, y = (-100).dp)
+                .background(
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    shape = androidx.compose.foundation.shape.CircleShape
+                )
+        )
+        Box(
+            modifier = Modifier
+                .size(200.dp)
+                .align(Alignment.TopEnd)
+                .offset(x = 50.dp, y = 100.dp)
+                .background(
+                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.08f),
+                    shape = androidx.compose.foundation.shape.CircleShape
+                )
+        )
+        Box(
+            modifier = Modifier
+                .size(250.dp)
+                .align(Alignment.BottomStart)
+                .offset(x = (-50).dp, y = 100.dp)
+                .background(
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f),
+                    shape = androidx.compose.foundation.shape.CircleShape
+                )
+        )
+        
         // Card central
         Card(
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(24.dp),
             shape = RoundedCornerShape(24.dp),
-            elevation = CardDefaults.cardElevation(8.dp),
+            elevation = CardDefaults.cardElevation(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f))
         ) {
             Column(
