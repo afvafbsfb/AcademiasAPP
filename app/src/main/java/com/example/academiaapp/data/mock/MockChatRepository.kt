@@ -363,9 +363,15 @@ class MockChatRepository(
                     
                     val cursoNombre = curso?.get("nombre") as? String ?: "la sesión"
                     val aulaNombre = aula?.get("nombre") as? String ?: "Aula"
-                    // ✅ FIX: Obtener horarios del objeto horario (siempre están ahí) en lugar de la sesión
-                    val horaInicio = horario?.get("hora_inicio") as? String ?: sesion?.get("hora_inicio") as? String ?: "00:00"
-                    val horaFin = horario?.get("hora_fin") as? String ?: sesion?.get("hora_fin") as? String ?: "00:00"
+                    // ✅ FIX: Priorizar hora_inicio_demo/hora_fin_demo (sesión demo), luego horario, luego sesión
+                    val horaInicio = (sesion?.get("hora_inicio_demo") as? String) 
+                        ?: (horario?.get("hora_inicio") as? String) 
+                        ?: (sesion?.get("hora_inicio") as? String) 
+                        ?: "00:00"
+                    val horaFin = (sesion?.get("hora_fin_demo") as? String) 
+                        ?: (horario?.get("hora_fin") as? String) 
+                        ?: (sesion?.get("hora_fin") as? String) 
+                        ?: "00:00"
                     
                     // Formatear fecha legible desde timestamp_alta (formato: "2025-10-22 08:02:00")
                     val timestampAlta = sesion?.get("timestamp_alta") as? String ?: ""
