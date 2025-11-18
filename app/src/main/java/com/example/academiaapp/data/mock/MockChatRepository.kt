@@ -129,7 +129,8 @@ class MockChatRepository(
             }
 
             // Envío de formulario de alta: si se recibe la acción submit en el contexto
-            message.contains("alta nuevo alumno", ignoreCase = true) && (context?.get("action") == "submit_alta") -> {
+            (message.contains("alta de alumno", ignoreCase = true) || message.contains("alta nuevo alumno", ignoreCase = true)) && 
+            (context?.get("action") == "submit_alta") -> {
                 val form = context["form_data"] as? Map<String, Any?> ?: emptyMap()
                 MockDataGenerator.generateAltaAlumnoSuccessResponse(form)
             }
@@ -356,11 +357,42 @@ class MockChatRepository(
                     val horarioId = sesion?.get("horario_curso_id") as? Int
                     val horario = horarioId?.let { MockData.getHorarioById(it) }
                     val cursoId = horario?.get("curso_id") as? Int
+                    val aulaId = sesion?.get("aula_id") as? Int
                     val curso = cursoId?.let { MockData.getCurso(it) }
+                    val aula = aulaId?.let { MockData.getAula(it) }
+                    
                     val cursoNombre = curso?.get("nombre") as? String ?: "la sesión"
+                    val aulaNombre = aula?.get("nombre") as? String ?: "Aula"
+                    // ✅ FIX: Obtener horarios del objeto horario (siempre están ahí) en lugar de la sesión
+                    val horaInicio = horario?.get("hora_inicio") as? String ?: sesion?.get("hora_inicio") as? String ?: "00:00"
+                    val horaFin = horario?.get("hora_fin") as? String ?: sesion?.get("hora_fin") as? String ?: "00:00"
+                    
+                    // Formatear fecha legible desde timestamp_alta (formato: "2025-10-22 08:02:00")
+                    val timestampAlta = sesion?.get("timestamp_alta") as? String ?: ""
+                    val fechaLegible = if (timestampAlta.isNotBlank()) {
+                        try {
+                            val fecha = java.time.LocalDate.parse(timestampAlta.substring(0, 10))
+                            val diasSemana = listOf("", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")
+                            val meses = listOf("", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                                             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
+                            "${diasSemana[fecha.dayOfWeek.value]} ${fecha.dayOfMonth} de ${meses[fecha.monthValue]} de ${fecha.year}"
+                        } catch (e: Exception) {
+                            "Fecha no disponible"
+                        }
+                    } else "Fecha no disponible"
                     
                     val asistenciaInfo = MockData.calcularAsistenciaSesion(sesionId)
                     val (presentes, ausentes, total) = asistenciaInfo ?: Triple(0, 0, 0)
+                    
+                    // Obtener nombres de alumnos ausentes
+                    val nombresAusentes = if (alumnosAusentes.isNotEmpty()) {
+                        val nombres = alumnosAusentes.mapNotNull { id ->
+                            MockData.getAlumno(id)?.get("nombre") as? String
+                        }.joinToString(", ")
+                        "\n  - $nombres"
+                    } else {
+                        ""
+                    }
                     
                     println("🔧 DEBUG Pasar lista - presentes=$presentes, ausentes=$ausentes, total=$total, anotaciones=$numAnotaciones")
                     
@@ -370,10 +402,14 @@ class MockChatRepository(
                         message = """
                             Se ha pasado lista correctamente
                             
+                            Fecha: $fechaLegible
+                            Horario: $horaInicio - $horaFin
+                            Aula: $aulaNombre
                             Curso: $cursoNombre
+                            
                             Resumen de asistencia:
                             • Presentes: $presentes de $total alumnos
-                            • Ausentes: $ausentes alumnos
+                            • Ausentes: $ausentes alumnos$nombresAusentes
                             • Anotaciones de ausencia creadas: $numAnotaciones
                         """.trimIndent(),
                         data = null,
@@ -402,6 +438,10 @@ class MockChatRepository(
                 val tipoAnotacion = context?.get("tipo_anotacion") as? String
                 val descripcion = context?.get("descripcion") as? String
                 val curso = context?.get("curso") as? String ?: ""
+                val fecha = context?.get("fecha") as? String ?: ""
+                val horaInicio = context?.get("hora_inicio") as? String ?: ""
+                val horaFin = context?.get("hora_fin") as? String ?: ""
+                val aula = context?.get("aula") as? String ?: ""
                 
                 if (sesionId != null && alumnoId != null && tipoAnotacion != null && descripcion != null) {
                     println("🔧 DEBUG Alta anotación - sesionId=$sesionId, alumnoId=$alumnoId, tipo=$tipoAnotacion")
@@ -421,8 +461,11 @@ class MockChatRepository(
                         message = """
                             Se ha dado de alta la anotación correctamente
                             
-                            Alumno: $alumnoNombre
+                            Fecha: $fecha
+                            Horario: $horaInicio - $horaFin
+                            Aula: $aula
                             Curso: $curso
+                            Alumno: $alumnoNombre
                             Tipo: $tipoAnotacion
                             Descripción: $descripcion
                         """.trimIndent(),

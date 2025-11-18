@@ -601,8 +601,31 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                             formSpec = m.items.firstOrNull() ?: emptyMap(),
                                                             onCancel = { vm.sendMessageWithContext("cancelar alta", mapOf("screen" to "alumnos")) },
                                                             onSubmit = { formData ->
+                                                                // Construir mensaje descriptivo con los datos del formulario
+                                                                val nombre = formData["nombre"] ?: ""
+                                                                val telefono = formData["telefono"] ?: ""
+                                                                val fecha = formData["fecha_nacimiento"] ?: ""
+                                                                val email = formData["email"] ?: ""
+                                                                val dni = formData["dni"] ?: ""
+                                                                val direccion = formData["direccion"] ?: ""
+                                                                val cursoId = formData["curso_id"]
+                                                                val cursoNombre = formData["curso_nombre"] as? String
+                                                                
+                                                                val mensaje = buildString {
+                                                                    append("Alta de alumno: ")
+                                                                    append("Nombre: $nombre, ")
+                                                                    append("Teléfono: $telefono, ")
+                                                                    append("Fecha Nacimiento: $fecha")
+                                                                    if (email.toString().isNotBlank()) append(", Email: $email")
+                                                                    if (dni.toString().isNotBlank()) append(", DNI: $dni")
+                                                                    if (direccion.toString().isNotBlank()) append(", Dirección: $direccion")
+                                                                    if (cursoId != null && cursoNombre != null) {
+                                                                        append(", Curso: $cursoNombre (ID $cursoId)")
+                                                                    }
+                                                                }
+                                                                
                                                                 // Enviar acción de submit al mock mediante contexto
-                                                                vm.sendMessageWithContext("alta nuevo alumno", mapOf(
+                                                                vm.sendMessageWithContext(mensaje, mapOf(
                                                                     "screen" to "alumnos",
                                                                     "action" to "submit_alta",
                                                                     "form_data" to formData
@@ -614,9 +637,62 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                         AlumnoModificacionForm(
                                                             formSpec = m.items.firstOrNull() ?: emptyMap(),
                                                             onCancel = { vm.sendMessageWithContext("cancelar modificación", mapOf("screen" to "alumnos")) },
-                                                            onSubmit = { formData, alumnoId ->
+                                                            onSubmit = { formData, alumnoId, datosOriginales ->
+                                                                // Construir mensaje solo con campos modificados
+                                                                val mensaje = buildString {
+                                                                    // Añadir nombre e ID del alumno al inicio
+                                                                    val nombreAlumno = datosOriginales["nombre"] ?: "Alumno"
+                                                                    append("Modificación de alumno: Nombre: $nombreAlumno (ID: $alumnoId)")
+                                                                    
+                                                                    val cambios = mutableListOf<String>()
+                                                                    
+                                                                    // Comparar cada campo
+                                                                    if (formData["nombre"] != datosOriginales["nombre"]) {
+                                                                        cambios.add("Nombre: ${formData["nombre"]}")
+                                                                    }
+                                                                    if (formData["telefono"] != datosOriginales["telefono"]) {
+                                                                        cambios.add("Teléfono: ${formData["telefono"]}")
+                                                                    }
+                                                                    if (formData["email"]?.toString()?.isNotBlank() == true && 
+                                                                        formData["email"] != datosOriginales["email"]) {
+                                                                        cambios.add("Email: ${formData["email"]}")
+                                                                    }
+                                                                    if (formData["dni"]?.toString()?.isNotBlank() == true && 
+                                                                        formData["dni"] != datosOriginales["dni"]) {
+                                                                        cambios.add("DNI: ${formData["dni"]}")
+                                                                    }
+                                                                    
+                                                                    // Fecha (comparar formateada)
+                                                                    val fechaNueva = formData["fecha_nacimiento"]
+                                                                    val fechaOriginal = datosOriginales["fecha_nacimiento"]
+                                                                    if (fechaNueva != fechaOriginal) {
+                                                                        cambios.add("Fecha Nacimiento: $fechaNueva")
+                                                                    }
+                                                                    
+                                                                    if (formData["direccion"]?.toString()?.isNotBlank() == true && 
+                                                                        formData["direccion"] != datosOriginales["direccion"]) {
+                                                                        cambios.add("Dirección: ${formData["direccion"]}")
+                                                                    }
+                                                                    
+                                                                    // Curso (comparar IDs y mostrar nombre)
+                                                                    val cursoNuevoId = formData["curso_id"] as? Int
+                                                                    val cursoOriginalId = (datosOriginales["curso_id"] as? Number)?.toInt()
+                                                                    if (cursoNuevoId != cursoOriginalId && cursoNuevoId != null) {
+                                                                        val cursoNombre = formData["curso_nombre"] ?: "Curso"
+                                                                        cambios.add("Curso: $cursoNombre (ID $cursoNuevoId)")
+                                                                    }
+                                                                    
+                                                                    // Unir todos los cambios
+                                                                    if (cambios.isNotEmpty()) {
+                                                                        append(", ")
+                                                                        append(cambios.joinToString(", "))
+                                                                    } else {
+                                                                        append(" (sin cambios)")
+                                                                    }
+                                                                }
+                                                                
                                                                 // Enviar acción de submit de modificación al mock
-                                                                vm.sendMessageWithContext("modificación de alumno", mapOf(
+                                                                vm.sendMessageWithContext(mensaje, mapOf(
                                                                     "screen" to "alumnos",
                                                                     "action" to "submit_modificacion",
                                                                     "alumno_id" to alumnoId,
@@ -1354,11 +1430,10 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                 Column {
                     Text("¿Estás seguro de que deseas dar de baja al siguiente alumno?")
                     Spacer(Modifier.height(12.dp))
-                    Text("Nombre: Juan García García")
+                    Text("Nombre: Juan García García (ID: 1)")
                     Text("Email: juan.garcia1@example.com")
                     Text("DNI: 10000001A")
                     Text("Curso: Inglés B1 - Mañanas")
-                    Text("ID: 1")
                 }
             },
             confirmButton = {
@@ -1408,6 +1483,7 @@ private fun AlumnoAltaForm(
     var fecha by remember { mutableStateOf("") } // DD/MM/YYYY
     var direccion by remember { mutableStateOf("") }
     var cursoSeleccionado by remember { mutableStateOf<Int?>(null) }
+    var cursoNombre by remember { mutableStateOf<String?>(null) }
     var cursoLabel by remember { mutableStateOf("Seleccionar curso") }
     var expandedCursos by remember { mutableStateOf(false) }
 
@@ -1546,6 +1622,7 @@ private fun AlumnoAltaForm(
                             text = { Text(label) },
                             onClick = {
                                 cursoSeleccionado = id
+                                cursoNombre = label
                                 cursoLabel = label
                                 expandedCursos = false
                             }
@@ -1606,7 +1683,8 @@ private fun AlumnoAltaForm(
                         "telefono" to telefono,
                         "fecha_nacimiento" to fecha,
                         "direccion" to direccion,
-                        "curso_id" to cursoSeleccionado
+                        "curso_id" to cursoSeleccionado,
+                        "curso_nombre" to cursoNombre
                     )
                     onSubmit(formMap)
                 }) {
@@ -1626,7 +1704,7 @@ private fun AlumnoAltaForm(
 @Composable
 private fun AlumnoModificacionForm(
     formSpec: Map<String, Any?>,
-    onSubmit: (Map<String, Any?>, Int) -> Unit,
+    onSubmit: (Map<String, Any?>, Int, Map<String, Any?>) -> Unit,
     onCancel: () -> Unit
 ) {
     // Extraer cursos disponibles y datos del alumno desde formSpec
@@ -1659,6 +1737,16 @@ private fun AlumnoModificacionForm(
     // ✅ Pre-cargar curso seleccionado si existe
     val cursoIdInicial = (alumnoData["curso_id"] as? Number)?.toInt()
     var cursoSeleccionado by remember { mutableStateOf(cursoIdInicial) }
+    var cursoNombre by remember {
+        mutableStateOf<String?>(
+            if (cursoIdInicial != null) {
+                cursos.find { (it["id"] as? Number)?.toInt() == cursoIdInicial }
+                    ?.get("display_text") as? String
+            } else {
+                null
+            }
+        )
+    }
     var cursoLabel by remember {
         mutableStateOf(
             if (cursoIdInicial != null) {
@@ -1806,6 +1894,7 @@ private fun AlumnoModificacionForm(
                             text = { Text(label) },
                             onClick = {
                                 cursoSeleccionado = id
+                                cursoNombre = label
                                 cursoLabel = label
                                 expandedCursos = false
                             }
@@ -1866,11 +1955,12 @@ private fun AlumnoModificacionForm(
                         "telefono" to telefono,
                         "fecha_nacimiento" to fecha,
                         "direccion" to direccion,
-                        "curso_id" to cursoSeleccionado
+                        "curso_id" to cursoSeleccionado,
+                        "curso_nombre" to cursoNombre
                     )
                     // Obtener ID del alumno desde alumnoData
                     val alumnoId = (alumnoData["id"] as? Number)?.toInt() ?: -1
-                    onSubmit(formMap, alumnoId)
+                    onSubmit(formMap, alumnoId, alumnoData)
                 }) {
                     Text("Sí")
                 }
