@@ -577,7 +577,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                             }
 
                             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = align) {
-                                BoxWithConstraints(Modifier.fillMaxWidth()) {
+                                BoxWithConstraints {
                                     val hasTable = showExtras && m.items.isNotEmpty()
                                     val maxBubbleWidth = if (hasTable) this.maxWidth * 0.95f else this.maxWidth * 0.8f
                                     Card(

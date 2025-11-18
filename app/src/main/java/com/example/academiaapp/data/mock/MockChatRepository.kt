@@ -397,21 +397,23 @@ class MockChatRepository(
                     println("🔧 DEBUG Pasar lista - presentes=$presentes, ausentes=$ausentes, total=$total, anotaciones=$numAnotaciones")
                     
                     // Generar respuesta de confirmación
+                    val mensaje = buildString {
+                        appendLine("Se ha pasado lista correctamente")
+                        appendLine()
+                        appendLine("Fecha: $fechaLegible")
+                        appendLine("Horario: $horaInicio - $horaFin")
+                        appendLine("Aula: $aulaNombre")
+                        appendLine("Curso: $cursoNombre")
+                        appendLine()
+                        appendLine("Resumen de asistencia:")
+                        appendLine("• Presentes: $presentes de $total alumnos")
+                        appendLine("• Ausentes: $ausentes alumnos$nombresAusentes")
+                        append("• Anotaciones de ausencia creadas: $numAnotaciones")
+                    }
+                    
                     Envelope(
                         status = "success",
-                        message = """
-                            Se ha pasado lista correctamente
-                            
-                            Fecha: $fechaLegible
-                            Horario: $horaInicio - $horaFin
-                            Aula: $aulaNombre
-                            Curso: $cursoNombre
-                            
-                            Resumen de asistencia:
-                            • Presentes: $presentes de $total alumnos
-                            • Ausentes: $ausentes alumnos$nombresAusentes
-                            • Anotaciones de ausencia creadas: $numAnotaciones
-                        """.trimIndent(),
+                        message = mensaje,
                         data = null,
                         uiSuggestions = listOf(
                             Suggestion(
