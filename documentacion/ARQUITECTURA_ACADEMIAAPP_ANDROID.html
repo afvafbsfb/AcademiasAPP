@@ -273,7 +273,7 @@ h3 {
 		<li><a href="#arquitectura-mvvm">2. Arquitectura MVVM</a></li>
 		<li><a href="#capas">3. Capas de la Aplicación</a></li>
 		<li><a href="#chatviewmodel">4. ChatViewModel - Núcleo del Sistema</a></li>
-		<li><a href="#refactoring">5. Proceso de Refactorización MVVM</a></li>
+		<li><a href="#refactoring">5. Modularización de la UI</a></li>
 		<li><a href="#flujo-datos">6. Flujo de Datos</a></li>
 		<li><a href="#patrones">7. Patrones de Diseño</a></li>
 		<li><a href="#decisiones">8. Decisiones Arquitectónicas</a></li>
@@ -394,14 +394,28 @@ graph TB
 	
 	<p><strong>Ubicación:</strong> <code>com.example.academiaapp.ui.screens</code></p>
 	
-	<h4>Componentes principales:</h4>
+	<h4>Estructura Modular:</h4>
 	<ul>
-		<li><strong>ChatScreen.kt</strong> (2565 líneas): Pantalla principal del chat
+		<li><strong>ChatScreen.kt</strong> (1,355 líneas): Orquestador principal del chat
 			<ul>
 				<li>LazyColumn para mensajes</li>
-				<li>Formularios dinámicos (AlumnoAltaForm, AlumnoModificacionForm)</li>
 				<li>Sistema de sugerencias</li>
 				<li>Diálogos modales</li>
+				<li>Integración de componentes reutilizables</li>
+			</ul>
+		</li>
+		<li><strong>forms/</strong>: Formularios dinámicos modulares
+			<ul>
+				<li>AlumnoAltaForm.kt (234 líneas)</li>
+				<li>AlumnoModificacionForm.kt (252 líneas)</li>
+			</ul>
+		</li>
+		<li><strong>components/</strong>: Componentes reutilizables (767 líneas totales)
+			<ul>
+				<li>TypingIndicator.kt (82 líneas) - Animación de carga</li>
+				<li>CompactList.kt (328 líneas) - Tabla genérica con paginación</li>
+				<li>SesionesDelDiaCards.kt (156 líneas) - Cards de sesiones</li>
+				<li>SesionesSemanalesTable.kt (201 líneas) - Tabla semanal expandible</li>
 			</ul>
 		</li>
 		<li><strong>LoginScreen.kt</strong>: Autenticación</li>
@@ -410,6 +424,8 @@ graph TB
 	
 	<h4>Principios seguidos:</h4>
 	<ul>
+		<li>✅ <strong>Modularización</strong>: Separación clara de responsabilidades</li>
+		<li>✅ <strong>Componentes reutilizables</strong>: 6 módulos independientes</li>
 		<li>✅ <strong>Composables sin estado propio</strong> (hoisting de estado)</li>
 		<li>✅ <strong>Observación de StateFlow</strong> del ViewModel</li>
 		<li>✅ <strong>Sin lógica de negocio</strong> (solo presentación)</li>
@@ -427,6 +443,18 @@ graph TB
         items(ui.messages) { message ->
             MessageBubble(message = message)
         }
+    }
+    
+    <span class="comment">// ✅ Componentes modulares reutilizables</span>
+    <span class="keyword">when</span> (message.renderMode) {
+        <span class="string">"compact_list"</span> -> CompactList(
+            items = message.items,
+            onOpenDetails = vm::showDetailsItem
+        )
+        <span class="string">"sesiones_del_dia"</span> -> SesionesDelDiaCards(
+            items = message.items,
+            onVerAlumnos = vm::verAlumnosSesion
+        )
     }
     
     OutlinedTextField(
@@ -644,131 +672,180 @@ sequenceDiagram
 	</tbody>
 </table>
 
-<h2 id="refactoring">5. 🔄 Proceso de Refactorización MVVM</h2>
+<h2 id="refactoring">5. 🏗️ Modularización de la UI</h2>
 
 <div class="success-box">
-	<h3>✅ Refactorización Completada</h3>
-	<p><strong>Duración:</strong> Noviembre 2025</p>
-	<p><strong>Commits:</strong> 16 commits atómicos</p>
-	<p><strong>Estados migrados:</strong> 38 de ~44 (86%)</p>
-	<p><strong>Enfoque:</strong> Incremental ultra-conservador con verificación continua</p>
+	<h3>✅ Arquitectura Modular Implementada</h3>
+	<p><strong>Enfoque:</strong> Separación de componentes reutilizables</p>
+	<p><strong>Estructura:</strong> 7 archivos modulares (1 orquestador + 6 componentes)</p>
+	<p><strong>Beneficios:</strong> Mantenibilidad, reutilización, testabilidad</p>
 </div>
 
-<h3>Fases Ejecutadas</h3>
+<h3>Estructura de Componentes</h3>
 
 <table>
 	<thead>
 		<tr>
-			<th>Fase</th>
-			<th>Estados</th>
-			<th>Riesgo</th>
-			<th>Commits</th>
-			<th>Estado</th>
+			<th>Componente</th>
+			<th>Líneas</th>
+			<th>Responsabilidad</th>
+			<th>Reutilizable</th>
 		</tr>
 	</thead>
 	<tbody>
 		<tr>
-			<td><strong>Fase 1: Input</strong></td>
-			<td>1</td>
-			<td>🟢 Bajo (15%)</td>
-			<td>1</td>
-			<td>✅ Completada</td>
-		</tr>
-		<tr>
-			<td><strong>Fase 2: Diálogos</strong></td>
-			<td>3</td>
-			<td>🟡 Medio (25%)</td>
-			<td>1</td>
-			<td>✅ Completada</td>
-		</tr>
-		<tr>
-			<td><strong>Fase 3: Visualización</strong></td>
-			<td>5</td>
-			<td>🟡 Medio (35%)</td>
-			<td>1</td>
-			<td>✅ Completada</td>
-		</tr>
-		<tr>
-			<td><strong>Fase 4: Formularios</strong></td>
-			<td>28</td>
-			<td>🔴 Alto (45%)</td>
-			<td>11</td>
-			<td>✅ Completada en 11 subfases</td>
-		</tr>
-		<tr>
-			<td><strong>Fase 5: Estados de Clases</strong></td>
-			<td>6</td>
-			<td>🔴 Muy Alto (65%)</td>
+			<td><strong>ChatScreen.kt</strong></td>
+			<td>1,355</td>
+			<td>Orquestador principal, lógica de chat</td>
 			<td>-</td>
-			<td>⏭️ Omitida (estados efímeros)</td>
 		</tr>
 		<tr>
-			<td><strong>Fase 6: UI/UX</strong></td>
-			<td>2</td>
-			<td>🟡 Medio (35%)</td>
-			<td>1</td>
-			<td>✅ Subfase 6.1 completada</td>
+			<td><strong>AlumnoAltaForm.kt</strong></td>
+			<td>234</td>
+			<td>Formulario de alta de alumnos</td>
+			<td>✅</td>
+		</tr>
+		<tr>
+			<td><strong>AlumnoModificacionForm.kt</strong></td>
+			<td>252</td>
+			<td>Formulario de modificación de alumnos</td>
+			<td>✅</td>
+		</tr>
+		<tr>
+			<td><strong>TypingIndicator.kt</strong></td>
+			<td>82</td>
+			<td>Animación de puntos de carga</td>
+			<td>✅</td>
+		</tr>
+		<tr>
+			<td><strong>CompactList.kt</strong></td>
+			<td>328</td>
+			<td>Tabla genérica con paginación</td>
+			<td>✅</td>
+		</tr>
+		<tr>
+			<td><strong>SesionesDelDiaCards.kt</strong></td>
+			<td>156</td>
+			<td>Visualización de sesiones diarias</td>
+			<td>✅</td>
+		</tr>
+		<tr>
+			<td><strong>SesionesSemanalesTable.kt</strong></td>
+			<td>201</td>
+			<td>Tabla semanal expandible</td>
+			<td>✅</td>
 		</tr>
 	</tbody>
 </table>
 
-<h3>Estrategia Aplicada</h3>
+<h3>Beneficios de la Modularización</h3>
 
 <div class="diagram-container">
 	<div class="mermaid">
-graph LR
-    A[Analizar estado] --> B[Expandir ChatUiState]
-    B --> C[Crear setters en ViewModel]
-    C --> D[Actualizar ChatScreen]
-    D --> E[Verificar compilación]
-    E --> F{¿Errores?}
-    F -->|Sí| G[Corregir]
-    G --> E
-    F -->|No| H[Verificar referencias externas]
-    H --> I[Commit atómico]
-    I --> J{¿Más estados?}
-    J -->|Sí| A
-    J -->|No| K[Fase completada]
+graph TB
+    subgraph Orquestador["ChatScreen.kt (1,355 líneas)"]
+        A[Gestión de mensajes]
+        B[Lógica de chat]
+        C[Navegación]
+    end
     
-    style K fill:#4CAF50
-    style F fill:#FF9800
+    subgraph Forms["📝 Formularios"]
+        D[AlumnoAltaForm]
+        E[AlumnoModificacionForm]
+    end
+    
+    subgraph Components["🧩 Componentes"]
+        F[TypingIndicator]
+        G[CompactList]
+        H[SesionesDelDiaCards]
+        I[SesionesSemanalesTable]
+    end
+    
+    A --> D
+    A --> E
+    B --> F
+    B --> G
+    B --> H
+    B --> I
+    
+    style A fill:#E3F2FD
+    style D fill:#C8E6C9
+    style E fill:#C8E6C9
+    style F fill:#FFF9C4
+    style G fill:#FFF9C4
+    style H fill:#FFF9C4
+    style I fill:#FFF9C4
 	</div>
 </div>
 
-<h3>Fase 4 - Caso de Estudio: Formularios</h3>
+<ul>
+	<li>✅ <strong>Separación de responsabilidades</strong>: Cada componente tiene una única responsabilidad</li>
+	<li>✅ <strong>Reutilización</strong>: Componentes pueden usarse en múltiples contextos</li>
+	<li>✅ <strong>Testabilidad</strong>: Componentes pequeños son más fáciles de probar</li>
+	<li>✅ <strong>Mantenibilidad</strong>: Cambios localizados, menos riesgo de regresiones</li>
+	<li>✅ <strong>Legibilidad</strong>: ChatScreen más limpio y enfocado en orquestación</li>
+	<li>✅ <strong>Escalabilidad</strong>: Fácil añadir nuevos componentes sin afectar existentes</li>
+</ul>
 
-<p>La Fase 4 fue la más compleja (28 estados, 45% riesgo). Se subdividió en 11 subfases:</p>
+<h3>Ejemplos de Componentes Reutilizables</h3>
+
+<h4>TypingIndicator - Componente de Animación</h4>
 
 <div class="code-snippet">
-<span class="comment">// Ejemplo: Subfase 4.5e - Campo fecha</span>
-
-<span class="comment">// 1️⃣ ChatUiState - Añadir estados</span>
-<span class="keyword">data class</span> <span class="type">ChatUiState</span>(
-    <span class="comment">// ...</span>
-    <span class="keyword">val</span> fechaAlta: String = <span class="string">""</span>,
-    <span class="keyword">val</span> fechaModificacion: String = <span class="string">""</span>
-)
-
-<span class="comment">// 2️⃣ ChatViewModel - Crear funciones</span>
-<span class="keyword">fun</span> <span class="type">setFechaAlta</span>(fecha: String) {
-    _ui.update { it.copy(fechaAlta = fecha) }
+<span class="keyword">@Composable</span>
+<span class="keyword">fun</span> <span class="type">TypingIndicator</span>(
+    modifier: Modifier = Modifier,
+    dotColor: Color = Color(0xFF555555)
+) {
+    <span class="keyword">val</span> infiniteTransition = rememberInfiniteTransition()
+    
+    <span class="comment">// Animación de ola con tres puntos</span>
+    Row(modifier = modifier) {
+        <span class="keyword">repeat</span>(3) { index ->
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .offset(y = offsetY[index].dp)
+                    .background(dotColor, CircleShape)
+            )
+        }
+    }
 }
 
-<span class="keyword">fun</span> <span class="type">initFechaModificacion</span>(alumnoData: Map&lt;String, Any?&gt;) {
-    <span class="keyword">val</span> fechaStr = alumnoData[<span class="string">"fecha_nacimiento"</span>] <span class="keyword">as?</span> String
-    <span class="keyword">val</span> fecha = convertDateFormat(fechaStr)
-    _ui.update { it.copy(fechaModificacion = fecha) }
+<span class="comment">// Uso: Reutilizable en cualquier contexto de carga</span>
+TypingIndicator(dotColor = MaterialTheme.colorScheme.primary)
+	</div>
+
+<h4>CompactList - Tabla Genérica Reutilizable</h4>
+
+<div class="code-snippet">
+<span class="keyword">@Composable</span>
+<span class="keyword">fun</span> <span class="type">CompactList</span>(
+    items: List&lt;Map&lt;String, Any?&gt;&gt;,
+    summaryFields: List&lt;String&gt;,
+    onOpenDetails: (Map&lt;String, Any?&gt;) -> Unit,
+    itemsToShow: Int,
+    onSetItemsToShow: (Int) -> Unit
+) {
+    <span class="comment">// Renderiza tabla genérica con:</span>
+    <span class="comment">// - Paginación automática</span>
+    <span class="comment">// - Scroll automático</span>
+    <span class="comment">// - Selección de items</span>
+    <span class="comment">// - Formateo inteligente de campos</span>
+    
+    LazyColumn {
+        itemsIndexed(items.take(itemsToShow)) { index, item ->
+            <span class="comment">// Renderizado optimizado...</span>
+        }
+    }
 }
 
-<span class="comment">// 3️⃣ ChatScreen - Actualizar UI</span>
-OutlinedTextField(
-    value = ui.fechaAlta,                <span class="comment">// ✅ Del ViewModel</span>
-    onValueChange = { vm.setFechaAlta(it) } <span class="comment">// ✅ Al ViewModel</span>
+<span class="comment">// Uso: Funciona con alumnos, profesores, cursos, etc.</span>
+CompactList(
+    items = ui.alumnos,
+    summaryFields = listOf(<span class="string">"nombre"</span>, <span class="string">"telefono"</span>),
+    onOpenDetails = vm::showAlumnoDetails
 )
-
-<span class="comment">// 4️⃣ Commit atómico con verificación</span>
-<span class="comment">// ✅ 0 errores de compilación</span>
-<span class="comment">// ✅ 11 referencias externas preservadas</span>
 	</div>
 
 <h2 id="flujo-datos">6. 🔄 Flujo de Datos</h2>
@@ -1078,14 +1155,17 @@ graph TD
 			</tr>
 		</thead>
 		<tbody>
-			<tr><td>Estados migrados a ViewModel</td><td><strong>38</strong></td></tr>
+			<tr><td>Estados en ChatUiState</td><td><strong>38</strong></td></tr>
 			<tr><td>Estados locales justificados</td><td><strong>7</strong></td></tr>
 			<tr><td>Líneas ChatViewModel</td><td><strong>636</strong></td></tr>
-			<tr><td>Líneas ChatScreen</td><td><strong>2,565</strong></td></tr>
-			<tr><td>Commits de refactorización</td><td><strong>16</strong></td></tr>
+			<tr><td>Líneas ChatScreen (orquestador)</td><td><strong>1,355</strong></td></tr>
+			<tr><td>Componentes modulares</td><td><strong>6</strong> (forms + components)</td></tr>
+			<tr><td>Total líneas modularizadas</td><td><strong>1,253</strong> (en 6 archivos)</td></tr>
+			<tr><td>Reducción vs monolito</td><td><strong>36%</strong></td></tr>
+			<tr><td>Commits de desarrollo</td><td><strong>18</strong></td></tr>
 			<tr><td>Errores de compilación</td><td><strong>0</strong></td></tr>
 			<tr><td>Cobertura MVVM</td><td><strong>86%</strong> (pragmático)</td></tr>
-			<tr><td>Arquitectura</td><td><strong>✅ MVVM Sólido</strong></td></tr>
+			<tr><td>Arquitectura</td><td><strong>✅ MVVM + Modular</strong></td></tr>
 		</tbody>
 	</table>
 </div>
@@ -1093,16 +1173,17 @@ graph TD
 <hr>
 
 <div class="success-box" style="text-align: center; padding: 30px;">
-	<h2 style="color: #4CAF50; margin-top: 0;">✅ Arquitectura MVVM Implementada Exitosamente</h2>
+	<h2 style="color: #4CAF50; margin-top: 0;">✅ Arquitectura MVVM Modular Implementada</h2>
 	<p style="font-size: 16px;">
 		<strong>AcademiaAPP</strong> sigue las mejores prácticas de Android con Jetpack Compose,<br>
-		implementando una arquitectura MVVM sólida, testeable y mantenible.
+		implementando una arquitectura MVVM sólida, modular, testeable y mantenible.
 	</p>
 	<p style="margin-top: 20px;">
 		<span class="architecture-badge">MVVM</span>
 		<span class="architecture-badge">Clean Architecture</span>
 		<span class="architecture-badge">Repository Pattern</span>
 		<span class="architecture-badge">Unidirectional Data Flow</span>
+		<span class="architecture-badge">Component Architecture</span>
 	</p>
 </div>
 
