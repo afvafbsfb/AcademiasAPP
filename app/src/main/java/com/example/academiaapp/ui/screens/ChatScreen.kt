@@ -117,6 +117,7 @@ import com.example.academiaapp.ui.components.SuggestionClarificationDialog
 import com.example.academiaapp.ui.utils.MenuBuilder
 import com.example.academiaapp.data.remote.dto.needsClarification
 import com.example.academiaapp.data.mock.MockData
+import com.example.academiaapp.ui.viewmodels.ChatUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -620,7 +621,9 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                     "action" to "submit_alta",
                                                                     "form_data" to formData
                                                                 ))
-                                                            }
+                                                            },
+                                                            vm = vm,
+                                                            ui = ui
                                                         )
                                                     } else if (m.type == "formulario_modificacion_alumno") {
                                                         // ✅ NUEVO: Formulario de modificación con datos pre-cargados
@@ -688,7 +691,9 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                     "alumno_id" to alumnoId,
                                                                     "form_data" to formData
                                                                 ))
-                                                            }
+                                                            },
+                                                            vm = vm,
+                                                            ui = ui
                                                         )
                                                     } else if (m.type == "sesiones_dia") {
                                                         // Renderizador especial para clases del día (cards híbridas)
@@ -813,7 +818,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                         )
                                                     } else if (m.type == "sesiones_semana") {
                                                         // Renderizador especial para vista semanal
-                                                        SesionesSemanalesTable(items = m.items)
+                                                        SesionesSemanalesTable(items = m.items, expandedDay = ui.expandedDay, onToggleExpandedDay = vm::toggleExpandedDay)
                                                     } else if (m.type == "alumnos_sesion") {
                                                         // Renderizador especial para alumnos de una sesión
                                                         val dataItem = m.items.firstOrNull() ?: emptyMap()
@@ -1012,7 +1017,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                     } else {
                                                         val typeLabel = m.type?.let { "Resultados (${it})" } ?: "Resultados:"
                                                         Text(typeLabel, color = textColor)
-                                                        CompactList(items = m.items, summaryFields = m.summaryFields, onOpenDetails = vm::showDetailsItem)
+                                                        CompactList(items = m.items, summaryFields = m.summaryFields, onOpenDetails = vm::showDetailsItem, itemsToShow = ui.itemsToShow, onSetItemsToShow = vm::setItemsToShow, selectedItemId = ui.selectedItemId, onSelectItem = vm::selectItem)
                                                     }
                                                 }
                                                 // No mostrar sugerencias si es formulario (ya tiene sus propios botones)
@@ -1461,7 +1466,9 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
 private fun AlumnoAltaForm(
     formSpec: Map<String, Any?>,
     onSubmit: (Map<String, Any?>) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    vm: ChatViewModel,
+    ui: ChatUiState
 ) {
     // Extraer cursos disponibles si vienen
     val cursos = (formSpec["cursos_disponibles"] as? List<Map<String, Any?>>) ?: emptyList()
@@ -1477,11 +1484,6 @@ private fun AlumnoAltaForm(
     var cursoLabel by remember { mutableStateOf("Seleccionar curso") }
     var expandedCursos by remember { mutableStateOf(false) }
 
-    // Validation states
-    var nombreError by remember { mutableStateOf(false) }
-    var telefonoError by remember { mutableStateOf(false) }
-    var fechaError by remember { mutableStateOf(false) }
-
     // Diálogo de confirmación
     var showConfirmDialog by remember { mutableStateOf(false) }
 
@@ -1496,18 +1498,18 @@ private fun AlumnoAltaForm(
         var firstErrorField: FocusRequester? = null
 
         if (nombre.isBlank()) {
-            nombreError = true
+            vm.setNombreError(true)
             ok = false
             if (firstErrorField == null) firstErrorField = nombreFocusRequester
         }
         if (telefono.isBlank()) {
-            telefonoError = true
+            vm.setTelefonoError(true)
             ok = false
             if (firstErrorField == null) firstErrorField = telefonoFocusRequester
         }
         val fechaRegex = "^\\d{2}/\\d{2}/\\d{4}$".toRegex()
         if (!fechaRegex.matches(fecha)) {
-            fechaError = true
+            vm.setFechaError(true)
             ok = false
             if (firstErrorField == null) firstErrorField = fechaFocusRequester
         }
@@ -1528,27 +1530,27 @@ private fun AlumnoAltaForm(
         // Nombre (required)
         OutlinedTextField(
             value = nombre,
-            onValueChange = { nombre = it; if (it.isNotBlank()) nombreError = false },
+            onValueChange = { nombre = it; if (it.isNotBlank()) vm.setNombreError(false) },
             label = { Text("Nombre completo *") },
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(nombreFocusRequester)
-                .background(if (nombreError) Color(0xFFFFE0B2) else Color.Transparent),
+                .background(if (ui.nombreError) Color(0xFFFFE0B2) else Color.Transparent),
             singleLine = true,
-            isError = nombreError
+            isError = ui.nombreError
         )
 
         // Telefono (required)
         OutlinedTextField(
             value = telefono,
-            onValueChange = { telefono = it; if (it.isNotBlank()) telefonoError = false },
+            onValueChange = { telefono = it; if (it.isNotBlank()) vm.setTelefonoError(false) },
             label = { Text("Teléfono *") },
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(telefonoFocusRequester)
-                .background(if (telefonoError) Color(0xFFFFE0B2) else Color.Transparent),
+                .background(if (ui.telefonoError) Color(0xFFFFE0B2) else Color.Transparent),
             singleLine = true,
-            isError = telefonoError,
+            isError = ui.telefonoError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
         )
 
@@ -1566,15 +1568,15 @@ private fun AlumnoAltaForm(
                     }
                 }
                 fecha = masked
-                if (masked.isNotBlank()) fechaError = false
+                if (masked.isNotBlank()) vm.setFechaError(false)
             },
             label = { Text("Fecha de nacimiento (DD/MM/AAAA) *") },
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(fechaFocusRequester)
-                .background(if (fechaError) Color(0xFFFFE0B2) else Color.Transparent),
+                .background(if (ui.fechaError) Color(0xFFFFE0B2) else Color.Transparent),
             singleLine = true,
-            isError = fechaError,
+            isError = ui.fechaError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
@@ -1695,7 +1697,9 @@ private fun AlumnoAltaForm(
 private fun AlumnoModificacionForm(
     formSpec: Map<String, Any?>,
     onSubmit: (Map<String, Any?>, Int, Map<String, Any?>) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    vm: ChatViewModel,
+    ui: ChatUiState
 ) {
     // Extraer cursos disponibles y datos del alumno desde formSpec
     val cursos = (formSpec["cursos_disponibles"] as? List<Map<String, Any?>>) ?: emptyList()
@@ -1749,11 +1753,6 @@ private fun AlumnoModificacionForm(
     }
     var expandedCursos by remember { mutableStateOf(false) }
 
-    // Validation states
-    var nombreError by remember { mutableStateOf(false) }
-    var telefonoError by remember { mutableStateOf(false) }
-    var fechaError by remember { mutableStateOf(false) }
-
     // Diálogo de confirmación
     var showConfirmDialog by remember { mutableStateOf(false) }
 
@@ -1768,18 +1767,18 @@ private fun AlumnoModificacionForm(
         var firstErrorField: FocusRequester? = null
 
         if (nombre.isBlank()) {
-            nombreError = true
+            vm.setNombreError(true)
             ok = false
             if (firstErrorField == null) firstErrorField = nombreFocusRequester
         }
         if (telefono.isBlank()) {
-            telefonoError = true
+            vm.setTelefonoError(true)
             ok = false
             if (firstErrorField == null) firstErrorField = telefonoFocusRequester
         }
         val fechaRegex = "^\\d{2}/\\d{2}/\\d{4}$".toRegex()
         if (!fechaRegex.matches(fecha)) {
-            fechaError = true
+            vm.setFechaError(true)
             ok = false
             if (firstErrorField == null) firstErrorField = fechaFocusRequester
         }
@@ -1800,27 +1799,27 @@ private fun AlumnoModificacionForm(
         // Nombre (required)
         OutlinedTextField(
             value = nombre,
-            onValueChange = { nombre = it; if (it.isNotBlank()) nombreError = false },
+            onValueChange = { nombre = it; if (it.isNotBlank()) vm.setNombreError(false) },
             label = { Text("Nombre completo *") },
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(nombreFocusRequester)
-                .background(if (nombreError) Color(0xFFFFE0B2) else Color.Transparent),
+                .background(if (ui.nombreError) Color(0xFFFFE0B2) else Color.Transparent),
             singleLine = true,
-            isError = nombreError
+            isError = ui.nombreError
         )
 
         // Telefono (required)
         OutlinedTextField(
             value = telefono,
-            onValueChange = { telefono = it; if (it.isNotBlank()) telefonoError = false },
+            onValueChange = { telefono = it; if (it.isNotBlank()) vm.setTelefonoError(false) },
             label = { Text("Teléfono *") },
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(telefonoFocusRequester)
-                .background(if (telefonoError) Color(0xFFFFE0B2) else Color.Transparent),
+                .background(if (ui.telefonoError) Color(0xFFFFE0B2) else Color.Transparent),
             singleLine = true,
-            isError = telefonoError,
+            isError = ui.telefonoError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
         )
 
@@ -1838,15 +1837,15 @@ private fun AlumnoModificacionForm(
                     }
                 }
                 fecha = masked
-                if (masked.isNotBlank()) fechaError = false
+                if (masked.isNotBlank()) vm.setFechaError(false)
             },
             label = { Text("Fecha de nacimiento (DD/MM/AAAA) *") },
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(fechaFocusRequester)
-                .background(if (fechaError) Color(0xFFFFE0B2) else Color.Transparent),
+                .background(if (ui.fechaError) Color(0xFFFFE0B2) else Color.Transparent),
             singleLine = true,
-            isError = fechaError,
+            isError = ui.fechaError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
@@ -1968,7 +1967,11 @@ private fun AlumnoModificacionForm(
 private fun CompactList(
     items: List<Map<String, Any?>>,
     summaryFields: List<String>,
-    onOpenDetails: (Map<String, Any?>) -> Unit
+    onOpenDetails: (Map<String, Any?>) -> Unit,
+    itemsToShow: Int,
+    onSetItemsToShow: (Int) -> Unit,
+    selectedItemId: Int?,
+    onSelectItem: (Int?) -> Unit
 ) {
     // ✅ NUEVO: Función para acceder a campos anidados con dot notation
     fun getNestedValue(item: Map<String, Any?>, path: String): Any? {
@@ -2003,7 +2006,7 @@ private fun CompactList(
     }
 
     // Estado para controlar cuántos items mostrar (por defecto 5)
-    val allItemsShown = ui.itemsToShow >= items.size
+    val allItemsShown = itemsToShow >= items.size
 
     // Estado para el scroll de la LazyColumn de la tabla
     val tableListState = rememberLazyListState()
@@ -2025,13 +2028,13 @@ private fun CompactList(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Mostrando ${ui.itemsToShow.coerceAtMost(items.size)} de ${items.size} registros",
+                text = "Mostrando ${itemsToShow.coerceAtMost(items.size)} de ${items.size} registros",
                 style = androidx.compose.material3.MaterialTheme.typography.labelMedium,
                 color = Color(0xFF555555)
             )
             if (!allItemsShown) {
                 Text(
-                    text = "${items.size - ui.itemsToShow} más",
+                    text = "${items.size - itemsToShow} más",
                     style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
                     color = androidx.compose.material3.MaterialTheme.colorScheme.primary
                 )
@@ -2109,10 +2112,10 @@ private fun CompactList(
         }
 
         // Calcular altura dinámica: crece con los registros hasta un máximo de 600dp
-        val dynamicMaxHeight = remember(ui.itemsToShow) {
+        val dynamicMaxHeight = remember(itemsToShow) {
             val estimatedRowHeight = 52.dp
             val headerHeight = 50.dp
-            val calculatedHeight = headerHeight + (estimatedRowHeight * ui.itemsToShow)
+            val calculatedHeight = headerHeight + (estimatedRowHeight * itemsToShow)
             // Crecimiento: desde 280dp hasta máximo 600dp
             calculatedHeight.coerceIn(280.dp, 600.dp)
         }
@@ -2124,7 +2127,7 @@ private fun CompactList(
                 .heightIn(max = dynamicMaxHeight),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            itemsIndexed(items.take(ui.itemsToShow)) { index, item ->
+            itemsIndexed(items.take(itemsToShow)) { index, item ->
                 val keys = item.keys.toList()
                 fun findKeyIgnoreCase(target: String): String? = keys.firstOrNull { it.equals(target, ignoreCase = true) }
 
@@ -2172,7 +2175,7 @@ private fun CompactList(
 
                 // ✅ PASO 2: Obtener ID del item y determinar si está seleccionado
                 val itemId = (item["id"] as? Number)?.toInt()
-                val isSelected = itemId != null && itemId == ui.selectedItemId
+                val isSelected = itemId != null && itemId == selectedItemId
 
                 // ✅ PASO 3: Color de fila según estado de selección
                 val rowColor = when {
@@ -2187,7 +2190,7 @@ private fun CompactList(
                         .background(rowColor)
                         .clickable {
                             // Toggle selección: si ya está seleccionado, deseleccionar
-                            vm.selectItem(if (isSelected) null else itemId)
+                            onSelectItem(if (isSelected) null else itemId)
                         }
                         .padding(vertical = 10.dp, horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -2220,7 +2223,7 @@ private fun CompactList(
                 }
 
                 // Separador entre filas (excepto la última)
-                if (index < ui.itemsToShow - 1) {
+                if (index < itemsToShow - 1) {
                     androidx.compose.material3.HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 8.dp),
                         thickness = 1.dp,
@@ -2240,20 +2243,20 @@ private fun CompactList(
             ) {
                 Button(
                     onClick = {
-                        val previousCount = ui.itemsToShow
+                        val previousCount = itemsToShow
                         // Mostrar 5 items más cada vez que se pulsa
-                        vm.setItemsToShow((ui.itemsToShow + 5).coerceAtMost(items.size)
+                        onSetItemsToShow((itemsToShow + 5).coerceAtMost(items.size))
 
                         // Hacer scroll automático hacia los nuevos registros después de actualizar
                         coroutineScope.launch {
                             delay(150) // Delay para que se rendericen los nuevos items
 
                             // Calcular si necesitamos hacer scroll al final de la tabla
-                            val newItemIndex = (ui.itemsToShow - 1).coerceAtLeast(0)
+                            val newItemIndex = (itemsToShow - 1).coerceAtLeast(0)
 
                             // Si ya estamos mostrando más de ~11 registros (cuando la tabla alcanza su altura máxima)
                             // hacer scroll hasta el último registro para que se vean los nuevos
-                            if (ui.itemsToShow > 11) {
+                            if (itemsToShow > 11) {
                                 // Scroll hasta el último registro visible
                                 tableListState.animateScrollToItem(newItemIndex)
                             } else {
@@ -2427,7 +2430,9 @@ fun SesionesDelDiaCards(
  */
 @Composable
 fun SesionesSemanalesTable(
-    items: List<Map<String, Any?>>
+    items: List<Map<String, Any?>>,
+    expandedDay: String?,
+    onToggleExpandedDay: (String?) -> Unit
 ) {
     
 
@@ -2503,7 +2508,7 @@ fun SesionesSemanalesTable(
                     if (cantidad > 0) {
                         IconButton(
                             onClick = { 
-                                vm.toggleExpandedDay(if (ui.expandedDay == dia) null else dia)
+                                onToggleExpandedDay(if (expandedDay == dia) null else dia)
                             },
                             modifier = Modifier.size(36.dp)
                         ) {

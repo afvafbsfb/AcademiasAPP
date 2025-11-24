@@ -53,7 +53,12 @@ data class ChatUiState(
     val showScrollbar: Boolean = false,
     val itemsToShow: Int = 5,
     val selectedItemId: Int? = null,
-    val expandedDay: String? = null
+    val expandedDay: String? = null,
+    
+    // 🆕 Estados de validación de formularios (Alta y Modificación)
+    val nombreError: Boolean = false,
+    val telefonoError: Boolean = false,
+    val fechaError: Boolean = false
 )
 
 class ChatViewModel(
@@ -135,6 +140,19 @@ class ChatViewModel(
     // 🆕 Expandir/contraer día en tabla semanal
     fun toggleExpandedDay(day: String?) {
         _ui.update { it.copy(expandedDay = day) }
+    }
+
+    // 🆕 Actualizar errores de validación
+    fun setNombreError(hasError: Boolean) {
+        _ui.update { it.copy(nombreError = hasError) }
+    }
+
+    fun setTelefonoError(hasError: Boolean) {
+        _ui.update { it.copy(telefonoError = hasError) }
+    }
+
+    fun setFechaError(hasError: Boolean) {
+        _ui.update { it.copy(fechaError = hasError) }
     }
 
     fun loadWelcome() {
