@@ -1482,7 +1482,6 @@ private fun AlumnoAltaForm(
     var cursoSeleccionado by remember { mutableStateOf<Int?>(null) }
     var cursoNombre by remember { mutableStateOf<String?>(null) }
     var cursoLabel by remember { mutableStateOf("Seleccionar curso") }
-    var expandedCursos by remember { mutableStateOf(false) }
 
     // Diálogo de confirmación
     
@@ -1588,15 +1587,15 @@ private fun AlumnoAltaForm(
         // Curso (optional) - Dropdown Menu
         if (cursos.isNotEmpty()) {
             ExposedDropdownMenuBox(
-                expanded = expandedCursos,
-                onExpandedChange = { expandedCursos = it }
+                expanded = ui.expandedCursosAlta,
+                onExpandedChange = { vm.setExpandedCursosAlta(it) }
             ) {
                 OutlinedTextField(
                     value = cursoLabel,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Curso (opcional)") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCursos) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = ui.expandedCursosAlta) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor(),
@@ -1604,8 +1603,8 @@ private fun AlumnoAltaForm(
                 )
 
                 ExposedDropdownMenu(
-                    expanded = expandedCursos,
-                    onDismissRequest = { expandedCursos = false }
+                    expanded = ui.expandedCursosAlta,
+                    onDismissRequest = { vm.setExpandedCursosAlta(false) }
                 ) {
                     cursos.forEach { c ->
                         val id = (c["id"] as? Number)?.toInt()
@@ -1616,7 +1615,7 @@ private fun AlumnoAltaForm(
                                 cursoSeleccionado = id
                                 cursoNombre = label
                                 cursoLabel = label
-                                expandedCursos = false
+                                vm.setExpandedCursosAlta(false)
                             }
                         )
                     }
@@ -1751,7 +1750,6 @@ private fun AlumnoModificacionForm(
             }
         )
     }
-    var expandedCursos by remember { mutableStateOf(false) }
 
     // Diálogo de confirmación
     
@@ -1857,15 +1855,15 @@ private fun AlumnoModificacionForm(
         // Curso (optional) - Dropdown Menu
         if (cursos.isNotEmpty()) {
             ExposedDropdownMenuBox(
-                expanded = expandedCursos,
-                onExpandedChange = { expandedCursos = it }
+                expanded = ui.expandedCursosModificacion,
+                onExpandedChange = { vm.setExpandedCursosModificacion(it) }
             ) {
                 OutlinedTextField(
                     value = cursoLabel,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Curso (opcional)") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCursos) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = ui.expandedCursosModificacion) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor(),
@@ -1873,8 +1871,8 @@ private fun AlumnoModificacionForm(
                 )
 
                 ExposedDropdownMenu(
-                    expanded = expandedCursos,
-                    onDismissRequest = { expandedCursos = false }
+                    expanded = ui.expandedCursosModificacion,
+                    onDismissRequest = { vm.setExpandedCursosModificacion(false) }
                 ) {
                     cursos.forEach { c ->
                         val id = (c["id"] as? Number)?.toInt()
@@ -1885,7 +1883,7 @@ private fun AlumnoModificacionForm(
                                 cursoSeleccionado = id
                                 cursoNombre = label
                                 cursoLabel = label
-                                expandedCursos = false
+                                vm.setExpandedCursosModificacion(false)
                             }
                         )
                     }

@@ -62,7 +62,11 @@ data class ChatUiState(
     
     // 🆕 Estados de confirmación de formularios
     val showConfirmDialogAlta: Boolean = false,
-    val showConfirmDialogModificacion: Boolean = false
+    val showConfirmDialogModificacion: Boolean = false,
+    
+    // 🆕 Estados de dropdown de cursos
+    val expandedCursosAlta: Boolean = false,
+    val expandedCursosModificacion: Boolean = false
 )
 
 class ChatViewModel(
@@ -174,6 +178,15 @@ class ChatViewModel(
 
     fun hideConfirmDialogModificacion() {
         _ui.update { it.copy(showConfirmDialogModificacion = false) }
+    }
+
+    // 🆕 Manejar estado de expansión de dropdown de cursos
+    fun setExpandedCursosAlta(expanded: Boolean) {
+        _ui.update { it.copy(expandedCursosAlta = expanded) }
+    }
+
+    fun setExpandedCursosModificacion(expanded: Boolean) {
+        _ui.update { it.copy(expandedCursosModificacion = expanded) }
     }
 
     fun loadWelcome() {
