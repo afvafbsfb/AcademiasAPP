@@ -1473,8 +1473,6 @@ private fun AlumnoAltaForm(
     // Extraer cursos disponibles si vienen
     val cursos = (formSpec["cursos_disponibles"] as? List<Map<String, Any?>>) ?: emptyList()
 
-    var email by remember { mutableStateOf("") }
-    var dni by remember { mutableStateOf("") }
     var fecha by remember { mutableStateOf("") } // DD/MM/YYYY
     var direccion by remember { mutableStateOf("") }
 
@@ -1575,8 +1573,8 @@ private fun AlumnoAltaForm(
         )
 
         // Email, DNI, Dirección (optional)
-        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = dni, onValueChange = { dni = it }, label = { Text("DNI") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = ui.emailAlta, onValueChange = { vm.setEmailAlta(it) }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = ui.dniAlta, onValueChange = { vm.setDniAlta(it) }, label = { Text("DNI") }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(value = direccion, onValueChange = { direccion = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth())
 
         // Curso (optional) - Dropdown Menu
@@ -1664,8 +1662,8 @@ private fun AlumnoAltaForm(
                     // Build form map
                     val formMap = mapOf(
                         "nombre" to ui.nombreAlta,
-                        "email" to email,
-                        "dni" to dni,
+                        "email" to ui.emailAlta,
+                        "dni" to ui.dniAlta,
                         "telefono" to ui.telefonoAlta,
                         "fecha_nacimiento" to fecha,
                         "direccion" to direccion,
@@ -1715,8 +1713,6 @@ private fun AlumnoModificacionForm(
     }
 
     // ✅ CORREGIDO: Inicializar como String desde alumnoData con conversión de formato de fecha
-    var email by remember { mutableStateOf((alumnoData["email"] as? String) ?: "") }
-    var dni by remember { mutableStateOf((alumnoData["dni"] as? String) ?: "") }
     var fecha by remember { mutableStateOf(convertDateFormat(alumnoData["fecha_nacimiento"] as? String)) }
     var direccion by remember { mutableStateOf((alumnoData["direccion"] as? String) ?: "") }
 
@@ -1730,6 +1726,8 @@ private fun AlumnoModificacionForm(
         vm.initCursoNombreModificacion(cursos, cursoIdInicial)
         vm.initNombreModificacion(alumnoData)
         vm.initTelefonoModificacion(alumnoData)
+        vm.initEmailModificacion(alumnoData)
+        vm.initDniModificacion(alumnoData)
     }
 
     // Diálogo de confirmación
@@ -1829,8 +1827,8 @@ private fun AlumnoModificacionForm(
         )
 
         // Email, DNI, Dirección (optional)
-        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = dni, onValueChange = { dni = it }, label = { Text("DNI") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = ui.emailModificacion, onValueChange = { vm.setEmailModificacion(it) }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = ui.dniModificacion, onValueChange = { vm.setDniModificacion(it) }, label = { Text("DNI") }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(value = direccion, onValueChange = { direccion = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth())
 
         // Curso (optional) - Dropdown Menu
@@ -1918,8 +1916,8 @@ private fun AlumnoModificacionForm(
                     // Build form map
                     val formMap = mapOf(
                         "nombre" to ui.nombreModificacion,
-                        "email" to email,
-                        "dni" to dni,
+                        "email" to ui.emailModificacion,
+                        "dni" to ui.dniModificacion,
                         "telefono" to ui.telefonoModificacion,
                         "fecha_nacimiento" to fecha,
                         "direccion" to direccion,

@@ -86,7 +86,15 @@ data class ChatUiState(
     
     // 🆕 Campos de formulario - telefono
     val telefonoAlta: String = "",
-    val telefonoModificacion: String = ""
+    val telefonoModificacion: String = "",
+    
+    // 🆕 Campos de formulario - email
+    val emailAlta: String = "",
+    val emailModificacion: String = "",
+    
+    // 🆕 Campos de formulario - dni
+    val dniAlta: String = "",
+    val dniModificacion: String = ""
 )
 
 class ChatViewModel(
@@ -287,6 +295,34 @@ class ChatViewModel(
     fun initTelefonoModificacion(alumnoData: Map<String, Any?>) {
         val telefono = (alumnoData["telefono"] as? String) ?: ""
         _ui.update { it.copy(telefonoModificacion = telefono) }
+    }
+    
+    // 🆕 Email setters y init
+    fun setEmailAlta(email: String) {
+        _ui.update { it.copy(emailAlta = email) }
+    }
+    
+    fun setEmailModificacion(email: String) {
+        _ui.update { it.copy(emailModificacion = email) }
+    }
+    
+    fun initEmailModificacion(alumnoData: Map<String, Any?>) {
+        val email = (alumnoData["email"] as? String) ?: ""
+        _ui.update { it.copy(emailModificacion = email) }
+    }
+    
+    // 🆕 DNI setters y init
+    fun setDniAlta(dni: String) {
+        _ui.update { it.copy(dniAlta = dni) }
+    }
+    
+    fun setDniModificacion(dni: String) {
+        _ui.update { it.copy(dniModificacion = dni) }
+    }
+    
+    fun initDniModificacion(alumnoData: Map<String, Any?>) {
+        val dni = (alumnoData["dni"] as? String) ?: ""
+        _ui.update { it.copy(dniModificacion = dni) }
     }
 
     fun loadWelcome() {
