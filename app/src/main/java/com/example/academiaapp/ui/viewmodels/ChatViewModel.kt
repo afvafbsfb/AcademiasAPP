@@ -70,7 +70,11 @@ data class ChatUiState(
     
     // 🆕 Labels de cursos seleccionados
     val cursoLabelAlta: String = "Seleccionar curso",
-    val cursoLabelModificacion: String = "Seleccionar curso"
+    val cursoLabelModificacion: String = "Seleccionar curso",
+    
+    // 🆕 IDs de cursos seleccionados
+    val cursoSeleccionadoAlta: Int? = null,
+    val cursoSeleccionadoModificacion: Int? = null
 )
 
 class ChatViewModel(
@@ -208,6 +212,22 @@ class ChatViewModel(
             val label = cursos.find { (it["id"] as? Number)?.toInt() == cursoIdInicial }
                 ?.get("display_text") as? String ?: "Seleccionar curso"
             _ui.update { it.copy(cursoLabelModificacion = label) }
+        }
+    }
+
+    // 🆕 Manejar IDs de cursos seleccionados
+    fun setCursoSeleccionadoAlta(cursoId: Int?) {
+        _ui.update { it.copy(cursoSeleccionadoAlta = cursoId) }
+    }
+
+    fun setCursoSeleccionadoModificacion(cursoId: Int?) {
+        _ui.update { it.copy(cursoSeleccionadoModificacion = cursoId) }
+    }
+
+    // 🆕 Inicializar curso seleccionado en formulario de modificación
+    fun initCursoSeleccionadoModificacion(cursoIdInicial: Int?) {
+        if (cursoIdInicial != null) {
+            _ui.update { it.copy(cursoSeleccionadoModificacion = cursoIdInicial) }
         }
     }
 

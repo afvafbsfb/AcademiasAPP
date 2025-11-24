@@ -1479,7 +1479,6 @@ private fun AlumnoAltaForm(
     var telefono by remember { mutableStateOf("") }
     var fecha by remember { mutableStateOf("") } // DD/MM/YYYY
     var direccion by remember { mutableStateOf("") }
-    var cursoSeleccionado by remember { mutableStateOf<Int?>(null) }
     var cursoNombre by remember { mutableStateOf<String?>(null) }
 
     // Diálogo de confirmación
@@ -1611,7 +1610,7 @@ private fun AlumnoAltaForm(
                         DropdownMenuItem(
                             text = { Text(label) },
                             onClick = {
-                                cursoSeleccionado = id
+                                vm.setCursoSeleccionadoAlta(id)
                                 cursoNombre = label
                                 vm.setCursoLabelAlta(label)
                                 vm.setExpandedCursosAlta(false)
@@ -1673,7 +1672,7 @@ private fun AlumnoAltaForm(
                         "telefono" to telefono,
                         "fecha_nacimiento" to fecha,
                         "direccion" to direccion,
-                        "curso_id" to cursoSeleccionado,
+                        "curso_id" to ui.cursoSeleccionadoAlta,
                         "curso_nombre" to cursoNombre
                     )
                     onSubmit(formMap)
@@ -1728,7 +1727,6 @@ private fun AlumnoModificacionForm(
 
     // ✅ Pre-cargar curso seleccionado si existe
     val cursoIdInicial = (alumnoData["curso_id"] as? Number)?.toInt()
-    var cursoSeleccionado by remember { mutableStateOf(cursoIdInicial) }
     var cursoNombre by remember {
         mutableStateOf<String?>(
             if (cursoIdInicial != null) {
@@ -1743,6 +1741,7 @@ private fun AlumnoModificacionForm(
     // Inicializar label de curso si viene cursoIdInicial
     LaunchedEffect(Unit) {
         vm.initCursoLabelModificacion(cursos, cursoIdInicial)
+        vm.initCursoSeleccionadoModificacion(cursoIdInicial)
     }
 
     // Diálogo de confirmación
@@ -1874,7 +1873,7 @@ private fun AlumnoModificacionForm(
                         DropdownMenuItem(
                             text = { Text(label) },
                             onClick = {
-                                cursoSeleccionado = id
+                                vm.setCursoSeleccionadoModificacion(id)
                                 cursoNombre = label
                                 vm.setCursoLabelModificacion(label)
                                 vm.setExpandedCursosModificacion(false)
@@ -1936,7 +1935,7 @@ private fun AlumnoModificacionForm(
                         "telefono" to telefono,
                         "fecha_nacimiento" to fecha,
                         "direccion" to direccion,
-                        "curso_id" to cursoSeleccionado,
+                        "curso_id" to ui.cursoSeleccionadoModificacion,
                         "curso_nombre" to cursoNombre
                     )
                     // Obtener ID del alumno desde alumnoData
