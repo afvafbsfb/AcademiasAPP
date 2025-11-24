@@ -1481,7 +1481,6 @@ private fun AlumnoAltaForm(
     var direccion by remember { mutableStateOf("") }
     var cursoSeleccionado by remember { mutableStateOf<Int?>(null) }
     var cursoNombre by remember { mutableStateOf<String?>(null) }
-    var cursoLabel by remember { mutableStateOf("Seleccionar curso") }
 
     // Diálogo de confirmación
     
@@ -1591,7 +1590,7 @@ private fun AlumnoAltaForm(
                 onExpandedChange = { vm.setExpandedCursosAlta(it) }
             ) {
                 OutlinedTextField(
-                    value = cursoLabel,
+                    value = ui.cursoLabelAlta,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Curso (opcional)") },
@@ -1614,7 +1613,7 @@ private fun AlumnoAltaForm(
                             onClick = {
                                 cursoSeleccionado = id
                                 cursoNombre = label
-                                cursoLabel = label
+                                vm.setCursoLabelAlta(label)
                                 vm.setExpandedCursosAlta(false)
                             }
                         )
@@ -1740,15 +1739,10 @@ private fun AlumnoModificacionForm(
             }
         )
     }
-    var cursoLabel by remember {
-        mutableStateOf(
-            if (cursoIdInicial != null) {
-                cursos.find { (it["id"] as? Number)?.toInt() == cursoIdInicial }
-                    ?.get("display_text") as? String ?: "Seleccionar curso"
-            } else {
-                "Seleccionar curso"
-            }
-        )
+
+    // Inicializar label de curso si viene cursoIdInicial
+    LaunchedEffect(Unit) {
+        vm.initCursoLabelModificacion(cursos, cursoIdInicial)
     }
 
     // Diálogo de confirmación
@@ -1859,7 +1853,7 @@ private fun AlumnoModificacionForm(
                 onExpandedChange = { vm.setExpandedCursosModificacion(it) }
             ) {
                 OutlinedTextField(
-                    value = cursoLabel,
+                    value = ui.cursoLabelModificacion,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Curso (opcional)") },
@@ -1882,7 +1876,7 @@ private fun AlumnoModificacionForm(
                             onClick = {
                                 cursoSeleccionado = id
                                 cursoNombre = label
-                                cursoLabel = label
+                                vm.setCursoLabelModificacion(label)
                                 vm.setExpandedCursosModificacion(false)
                             }
                         )

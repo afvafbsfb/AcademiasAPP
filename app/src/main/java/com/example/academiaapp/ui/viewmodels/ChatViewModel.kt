@@ -66,7 +66,11 @@ data class ChatUiState(
     
     // 🆕 Estados de dropdown de cursos
     val expandedCursosAlta: Boolean = false,
-    val expandedCursosModificacion: Boolean = false
+    val expandedCursosModificacion: Boolean = false,
+    
+    // 🆕 Labels de cursos seleccionados
+    val cursoLabelAlta: String = "Seleccionar curso",
+    val cursoLabelModificacion: String = "Seleccionar curso"
 )
 
 class ChatViewModel(
@@ -187,6 +191,24 @@ class ChatViewModel(
 
     fun setExpandedCursosModificacion(expanded: Boolean) {
         _ui.update { it.copy(expandedCursosModificacion = expanded) }
+    }
+
+    // 🆕 Manejar labels de cursos seleccionados
+    fun setCursoLabelAlta(label: String) {
+        _ui.update { it.copy(cursoLabelAlta = label) }
+    }
+
+    fun setCursoLabelModificacion(label: String) {
+        _ui.update { it.copy(cursoLabelModificacion = label) }
+    }
+
+    // 🆕 Inicializar label de curso en formulario de modificación
+    fun initCursoLabelModificacion(cursos: List<Map<String, Any?>>, cursoIdInicial: Int?) {
+        if (cursoIdInicial != null) {
+            val label = cursos.find { (it["id"] as? Number)?.toInt() == cursoIdInicial }
+                ?.get("display_text") as? String ?: "Seleccionar curso"
+            _ui.update { it.copy(cursoLabelModificacion = label) }
+        }
     }
 
     fun loadWelcome() {
