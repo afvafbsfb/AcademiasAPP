@@ -1485,7 +1485,7 @@ private fun AlumnoAltaForm(
     var expandedCursos by remember { mutableStateOf(false) }
 
     // Diálogo de confirmación
-    var showConfirmDialog by remember { mutableStateOf(false) }
+    
 
     // Focus requesters para cada campo obligatorio
     val nombreFocusRequester = remember { FocusRequester() }
@@ -1520,7 +1520,7 @@ private fun AlumnoAltaForm(
         }
 
         // Si validó bien, mostrar diálogo
-        showConfirmDialog = true
+        vm.showConfirmDialogAlta()
     }
 
     Column(modifier = Modifier.fillMaxWidth().padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1659,14 +1659,14 @@ private fun AlumnoAltaForm(
     }
 
     // Diálogo de confirmación
-    if (showConfirmDialog) {
+    if (ui.showConfirmDialogAlta) {
         AlertDialog(
-            onDismissRequest = { showConfirmDialog = false },
+            onDismissRequest = { vm.hideConfirmDialogAlta() },
             title = { Text("Confirmar alta") },
             text = { Text("¿Has verificado todos los datos del alumno?") },
             confirmButton = {
                 TextButton(onClick = {
-                    showConfirmDialog = false
+                    vm.hideConfirmDialogAlta()
                     // Build form map
                     val formMap = mapOf(
                         "nombre" to nombre,
@@ -1684,7 +1684,7 @@ private fun AlumnoAltaForm(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirmDialog = false }) {
+                TextButton(onClick = { vm.hideConfirmDialogAlta() }) {
                     Text("No")
                 }
             }
@@ -1754,7 +1754,7 @@ private fun AlumnoModificacionForm(
     var expandedCursos by remember { mutableStateOf(false) }
 
     // Diálogo de confirmación
-    var showConfirmDialog by remember { mutableStateOf(false) }
+    
 
     // Focus requesters para cada campo obligatorio
     val nombreFocusRequester = remember { FocusRequester() }
@@ -1789,7 +1789,7 @@ private fun AlumnoModificacionForm(
         }
 
         // Si validó bien, mostrar diálogo
-        showConfirmDialog = true
+        vm.showConfirmDialogModificacion()
     }
 
     Column(modifier = Modifier.fillMaxWidth().padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1928,14 +1928,14 @@ private fun AlumnoModificacionForm(
     }
 
     // Diálogo de confirmación
-    if (showConfirmDialog) {
+    if (ui.showConfirmDialogModificacion) {
         AlertDialog(
-            onDismissRequest = { showConfirmDialog = false },
+            onDismissRequest = { vm.hideConfirmDialogModificacion() },
             title = { Text("Confirmar modificación") },
             text = { Text("¿Has verificado todos los datos del alumno?") },
             confirmButton = {
                 TextButton(onClick = {
-                    showConfirmDialog = false
+                    vm.hideConfirmDialogModificacion()
                     // Build form map
                     val formMap = mapOf(
                         "nombre" to nombre,
@@ -1955,7 +1955,7 @@ private fun AlumnoModificacionForm(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirmDialog = false }) {
+                TextButton(onClick = { vm.hideConfirmDialogModificacion() }) {
                     Text("No")
                 }
             }

@@ -58,7 +58,11 @@ data class ChatUiState(
     // 🆕 Estados de validación de formularios (Alta y Modificación)
     val nombreError: Boolean = false,
     val telefonoError: Boolean = false,
-    val fechaError: Boolean = false
+    val fechaError: Boolean = false,
+    
+    // 🆕 Estados de confirmación de formularios
+    val showConfirmDialogAlta: Boolean = false,
+    val showConfirmDialogModificacion: Boolean = false
 )
 
 class ChatViewModel(
@@ -153,6 +157,23 @@ class ChatViewModel(
 
     fun setFechaError(hasError: Boolean) {
         _ui.update { it.copy(fechaError = hasError) }
+    }
+
+    // 🆕 Mostrar/ocultar diálogos de confirmación de formularios
+    fun showConfirmDialogAlta() {
+        _ui.update { it.copy(showConfirmDialogAlta = true) }
+    }
+
+    fun hideConfirmDialogAlta() {
+        _ui.update { it.copy(showConfirmDialogAlta = false) }
+    }
+
+    fun showConfirmDialogModificacion() {
+        _ui.update { it.copy(showConfirmDialogModificacion = true) }
+    }
+
+    fun hideConfirmDialogModificacion() {
+        _ui.update { it.copy(showConfirmDialogModificacion = false) }
     }
 
     fun loadWelcome() {
