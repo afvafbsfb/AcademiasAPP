@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Arquitectura AcademiaAPP Android - TFG FP DAM</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+<meta name="version" content="1.0.0">
+<meta name="last-updated" content="2025-11-24">
+<meta name="author" content="Ángel Fernández Vidal">
+<meta name="project" content="TFG FP DAM - AcademiaAPP Cliente Android">
+
+<style>
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Droid Sans", sans-serif;
+	font-size: 14px;
+	padding: 0 26px;
+	line-height: 22px;
+	word-wrap: break-word;
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.version-badge {
+	background-color: #4CAF50;
+	color: white;
+	padding: 4px 12px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: bold;
+	display: inline-block;
+	margin-left: 10px;
+}
+
+.architecture-badge {
+	background-color: #2196F3;
+	color: white;
+	padding: 6px 16px;
+	border-radius: 16px;
+	font-size: 13px;
+	font-weight: bold;
+	display: inline-block;
+	margin: 8px 4px;
+}
+
+.tech-stack {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	padding: 20px;
+	border-radius: 8px;
+	margin: 20px 0;
+}
+
+.tech-stack h3 {
+	margin-top: 0;
+	color: white;
+}
+
+.tech-item {
+	background-color: rgba(255, 255, 255, 0.2);
+	padding: 8px 16px;
+	border-radius: 20px;
+	display: inline-block;
+	margin: 4px;
+	font-size: 13px;
+}
+
+.layer-card {
+	border: 2px solid #e0e0e0;
+	border-radius: 8px;
+	padding: 20px;
+	margin: 16px 0;
+	background-color: #fafafa;
+}
+
+.layer-card h3 {
+	margin-top: 0;
+	color: #1976D2;
+	border-bottom: 2px solid #1976D2;
+	padding-bottom: 8px;
+}
+
+.mvvm-section {
+	background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+	color: white;
+	padding: 24px;
+	border-radius: 12px;
+	margin: 24px 0;
+}
+
+.mvvm-section h2 {
+	margin-top: 0;
+	color: white;
+}
+
+.stats-box {
+	background-color: #E3F2FD;
+	border-left: 4px solid #2196F3;
+	padding: 16px;
+	margin: 16px 0;
+	border-radius: 4px;
+}
+
+.stats-number {
+	font-size: 32px;
+	font-weight: bold;
+	color: #1976D2;
+}
+
+.code-snippet {
+	background-color: #263238;
+	color: #aed581;
+	padding: 16px;
+	border-radius: 8px;
+	overflow-x: auto;
+	margin: 16px 0;
+	font-family: 'Courier New', monospace;
+	font-size: 13px;
+	line-height: 1.6;
+}
+
+.code-snippet .keyword {
+	color: #c792ea;
+}
+
+.code-snippet .string {
+	color: #c3e88d;
+}
+
+.code-snippet .comment {
+	color: #546e7a;
+}
+
+.code-snippet .type {
+	color: #ffcb6b;
+}
+
+.highlight-box {
+	background-color: #FFF3E0;
+	border-left: 4px solid #FF9800;
+	padding: 16px;
+	margin: 16px 0;
+	border-radius: 4px;
+}
+
+.success-box {
+	background-color: #E8F5E9;
+	border-left: 4px solid #4CAF50;
+	padding: 16px;
+	margin: 16px 0;
+	border-radius: 4px;
+}
+
+.diagram-container {
+	background-color: white;
+	border: 2px solid #e0e0e0;
+	border-radius: 8px;
+	padding: 20px;
+	margin: 24px 0;
+	text-align: center;
+}
+
+table {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 16px 0;
+}
+
+th {
+	background-color: #1976D2;
+	color: white;
+	padding: 12px;
+	text-align: left;
+}
+
+td {
+	border: 1px solid #e0e0e0;
+	padding: 10px;
+}
+
+tr:nth-child(even) {
+	background-color: #f5f5f5;
+}
+
+.toc {
+	background-color: #f5f5f5;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 20px;
+	margin: 20px 0;
+}
+
+.toc ul {
+	list-style: none;
+	padding-left: 20px;
+}
+
+.toc a {
+	color: #1976D2;
+	text-decoration: none;
+	line-height: 1.8;
+}
+
+.toc a:hover {
+	text-decoration: underline;
+}
+
+h1 {
+	color: #1976D2;
+	border-bottom: 3px solid #1976D2;
+	padding-bottom: 12px;
+}
+
+h2 {
+	color: #424242;
+	border-bottom: 2px solid #e0e0e0;
+	padding-bottom: 8px;
+	margin-top: 32px;
+}
+
+h3 {
+	color: #616161;
+}
+
+.mermaid {
+	background-color: white;
+	padding: 20px;
+	border-radius: 8px;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>
+	mermaid.initialize({ 
+		startOnLoad: true,
+		theme: 'default',
+		themeVariables: {
+			primaryColor: '#E3F2FD',
+			primaryTextColor: '#1976D2',
+			primaryBorderColor: '#1976D2',
+			lineColor: '#1976D2',
+			secondaryColor: '#FFF3E0',
+			tertiaryColor: '#E8F5E9',
+			fontSize: '14px'
+		}
+	});
+</script>
+</head>
+<body>
+
+<h1>🏗️ Arquitectura AcademiaAPP - Cliente Android <span class="version-badge">v1.0.0</span></h1>
+
+<p><strong>Proyecto:</strong> TFG FP DAM - Sistema de Gestión de Academias<br>
+<strong>Autor:</strong> Ángel Fernández Vidal<br>
+<strong>Última actualización:</strong> 24 de noviembre de 2025</p>
+
+<div class="tech-stack">
+	<h3>🛠️ Stack Tecnológico</h3>
+	<span class="tech-item">Kotlin</span>
+	<span class="tech-item">Jetpack Compose</span>
+	<span class="tech-item">MVVM</span>
+	<span class="tech-item">Coroutines</span>
+	<span class="tech-item">StateFlow</span>
+	<span class="tech-item">Retrofit</span>
+	<span class="tech-item">Material Design 3</span>
+	<span class="tech-item">Navigation</span>
+	<span class="tech-item">ViewModel</span>
+	<span class="tech-item">Repository Pattern</span>
+</div>
+
+<div class="toc">
+	<h3>📋 Índice</h3>
+	<ul>
+		<li><a href="#vision-general">1. Visión General</a></li>
+		<li><a href="#arquitectura-mvvm">2. Arquitectura MVVM</a></li>
+		<li><a href="#capas">3. Capas de la Aplicación</a></li>
+		<li><a href="#chatviewmodel">4. ChatViewModel - Núcleo del Sistema</a></li>
+		<li><a href="#refactoring">5. Proceso de Refactorización MVVM</a></li>
+		<li><a href="#flujo-datos">6. Flujo de Datos</a></li>
+		<li><a href="#patrones">7. Patrones de Diseño</a></li>
+		<li><a href="#decisiones">8. Decisiones Arquitectónicas</a></li>
+	</ul>
+</div>
+
+<h2 id="vision-general">1. 🎯 Visión General</h2>
+
+<p>AcademiaAPP es un cliente Android nativo desarrollado en <strong>Kotlin</strong> con <strong>Jetpack Compose</strong> que implementa un sistema de gestión de academias mediante una <strong>interfaz conversacional tipo chat</strong>.</p>
+
+<div class="highlight-box">
+	<strong>🎨 Paradigma Principal:</strong> Chat-Driven Interface
+	<p>Toda la interacción se realiza a través de un chat conversacional con IA que guía al usuario mediante sugerencias contextuales y formularios dinámicos.</p>
+</div>
+
+<h3>Características Principales</h3>
+
+<ul>
+	<li>✅ <strong>Interfaz conversacional</strong> con asistente virtual</li>
+	<li>✅ <strong>Sistema de sugerencias inteligentes</strong> contextuales</li>
+	<li>✅ <strong>Formularios dinámicos</strong> (Alta/Modificación de alumnos)</li>
+	<li>✅ <strong>Gestión de clases y asistencias</strong></li>
+	<li>✅ <strong>Navegación por roles</strong> (admin_plataforma, profesor)</li>
+	<li>✅ <strong>Modo Mock + Backend Real</strong> configurable</li>
+	<li>✅ <strong>Material Design 3</strong> con tema dinámico</li>
+</ul>
+
+<h2 id="arquitectura-mvvm">2. 🏛️ Arquitectura MVVM</h2>
+
+<div class="mvvm-section">
+	<h2>Implementación MVVM Pragmática</h2>
+	<p>La aplicación sigue el patrón <strong>Model-View-ViewModel</strong> recomendado por Google para aplicaciones Android modernas, con un enfoque pragmático que equilibra pureza arquitectónica con eficiencia en el desarrollo.</p>
+</div>
+
+<div class="diagram-container">
+	<h3>Diagrama MVVM</h3>
+	<div class="mermaid">
+graph TB
+    subgraph View["🖼️ VIEW LAYER (Jetpack Compose)"]
+        ChatScreen["ChatScreen.kt<br/>📱 UI Composables"]
+        LoginScreen["LoginScreen.kt"]
+        OtherScreens["Otras Pantallas"]
+    end
+    
+    subgraph ViewModel["⚙️ VIEWMODEL LAYER"]
+        ChatViewModel["ChatViewModel<br/>🧠 Lógica de negocio<br/>38 estados gestionados"]
+        ChatUiState["ChatUiState<br/>📊 Estado reactivo"]
+    end
+    
+    subgraph Model["💾 MODEL LAYER"]
+        Repository["ChatRepository<br/>🔄 Abstracción de datos"]
+        SessionStore["SessionStore<br/>🔐 Sesión usuario"]
+        MockRepo["MockChatRepository<br/>🎭 Datos simulados"]
+        RealRepo["RemoteChatRepository<br/>🌐 API REST"]
+    end
+    
+    subgraph Data["📡 DATA LAYER"]
+        DTOs["DTOs (Envelope, ChatMessageDto)<br/>📦 Modelos de datos"]
+        Retrofit["Retrofit/OkHttp<br/>🔌 Cliente HTTP"]
+        API["Backend API<br/>🖥️ api-workers-profesores"]
+    end
+    
+    ChatScreen -->|"observa ui: StateFlow"| ChatUiState
+    ChatScreen -->|"llama funciones vm.*()"| ChatViewModel
+    ChatViewModel -->|"actualiza _ui.update"| ChatUiState
+    ChatViewModel -->|"usa"| Repository
+    Repository -.->|"Mock Mode"| MockRepo
+    Repository -.->|"Production"| RealRepo
+    RealRepo -->|"usa"| Retrofit
+    Retrofit -->|"HTTP"| API
+    SessionStore -->|"proporciona token"| Repository
+    
+    style ChatViewModel fill:#f093fb
+    style ChatUiState fill:#f5576c
+    style Repository fill:#667eea
+    style ChatScreen fill:#764ba2
+	</div>
+</div>
+
+<h3>Separación de Responsabilidades</h3>
+
+<table>
+	<thead>
+		<tr>
+			<th>Capa</th>
+			<th>Responsabilidad</th>
+			<th>Tecnología</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><strong>View</strong></td>
+			<td>Renderizar UI, capturar eventos de usuario</td>
+			<td>Jetpack Compose, Composables</td>
+		</tr>
+		<tr>
+			<td><strong>ViewModel</strong></td>
+			<td>Lógica de negocio, gestión de estado, orquestación</td>
+			<td>ViewModel, StateFlow, Coroutines</td>
+		</tr>
+		<tr>
+			<td><strong>Model</strong></td>
+			<td>Acceso a datos, abstracción de fuentes</td>
+			<td>Repository Pattern, interfaces</td>
+		</tr>
+		<tr>
+			<td><strong>Data</strong></td>
+			<td>Comunicación con backend, DTOs</td>
+			<td>Retrofit, OkHttp, JSON parsing</td>
+		</tr>
+	</tbody>
+</table>
+
+<h2 id="capas">3. 📦 Capas de la Aplicación</h2>
+
+<div class="layer-card">
+	<h3>🖼️ Capa de Presentación (UI Layer)</h3>
+	
+	<p><strong>Ubicación:</strong> <code>com.example.academiaapp.ui.screens</code></p>
+	
+	<h4>Componentes principales:</h4>
+	<ul>
+		<li><strong>ChatScreen.kt</strong> (2565 líneas): Pantalla principal del chat
+			<ul>
+				<li>LazyColumn para mensajes</li>
+				<li>Formularios dinámicos (AlumnoAltaForm, AlumnoModificacionForm)</li>
+				<li>Sistema de sugerencias</li>
+				<li>Diálogos modales</li>
+			</ul>
+		</li>
+		<li><strong>LoginScreen.kt</strong>: Autenticación</li>
+		<li><strong>AppTopBar.kt</strong>: Barra superior reutilizable</li>
+	</ul>
+	
+	<h4>Principios seguidos:</h4>
+	<ul>
+		<li>✅ <strong>Composables sin estado propio</strong> (hoisting de estado)</li>
+		<li>✅ <strong>Observación de StateFlow</strong> del ViewModel</li>
+		<li>✅ <strong>Sin lógica de negocio</strong> (solo presentación)</li>
+		<li>✅ <strong>Estados locales justificados</strong> para UI efímera</li>
+	</ul>
+	
+	<div class="code-snippet">
+<span class="keyword">@Composable</span>
+<span class="keyword">fun</span> <span class="type">ChatScreen</span>(navController: NavController? = <span class="keyword">null</span>) {
+    <span class="keyword">val</span> vm: ChatViewModel = viewModel(...)
+    <span class="keyword">val</span> ui <span class="keyword">by</span> vm.ui.<span class="type">collectAsState</span>()  <span class="comment">// ✅ Observación reactiva</span>
+    
+    <span class="comment">// ✅ UI observa, ViewModel gestiona</span>
+    LazyColumn {
+        items(ui.messages) { message ->
+            MessageBubble(message = message)
+        }
+    }
+    
+    OutlinedTextField(
+        value = ui.input,                    <span class="comment">// ✅ Estado del ViewModel</span>
+        onValueChange = { vm.setInput(it) }  <span class="comment">// ✅ Acción al ViewModel</span>
+    )
+}
+	</div>
+</div>
+
+<div class="layer-card">
+	<h3>⚙️ Capa de ViewModel</h3>
+	
+	<p><strong>Ubicación:</strong> <code>com.example.academiaapp.ui.viewmodels</code></p>
+	
+	<h4>ChatViewModel.kt (636 líneas)</h4>
+	
+	<div class="stats-box">
+		<p><span class="stats-number">38</span> estados gestionados en <code>ChatUiState</code></p>
+		<p><span class="stats-number">60+</span> funciones de negocio y actualización de estado</p>
+		<p><span class="stats-number">100%</span> lógica de negocio centralizada</p>
+	</div>
+	
+	<h4>Estructura del Estado:</h4>
+	
+	<div class="code-snippet">
+<span class="keyword">data class</span> <span class="type">ChatUiState</span>(
+    <span class="comment">// 🔄 Estados de carga</span>
+    <span class="keyword">val</span> loading: Boolean = <span class="keyword">false</span>,
+    <span class="keyword">val</span> error: String? = <span class="keyword">null</span>,
+    <span class="keyword">val</span> messages: List&lt;ChatMessage&gt; = emptyList(),
+    
+    <span class="comment">// 💬 Input del chat</span>
+    <span class="keyword">val</span> input: String = <span class="string">""</span>,
+    
+    <span class="comment">// 📋 Diálogos</span>
+    <span class="keyword">val</span> showClarificationDialog: Boolean = <span class="keyword">false</span>,
+    <span class="keyword">val</span> showBajaAlumnoDialog: Boolean = <span class="keyword">false</span>,
+    <span class="keyword">val</span> showConfirmDialogAlta: Boolean = <span class="keyword">false</span>,
+    <span class="keyword">val</span> showConfirmDialogModificacion: Boolean = <span class="keyword">false</span>,
+    
+    <span class="comment">// 📊 Visualización de datos</span>
+    <span class="keyword">val</span> detailsItem: Map&lt;String, Any?&gt;? = <span class="keyword">null</span>,
+    <span class="keyword">val</span> itemsToShow: Int = 5,
+    <span class="keyword">val</span> selectedItemId: Int? = <span class="keyword">null</span>,
+    
+    <span class="comment">// 📝 Formularios - 28 estados (14 campos × 2 formularios)</span>
+    <span class="keyword">val</span> nombreAlta: String = <span class="string">""</span>,
+    <span class="keyword">val</span> nombreModificacion: String = <span class="string">""</span>,
+    <span class="keyword">val</span> telefonoAlta: String = <span class="string">""</span>,
+    <span class="keyword">val</span> telefonoModificacion: String = <span class="string">""</span>,
+    <span class="comment">// ... 24 campos más</span>
+    
+    <span class="comment">// ⚠️ Validaciones</span>
+    <span class="keyword">val</span> nombreError: Boolean = <span class="keyword">false</span>,
+    <span class="keyword">val</span> telefonoError: Boolean = <span class="keyword">false</span>,
+    <span class="keyword">val</span> fechaError: Boolean = <span class="keyword">false</span>,
+    
+    <span class="comment">// 🎨 UI/UX</span>
+    <span class="keyword">val</span> modificacionAlumnoClickCount: Int = 0
+)
+	</div>
+	
+	<h4>Responsabilidades clave:</h4>
+	<ul>
+		<li>🔄 <strong>Gestión de mensajes</strong>: envío, recepción, paginación</li>
+		<li>📝 <strong>Validación de formularios</strong></li>
+		<li>🎯 <strong>Orquestación de diálogos</strong></li>
+		<li>🔐 <strong>Gestión de contexto</strong> (navegación, sugerencias)</li>
+		<li>🧪 <strong>Control de mocks vs backend</strong></li>
+	</ul>
+</div>
+
+<div class="layer-card">
+	<h3>💾 Capa de Dominio (Domain Layer)</h3>
+	
+	<p><strong>Ubicación:</strong> <code>com.example.academiaapp.domain</code></p>
+	
+	<h4>Repository Pattern</h4>
+	
+	<div class="code-snippet">
+<span class="keyword">interface</span> <span class="type">ChatRepository</span> {
+    <span class="keyword">suspend fun</span> <span class="type">welcome</span>(): Result&lt;Envelope&gt;
+    <span class="keyword">suspend fun</span> <span class="type">sendMessage</span>(text: String, context: Map&lt;String, Any&gt;?): Result&lt;Envelope&gt;
+    <span class="keyword">suspend fun</span> <span class="type">fetchPage</span>(paginationToken: String): Result&lt;Envelope&gt;
+    <span class="keyword">fun</span> <span class="type">clearWelcomeCache</span>()
+}
+	</div>
+	
+	<h4>Implementaciones:</h4>
+	<ul>
+		<li><strong>MockChatRepository</strong>: Datos simulados para desarrollo/demo</li>
+		<li><strong>RemoteChatRepository</strong>: Comunicación con API real</li>
+	</ul>
+	
+	<div class="highlight-box">
+		<strong>💡 Ventaja del Repository Pattern:</strong>
+		<p>Permite cambiar entre modo mock y producción sin modificar el ViewModel. El repositorio actúa como abstracción de la fuente de datos.</p>
+	</div>
+</div>
+
+<div class="layer-card">
+	<h3>📡 Capa de Datos (Data Layer)</h3>
+	
+	<p><strong>Ubicación:</strong> <code>com.example.academiaapp.data</code></p>
+	
+	<h4>Componentes:</h4>
+	<ul>
+		<li><strong>DTOs</strong>: Envelope, ChatMessageDto, GenericItem, Suggestion, PaginationInfo</li>
+		<li><strong>Retrofit Service</strong>: ChatApiService con endpoints tipados</li>
+		<li><strong>SessionStore</strong>: DataStore para persistencia de sesión</li>
+		<li><strong>MockData</strong>: Datos de prueba estructurados</li>
+	</ul>
+	
+	<h4>Envelope - Contrato de Comunicación:</h4>
+	
+	<div class="code-snippet">
+<span class="keyword">data class</span> <span class="type">Envelope</span>(
+    <span class="keyword">val</span> message: String?,              <span class="comment">// Mensaje del asistente</span>
+    <span class="keyword">val</span> items: List&lt;GenericItem&gt;?,    <span class="comment">// Datos (alumnos, clases, etc.)</span>
+    <span class="keyword">val</span> suggestions: List&lt;Suggestion&gt;?, <span class="comment">// Sugerencias contextuales</span>
+    <span class="keyword">val</span> summary_fields: List&lt;String&gt;?, <span class="comment">// Campos a resumir</span>
+    <span class="keyword">val</span> screen: String?,              <span class="comment">// Contexto de pantalla</span>
+    <span class="keyword">val</span> pagination: PaginationInfo?   <span class="comment">// Info de paginación</span>
+)
+	</div>
+</div>
+
+<h2 id="chatviewmodel">4. 🧠 ChatViewModel - Núcleo del Sistema</h2>
+
+<div class="diagram-container">
+	<h3>Flujo de Operaciones en ChatViewModel</h3>
+	<div class="mermaid">
+sequenceDiagram
+    participant U as Usuario
+    participant V as ChatScreen
+    participant VM as ChatViewModel
+    participant R as Repository
+    participant API as Backend API
+    
+    U->>V: Escribe mensaje
+    V->>VM: vm.setInput(text)
+    VM->>VM: _ui.update { it.copy(input = text) }
+    
+    U->>V: Presiona enviar
+    V->>VM: vm.sendMessage(text)
+    
+    VM->>VM: Añade mensaje usuario
+    VM->>VM: _ui.update { loading = true }
+    
+    alt Modo Mock
+        VM->>R: sendMessage(text, context)
+        R-->>VM: Result.Success(mockEnvelope)
+    else Modo Producción
+        VM->>R: sendMessage(text, context)
+        R->>API: POST /chat/sendMessage
+        API-->>R: Envelope JSON
+        R-->>VM: Result.Success(envelope)
+    end
+    
+    VM->>VM: applyEnvelope(envelope)
+    VM->>VM: Añade mensaje asistente
+    VM->>VM: _ui.update { loading = false }
+    VM-->>V: ui StateFlow emite nuevo estado
+    V-->>U: Muestra respuesta
+	</div>
+</div>
+
+<h3>Funciones Principales</h3>
+
+<table>
+	<thead>
+		<tr>
+			<th>Categoría</th>
+			<th>Funciones</th>
+			<th>Responsabilidad</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><strong>Mensajería</strong></td>
+			<td>sendMessage()<br>sendMessageWithContext()<br>loadWelcome()<br>applyEnvelope()</td>
+			<td>Envío/recepción de mensajes, aplicación de respuestas</td>
+		</tr>
+		<tr>
+			<td><strong>Navegación</strong></td>
+			<td>fetchNextPage()<br>fetchPrevPage()<br>disableSuggestionsForMessage()</td>
+			<td>Paginación de datos, gestión de sugerencias</td>
+		</tr>
+		<tr>
+			<td><strong>Diálogos</strong></td>
+			<td>showClarificationDialog()<br>closeClarificationDialog()<br>showBajaAlumnoDialog()<br>showConfirmDialogAlta()</td>
+			<td>Control de modals y confirmaciones</td>
+		</tr>
+		<tr>
+			<td><strong>Formularios</strong></td>
+			<td>setNombreAlta()<br>setTelefonoModificacion()<br>initDireccionModificacion()<br>convertDateFormat()</td>
+			<td>Gestión de 28 campos de formulario</td>
+		</tr>
+		<tr>
+			<td><strong>Validación</strong></td>
+			<td>setNombreError()<br>setTelefonoError()<br>setFechaError()</td>
+			<td>Control de errores de validación</td>
+		</tr>
+		<tr>
+			<td><strong>Visualización</strong></td>
+			<td>toggleItemDetails()<br>toggleDayExpanded()<br>setItemsToShow()</td>
+			<td>Control de expansión/colapso de elementos</td>
+		</tr>
+		<tr>
+			<td><strong>UI/UX</strong></td>
+			<td>incrementModificacionClickCount()<br>resetModificacionClickCount()</td>
+			<td>Interacciones especiales de UI</td>
+		</tr>
+	</tbody>
+</table>
+
+<h2 id="refactoring">5. 🔄 Proceso de Refactorización MVVM</h2>
+
+<div class="success-box">
+	<h3>✅ Refactorización Completada</h3>
+	<p><strong>Duración:</strong> Noviembre 2025</p>
+	<p><strong>Commits:</strong> 16 commits atómicos</p>
+	<p><strong>Estados migrados:</strong> 38 de ~44 (86%)</p>
+	<p><strong>Enfoque:</strong> Incremental ultra-conservador con verificación continua</p>
+</div>
+
+<h3>Fases Ejecutadas</h3>
+
+<table>
+	<thead>
+		<tr>
+			<th>Fase</th>
+			<th>Estados</th>
+			<th>Riesgo</th>
+			<th>Commits</th>
+			<th>Estado</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><strong>Fase 1: Input</strong></td>
+			<td>1</td>
+			<td>🟢 Bajo (15%)</td>
+			<td>1</td>
+			<td>✅ Completada</td>
+		</tr>
+		<tr>
+			<td><strong>Fase 2: Diálogos</strong></td>
+			<td>3</td>
+			<td>🟡 Medio (25%)</td>
+			<td>1</td>
+			<td>✅ Completada</td>
+		</tr>
+		<tr>
+			<td><strong>Fase 3: Visualización</strong></td>
+			<td>5</td>
+			<td>🟡 Medio (35%)</td>
+			<td>1</td>
+			<td>✅ Completada</td>
+		</tr>
+		<tr>
+			<td><strong>Fase 4: Formularios</strong></td>
+			<td>28</td>
+			<td>🔴 Alto (45%)</td>
+			<td>11</td>
+			<td>✅ Completada en 11 subfases</td>
+		</tr>
+		<tr>
+			<td><strong>Fase 5: Estados de Clases</strong></td>
+			<td>6</td>
+			<td>🔴 Muy Alto (65%)</td>
+			<td>-</td>
+			<td>⏭️ Omitida (estados efímeros)</td>
+		</tr>
+		<tr>
+			<td><strong>Fase 6: UI/UX</strong></td>
+			<td>2</td>
+			<td>🟡 Medio (35%)</td>
+			<td>1</td>
+			<td>✅ Subfase 6.1 completada</td>
+		</tr>
+	</tbody>
+</table>
+
+<h3>Estrategia Aplicada</h3>
+
+<div class="diagram-container">
+	<div class="mermaid">
+graph LR
+    A[Analizar estado] --> B[Expandir ChatUiState]
+    B --> C[Crear setters en ViewModel]
+    C --> D[Actualizar ChatScreen]
+    D --> E[Verificar compilación]
+    E --> F{¿Errores?}
+    F -->|Sí| G[Corregir]
+    G --> E
+    F -->|No| H[Verificar referencias externas]
+    H --> I[Commit atómico]
+    I --> J{¿Más estados?}
+    J -->|Sí| A
+    J -->|No| K[Fase completada]
+    
+    style K fill:#4CAF50
+    style F fill:#FF9800
+	</div>
+</div>
+
+<h3>Fase 4 - Caso de Estudio: Formularios</h3>
+
+<p>La Fase 4 fue la más compleja (28 estados, 45% riesgo). Se subdividió en 11 subfases:</p>
+
+<div class="code-snippet">
+<span class="comment">// Ejemplo: Subfase 4.5e - Campo fecha</span>
+
+<span class="comment">// 1️⃣ ChatUiState - Añadir estados</span>
+<span class="keyword">data class</span> <span class="type">ChatUiState</span>(
+    <span class="comment">// ...</span>
+    <span class="keyword">val</span> fechaAlta: String = <span class="string">""</span>,
+    <span class="keyword">val</span> fechaModificacion: String = <span class="string">""</span>
+)
+
+<span class="comment">// 2️⃣ ChatViewModel - Crear funciones</span>
+<span class="keyword">fun</span> <span class="type">setFechaAlta</span>(fecha: String) {
+    _ui.update { it.copy(fechaAlta = fecha) }
+}
+
+<span class="keyword">fun</span> <span class="type">initFechaModificacion</span>(alumnoData: Map&lt;String, Any?&gt;) {
+    <span class="keyword">val</span> fechaStr = alumnoData[<span class="string">"fecha_nacimiento"</span>] <span class="keyword">as?</span> String
+    <span class="keyword">val</span> fecha = convertDateFormat(fechaStr)
+    _ui.update { it.copy(fechaModificacion = fecha) }
+}
+
+<span class="comment">// 3️⃣ ChatScreen - Actualizar UI</span>
+OutlinedTextField(
+    value = ui.fechaAlta,                <span class="comment">// ✅ Del ViewModel</span>
+    onValueChange = { vm.setFechaAlta(it) } <span class="comment">// ✅ Al ViewModel</span>
+)
+
+<span class="comment">// 4️⃣ Commit atómico con verificación</span>
+<span class="comment">// ✅ 0 errores de compilación</span>
+<span class="comment">// ✅ 11 referencias externas preservadas</span>
+	</div>
+
+<h2 id="flujo-datos">6. 🔄 Flujo de Datos</h2>
+
+<div class="diagram-container">
+	<h3>Flujo Unidireccional de Datos (UDF)</h3>
+	<div class="mermaid">
+flowchart TD
+    subgraph UI["🖼️ UI Layer"]
+        A[Usuario interactúa]
+        B[ChatScreen observa ui]
+        C[Renderiza cambios]
+    end
+    
+    subgraph VM["⚙️ ViewModel"]
+        D[Función vm.*]
+        E[_ui.update]
+        F[StateFlow emite]
+    end
+    
+    subgraph MODEL["💾 Model"]
+        G[Repository]
+        H[API/Mock]
+    end
+    
+    A -->|onClick, onChange| D
+    D -->|lógica de negocio| E
+    E --> F
+    F -->|collectAsState| B
+    B --> C
+    
+    D -.->|suspend fun| G
+    G -.->|Result| D
+    G <-->|datos| H
+    
+    style A fill:#E3F2FD
+    style F fill:#4CAF50
+    style C fill:#764ba2
+	</div>
+</div>
+
+<h3>Ejemplo: Alta de Alumno</h3>
+
+<div class="code-snippet">
+<span class="comment">// 1. Usuario completa formulario</span>
+OutlinedTextField(
+    value = ui.nombreAlta,
+    onValueChange = { vm.setNombreAlta(it) }  <span class="comment">// ⬆️ Evento</span>
+)
+
+<span class="comment">// 2. ViewModel actualiza estado</span>
+<span class="keyword">fun</span> <span class="type">setNombreAlta</span>(nombre: String) {
+    _ui.update { it.copy(nombreAlta = nombre) }  <span class="comment">// 🔄 Actualización</span>
+}
+
+<span class="comment">// 3. StateFlow emite nuevo estado</span>
+<span class="keyword">val</span> ui: StateFlow&lt;ChatUiState&gt; = _ui  <span class="comment">// 📡 Emisión reactiva</span>
+
+<span class="comment">// 4. ChatScreen recibe y renderiza</span>
+<span class="keyword">val</span> ui <span class="keyword">by</span> vm.ui.collectAsState()  <span class="comment">// ⬇️ Observación</span>
+Text(<span class="string">"Nombre: ${ui.nombreAlta}"</span>)  <span class="comment">// 🎨 Renderizado</span>
+	</div>
+
+<h2 id="patrones">7. 🎨 Patrones de Diseño</h2>
+
+<h3>Repository Pattern</h3>
+
+<div class="highlight-box">
+	<strong>Objetivo:</strong> Abstraer la fuente de datos del ViewModel
+	<p>El ViewModel solo conoce la interfaz <code>ChatRepository</code>, no si los datos vienen de un mock o del backend.</p>
+</div>
+
+<div class="code-snippet">
+<span class="comment">// Interfaz (abstracción)</span>
+<span class="keyword">interface</span> <span class="type">ChatRepository</span> {
+    <span class="keyword">suspend fun</span> <span class="type">sendMessage</span>(text: String): Result&lt;Envelope&gt;
+}
+
+<span class="comment">// Implementación Mock</span>
+<span class="keyword">class</span> <span class="type">MockChatRepository</span> : ChatRepository {
+    <span class="keyword">override suspend fun</span> <span class="type">sendMessage</span>(text: String): Result&lt;Envelope&gt; {
+        <span class="keyword">return</span> Result.Success(MockData.generateResponse(text))
+    }
+}
+
+<span class="comment">// Implementación Real</span>
+<span class="keyword">class</span> <span class="type">RemoteChatRepository</span>(<span class="keyword">private val</span> api: ChatApiService) : ChatRepository {
+    <span class="keyword">override suspend fun</span> <span class="type">sendMessage</span>(text: String): Result&lt;Envelope&gt; {
+        <span class="keyword">val</span> response = api.sendMessage(MessageRequest(text))
+        <span class="keyword">return</span> Result.Success(response)
+    }
+}
+	</div>
+
+<h3>Dependency Injection Manual</h3>
+
+<div class="code-snippet">
+<span class="comment">// AppContainer - DI simple sin framework</span>
+<span class="keyword">class</span> <span class="type">AppContainer</span>(<span class="keyword">val</span> context: Context) {
+    <span class="keyword">val</span> session = SessionStore(context)
+    
+    <span class="keyword">val</span> chatRepository: ChatRepository = <span class="keyword">if</span> (MockConfig.USE_MOCKS) {
+        MockChatRepository()
+    } <span class="keyword">else</span> {
+        RemoteChatRepository(retrofitService, session)
+    }
+}
+
+<span class="comment">// Uso en ViewModel</span>
+<span class="keyword">val</span> factory = ChatViewModelFactory(
+    app.container.chatRepository,
+    app.container.session
+)
+<span class="keyword">val</span> vm: ChatViewModel = viewModel(factory = factory)
+	</div>
+
+<h3>State Hoisting</h3>
+
+<div class="highlight-box">
+	<strong>Concepto:</strong> El estado se "eleva" al nivel más alto necesario
+	<p>Los Composables hijos son "sin estado" (stateless) y reciben datos + callbacks del padre.</p>
+</div>
+
+<div class="code-snippet">
+<span class="comment">// ❌ MAL: Estado local en componente hijo</span>
+<span class="keyword">@Composable</span>
+<span class="keyword">fun</span> <span class="type">MessageInput</span>() {
+    <span class="keyword">var</span> text <span class="keyword">by</span> remember { mutableStateOf(<span class="string">""</span>) }  <span class="comment">// ❌ Estado aquí</span>
+    TextField(value = text, onValueChange = { text = it })
+}
+
+<span class="comment">// ✅ BIEN: Estado en ViewModel</span>
+<span class="keyword">@Composable</span>
+<span class="keyword">fun</span> <span class="type">MessageInput</span>(value: String, onChange: (String) -> Unit) {
+    TextField(value = value, onValueChange = onChange)  <span class="comment">// ✅ Stateless</span>
+}
+
+<span class="comment">// Uso:</span>
+MessageInput(
+    value = ui.input,           <span class="comment">// Del ViewModel</span>
+    onChange = { vm.setInput(it) }  <span class="comment">// Al ViewModel</span>
+)
+	</div>
+
+<h3>Result Wrapper</h3>
+
+<div class="code-snippet">
+<span class="keyword">sealed class</span> <span class="type">Result</span>&lt;<span class="keyword">out</span> T&gt; {
+    <span class="keyword">data class</span> <span class="type">Success</span>&lt;<span class="keyword">out</span> T&gt;(<span class="keyword">val</span> data: T) : Result&lt;T&gt;()
+    <span class="keyword">data class</span> <span class="type">Error</span>(<span class="keyword">val</span> message: String) : Result&lt;Nothing&gt;()
+}
+
+<span class="comment">// Uso con when expression</span>
+<span class="keyword">when</span> (<span class="keyword">val</span> result = repo.sendMessage(text)) {
+    <span class="keyword">is</span> Result.Success -> applyEnvelope(result.data)
+    <span class="keyword">is</span> Result.Error -> _ui.update { it.copy(error = result.message) }
+}
+	</div>
+
+<h2 id="decisiones">8. 🎯 Decisiones Arquitectónicas</h2>
+
+<h3>1. Estados Locales Justificados</h3>
+
+<div class="stats-box">
+	<p><strong>Decisión:</strong> Mantener 7 estados locales en ChatScreen</p>
+	<p><strong>Razón:</strong> MVVM pragmático vs dogmático</p>
+</div>
+
+<table>
+	<thead>
+		<tr>
+			<th>Estado</th>
+			<th>Tipo</th>
+			<th>Justificación</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>ausenciasMap<br>showVerAnotacionesDialog<br>showNuevaAnotacionDialog<br>selectedAlumnoId<br>selectedAlumnoNombre<br>anotacionesAlumno</td>
+			<td><code>remember(index)</code></td>
+			<td>
+				✅ <strong>Efímeros por mensaje</strong><br>
+				✅ Se recrean dinámicamente<br>
+				✅ No necesitan persistencia<br>
+				✅ Lógica de presentación específica
+			</td>
+		</tr>
+		<tr>
+			<td>showScrollToBottom</td>
+			<td><code>derivedStateOf</code></td>
+			<td>
+				✅ <strong>Cálculo derivado de UI</strong><br>
+				✅ Depende de LazyListState (Compose)<br>
+				✅ No es lógica de negocio<br>
+				✅ Best practice de Google
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<div class="success-box">
+	<p><strong>✅ Soporte oficial:</strong></p>
+	<p>"States that are scoped to a specific composable and don't need to survive configuration changes should use remember. DerivedStateOf is perfect for calculations based on other state."</p>
+	<p style="text-align: right;"><em>— Android Developers Documentation</em></p>
+</div>
+
+<h3>2. Mock vs Backend Real</h3>
+
+<div class="code-snippet">
+<span class="comment">// MockConfig.kt - Control centralizado</span>
+<span class="keyword">object</span> <span class="type">MockConfig</span> {
+    <span class="keyword">const val</span> USE_MOCKS = <span class="keyword">true</span>  <span class="comment">// ✅ Un solo flag</span>
+    
+    <span class="keyword">fun</span> <span class="type">isMocked</span>(screen: String): Boolean {
+        <span class="keyword">return</span> USE_MOCKS && screen <span class="keyword">in</span> listOf(
+            <span class="string">"alumnos"</span>, <span class="string">"clases"</span>, <span class="string">"sesiones"</span>
+        )
+    }
+}
+	</div>
+
+<p><strong>Ventajas:</strong></p>
+<ul>
+	<li>✅ Desarrollo sin backend disponible</li>
+	<li>✅ Testing de UI aislado</li>
+	<li>✅ Demos sin conexión</li>
+	<li>✅ Cambio rápido entre modos</li>
+</ul>
+
+<h3>3. ViewModelStoreOwner: Activity vs NavBackStackEntry</h3>
+
+<div class="highlight-box">
+	<p><strong>Decisión:</strong> Usar Activity como owner del ChatViewModel</p>
+	<p><strong>Razón:</strong> Preservar mensajes del chat entre navegaciones</p>
+</div>
+
+<div class="code-snippet">
+<span class="keyword">val</span> activityOwner = LocalActivity.current <span class="keyword">as?</span> ViewModelStoreOwner
+<span class="keyword">val</span> owner: ViewModelStoreOwner = activityOwner ?: LocalViewModelStoreOwner.current
+<span class="keyword">val</span> vm: ChatViewModel = viewModel(viewModelStoreOwner = owner, factory = factory)
+	</div>
+
+<p><strong>Efecto:</strong> El ViewModel sobrevive a navegación entre pantallas (Login → Chat)</p>
+
+<h3>4. Single Source of Truth</h3>
+
+<div class="diagram-container">
+	<div class="mermaid">
+graph TD
+    A[ChatUiState en ViewModel] -->|"única fuente"| B[ChatScreen observa]
+    A -->|"única fuente"| C[Otros Composables]
+    A -->|"única fuente"| D[Diálogos]
+    
+    E[Usuario modifica] --> F[vm.setX]
+    F --> G[_ui.update]
+    G --> A
+    
+    style A fill:#4CAF50
+    style G fill:#FF9800
+	</div>
+</div>
+
+<p><strong>Beneficios:</strong></p>
+<ul>
+	<li>✅ Estado consistente en toda la UI</li>
+	<li>✅ No hay sincronización manual</li>
+	<li>✅ Testeable fácilmente</li>
+	<li>✅ Debug simplificado</li>
+</ul>
+
+<h3>5. Coroutines + StateFlow</h3>
+
+<div class="code-snippet">
+<span class="comment">// StateFlow para estado reactivo</span>
+<span class="keyword">private val</span> _ui = MutableStateFlow(ChatUiState())
+<span class="keyword">val</span> ui: StateFlow&lt;ChatUiState&gt; = _ui
+
+<span class="comment">// Coroutines para operaciones asíncronas</span>
+<span class="keyword">fun</span> <span class="type">sendMessage</span>(text: String) {
+    viewModelScope.launch {  <span class="comment">// ✅ Se cancela con ViewModel</span>
+        <span class="keyword">when</span> (<span class="keyword">val</span> result = repo.sendMessage(text)) {
+            <span class="keyword">is</span> Result.Success -> applyEnvelope(result.data)
+            <span class="keyword">is</span> Result.Error -> _ui.update { it.copy(error = result.message) }
+        }
+    }
+}
+	</div>
+
+<p><strong>Por qué StateFlow:</strong></p>
+<ul>
+	<li>✅ Hot stream (siempre tiene valor inicial)</li>
+	<li>✅ Conflation (solo último valor importa)</li>
+	<li>✅ Integración perfecta con Compose</li>
+	<li>✅ Lifecycle-aware con collectAsState()</li>
+</ul>
+
+<hr>
+
+<h2>📊 Métricas Finales</h2>
+
+<div class="stats-box">
+	<table>
+		<thead>
+			<tr>
+				<th>Métrica</th>
+				<th>Valor</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr><td>Estados migrados a ViewModel</td><td><strong>38</strong></td></tr>
+			<tr><td>Estados locales justificados</td><td><strong>7</strong></td></tr>
+			<tr><td>Líneas ChatViewModel</td><td><strong>636</strong></td></tr>
+			<tr><td>Líneas ChatScreen</td><td><strong>2,565</strong></td></tr>
+			<tr><td>Commits de refactorización</td><td><strong>16</strong></td></tr>
+			<tr><td>Errores de compilación</td><td><strong>0</strong></td></tr>
+			<tr><td>Cobertura MVVM</td><td><strong>86%</strong> (pragmático)</td></tr>
+			<tr><td>Arquitectura</td><td><strong>✅ MVVM Sólido</strong></td></tr>
+		</tbody>
+	</table>
+</div>
+
+<hr>
+
+<div class="success-box" style="text-align: center; padding: 30px;">
+	<h2 style="color: #4CAF50; margin-top: 0;">✅ Arquitectura MVVM Implementada Exitosamente</h2>
+	<p style="font-size: 16px;">
+		<strong>AcademiaAPP</strong> sigue las mejores prácticas de Android con Jetpack Compose,<br>
+		implementando una arquitectura MVVM sólida, testeable y mantenible.
+	</p>
+	<p style="margin-top: 20px;">
+		<span class="architecture-badge">MVVM</span>
+		<span class="architecture-badge">Clean Architecture</span>
+		<span class="architecture-badge">Repository Pattern</span>
+		<span class="architecture-badge">Unidirectional Data Flow</span>
+	</p>
+</div>
+
+<hr>
+
+<p style="text-align: center; color: #757575; margin-top: 40px;">
+	<strong>Documento generado el 24 de noviembre de 2025</strong><br>
+	Parte del TFG FP DAM - Sistema de Gestión de Academias<br>
+	Autor: Ángel Fernández Vidal
+</p>
+
+</body>
+</html>
