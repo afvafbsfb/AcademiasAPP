@@ -249,9 +249,6 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
 
     // 🆕 REFACTOR: ui.detailsItem ahora viene del ViewModel
     
-    // ✅ NUEVO: Contador de clics para "Modificación de alumno" (mock)
-    var modificacionAlumnoClickCount by remember { mutableStateOf(0) }
-
     // 🆕 REFACTOR: dialogs ahora vienen del ViewModel
 
     // Context para Toast
@@ -1134,9 +1131,9 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                             if (!ui.loading && m.suggestionsEnabled) {
                                                                                 // ✅ MOCK: Lógica especial para "Modificación de alumno"
                                                                                 if (suggestion.displayText.equals("Modificación de alumno", ignoreCase = true)) {
-                                                                                    modificacionAlumnoClickCount++
+                                                                                    vm.incrementModificacionClickCount()
 
-                                                                                    if (modificacionAlumnoClickCount == 1) {
+                                                                                    if (ui.modificacionAlumnoClickCount == 1) {
                                                                                         // Primera vez: mostrar Snackbar con icono de advertencia
                                                                                         coroutineScope.launch {
                                                                                             snackbarHostState.showSnackbar(
@@ -1159,7 +1156,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                                             )
                                                                                         )
                                                                                         // Resetear contador para próximas veces
-                                                                                        modificacionAlumnoClickCount = 0
+                                                                                        vm.resetModificacionClickCount()
                                                                                     }
                                                                                 } else if (suggestion.displayText.equals("Baja de alumno", ignoreCase = true)) {
                                                                                     // ✅ PASO 1-2: Detectar "Baja de alumno" y mostrar diálogo de confirmación

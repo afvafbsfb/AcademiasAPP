@@ -102,7 +102,10 @@ data class ChatUiState(
     
     // 🆕 Campos de formulario - fecha
     val fechaAlta: String = "",
-    val fechaModificacion: String = ""
+    val fechaModificacion: String = "",
+    
+    // 🆕 FASE 6: Estados UI/UX
+    val modificacionAlumnoClickCount: Int = 0
 )
 
 class ChatViewModel(
@@ -374,6 +377,15 @@ class ChatViewModel(
             }
         }
         return dateStr
+    }
+    
+    // 🆕 FASE 6: UI/UX - Modificación alumno click count
+    fun incrementModificacionClickCount() {
+        _ui.update { it.copy(modificacionAlumnoClickCount = it.modificacionAlumnoClickCount + 1) }
+    }
+    
+    fun resetModificacionClickCount() {
+        _ui.update { it.copy(modificacionAlumnoClickCount = 0) }
     }
 
     fun loadWelcome() {
