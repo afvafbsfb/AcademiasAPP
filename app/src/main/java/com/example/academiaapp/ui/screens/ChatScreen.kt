@@ -1475,7 +1475,6 @@ private fun AlumnoAltaForm(
 
     var email by remember { mutableStateOf("") }
     var dni by remember { mutableStateOf("") }
-    var telefono by remember { mutableStateOf("") }
     var fecha by remember { mutableStateOf("") } // DD/MM/YYYY
     var direccion by remember { mutableStateOf("") }
 
@@ -1497,7 +1496,7 @@ private fun AlumnoAltaForm(
             ok = false
             if (firstErrorField == null) firstErrorField = nombreFocusRequester
         }
-        if (telefono.isBlank()) {
+        if (ui.telefonoAlta.isBlank()) {
             vm.setTelefonoError(true)
             ok = false
             if (firstErrorField == null) firstErrorField = telefonoFocusRequester
@@ -1537,8 +1536,8 @@ private fun AlumnoAltaForm(
 
         // Telefono (required)
         OutlinedTextField(
-            value = telefono,
-            onValueChange = { telefono = it; if (it.isNotBlank()) vm.setTelefonoError(false) },
+            value = ui.telefonoAlta,
+            onValueChange = { vm.setTelefonoAlta(it); if (it.isNotBlank()) vm.setTelefonoError(false) },
             label = { Text("Teléfono *") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -1667,7 +1666,7 @@ private fun AlumnoAltaForm(
                         "nombre" to ui.nombreAlta,
                         "email" to email,
                         "dni" to dni,
-                        "telefono" to telefono,
+                        "telefono" to ui.telefonoAlta,
                         "fecha_nacimiento" to fecha,
                         "direccion" to direccion,
                         "curso_id" to ui.cursoSeleccionadoAlta,
@@ -1718,7 +1717,6 @@ private fun AlumnoModificacionForm(
     // ✅ CORREGIDO: Inicializar como String desde alumnoData con conversión de formato de fecha
     var email by remember { mutableStateOf((alumnoData["email"] as? String) ?: "") }
     var dni by remember { mutableStateOf((alumnoData["dni"] as? String) ?: "") }
-    var telefono by remember { mutableStateOf((alumnoData["telefono"] as? String) ?: "") }
     var fecha by remember { mutableStateOf(convertDateFormat(alumnoData["fecha_nacimiento"] as? String)) }
     var direccion by remember { mutableStateOf((alumnoData["direccion"] as? String) ?: "") }
 
@@ -1731,6 +1729,7 @@ private fun AlumnoModificacionForm(
         vm.initCursoSeleccionadoModificacion(cursoIdInicial)
         vm.initCursoNombreModificacion(cursos, cursoIdInicial)
         vm.initNombreModificacion(alumnoData)
+        vm.initTelefonoModificacion(alumnoData)
     }
 
     // Diálogo de confirmación
@@ -1751,7 +1750,7 @@ private fun AlumnoModificacionForm(
             ok = false
             if (firstErrorField == null) firstErrorField = nombreFocusRequester
         }
-        if (telefono.isBlank()) {
+        if (ui.telefonoModificacion.isBlank()) {
             vm.setTelefonoError(true)
             ok = false
             if (firstErrorField == null) firstErrorField = telefonoFocusRequester
@@ -1791,8 +1790,8 @@ private fun AlumnoModificacionForm(
 
         // Telefono (required)
         OutlinedTextField(
-            value = telefono,
-            onValueChange = { telefono = it; if (it.isNotBlank()) vm.setTelefonoError(false) },
+            value = ui.telefonoModificacion,
+            onValueChange = { vm.setTelefonoModificacion(it); if (it.isNotBlank()) vm.setTelefonoError(false) },
             label = { Text("Teléfono *") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -1921,7 +1920,7 @@ private fun AlumnoModificacionForm(
                         "nombre" to ui.nombreModificacion,
                         "email" to email,
                         "dni" to dni,
-                        "telefono" to telefono,
+                        "telefono" to ui.telefonoModificacion,
                         "fecha_nacimiento" to fecha,
                         "direccion" to direccion,
                         "curso_id" to ui.cursoSeleccionadoModificacion,

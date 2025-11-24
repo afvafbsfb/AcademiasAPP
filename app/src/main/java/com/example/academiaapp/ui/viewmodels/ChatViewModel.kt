@@ -82,7 +82,11 @@ data class ChatUiState(
     
     // 🆕 Campos de formulario - nombre
     val nombreAlta: String = "",
-    val nombreModificacion: String = ""
+    val nombreModificacion: String = "",
+    
+    // 🆕 Campos de formulario - telefono
+    val telefonoAlta: String = "",
+    val telefonoModificacion: String = ""
 )
 
 class ChatViewModel(
@@ -269,6 +273,20 @@ class ChatViewModel(
     fun initNombreModificacion(alumnoData: Map<String, Any?>) {
         val nombre = (alumnoData["nombre"] as? String) ?: ""
         _ui.update { it.copy(nombreModificacion = nombre) }
+    }
+
+    // 🆕 Manejar campo telefono en formularios
+    fun setTelefonoAlta(telefono: String) {
+        _ui.update { it.copy(telefonoAlta = telefono) }
+    }
+
+    fun setTelefonoModificacion(telefono: String) {
+        _ui.update { it.copy(telefonoModificacion = telefono) }
+    }
+
+    fun initTelefonoModificacion(alumnoData: Map<String, Any?>) {
+        val telefono = (alumnoData["telefono"] as? String) ?: ""
+        _ui.update { it.copy(telefonoModificacion = telefono) }
     }
 
     fun loadWelcome() {
