@@ -1479,7 +1479,6 @@ private fun AlumnoAltaForm(
     var telefono by remember { mutableStateOf("") }
     var fecha by remember { mutableStateOf("") } // DD/MM/YYYY
     var direccion by remember { mutableStateOf("") }
-    var cursoNombre by remember { mutableStateOf<String?>(null) }
 
     // Diálogo de confirmación
     
@@ -1611,7 +1610,7 @@ private fun AlumnoAltaForm(
                             text = { Text(label) },
                             onClick = {
                                 vm.setCursoSeleccionadoAlta(id)
-                                cursoNombre = label
+                                vm.setCursoNombreAlta(label)
                                 vm.setCursoLabelAlta(label)
                                 vm.setExpandedCursosAlta(false)
                             }
@@ -1673,7 +1672,7 @@ private fun AlumnoAltaForm(
                         "fecha_nacimiento" to fecha,
                         "direccion" to direccion,
                         "curso_id" to ui.cursoSeleccionadoAlta,
-                        "curso_nombre" to cursoNombre
+                        "curso_nombre" to ui.cursoNombreAlta
                     )
                     onSubmit(formMap)
                 }) {
@@ -1727,21 +1726,12 @@ private fun AlumnoModificacionForm(
 
     // ✅ Pre-cargar curso seleccionado si existe
     val cursoIdInicial = (alumnoData["curso_id"] as? Number)?.toInt()
-    var cursoNombre by remember {
-        mutableStateOf<String?>(
-            if (cursoIdInicial != null) {
-                cursos.find { (it["id"] as? Number)?.toInt() == cursoIdInicial }
-                    ?.get("display_text") as? String
-            } else {
-                null
-            }
-        )
-    }
 
     // Inicializar label de curso si viene cursoIdInicial
     LaunchedEffect(Unit) {
         vm.initCursoLabelModificacion(cursos, cursoIdInicial)
         vm.initCursoSeleccionadoModificacion(cursoIdInicial)
+        vm.initCursoNombreModificacion(cursos, cursoIdInicial)
     }
 
     // Diálogo de confirmación
@@ -1874,7 +1864,7 @@ private fun AlumnoModificacionForm(
                             text = { Text(label) },
                             onClick = {
                                 vm.setCursoSeleccionadoModificacion(id)
-                                cursoNombre = label
+                                vm.setCursoNombreModificacion(label)
                                 vm.setCursoLabelModificacion(label)
                                 vm.setExpandedCursosModificacion(false)
                             }
@@ -1936,7 +1926,7 @@ private fun AlumnoModificacionForm(
                         "fecha_nacimiento" to fecha,
                         "direccion" to direccion,
                         "curso_id" to ui.cursoSeleccionadoModificacion,
-                        "curso_nombre" to cursoNombre
+                        "curso_nombre" to ui.cursoNombreModificacion
                     )
                     // Obtener ID del alumno desde alumnoData
                     val alumnoId = (alumnoData["id"] as? Number)?.toInt() ?: -1
