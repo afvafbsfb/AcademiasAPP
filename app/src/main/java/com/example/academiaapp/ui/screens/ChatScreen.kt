@@ -252,13 +252,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
     // ✅ NUEVO: Contador de clics para "Modificación de alumno" (mock)
     var modificacionAlumnoClickCount by remember { mutableStateOf(0) }
 
-    // ✅ NUEVO: Estado para el diálogo de aclaración de sugerencias
-    var showClarificationDialog by remember { mutableStateOf(false) }
-    var clarificationSuggestion by remember { mutableStateOf<com.example.academiaapp.data.remote.dto.Suggestion?>(null) }
-    var clarificationMessageIndex by remember { mutableStateOf(-1) }
-
-    // ✅ PASO 2: Estado para el diálogo de baja de alumno
-    var showBajaAlumnoDialog by remember { mutableStateOf(false) }
+    // 🆕 REFACTOR: dialogs ahora vienen del ViewModel
 
     // Context para Toast
     val context = LocalContext.current
@@ -1168,14 +1162,14 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                                     }
                                                                                 } else if (suggestion.displayText.equals("Baja de alumno", ignoreCase = true)) {
                                                                                     // ✅ PASO 1-2: Detectar "Baja de alumno" y mostrar diálogo de confirmación
-                                                                                    showBajaAlumnoDialog = true
+                                                                                    vm.showBajaAlumnoDialog()
                                                                                 } else {
                                                                                     // ✅ Lógica normal para otras sugerencias
                                                                                     if (suggestion.needsClarification()) {
                                                                                         // Mostrar diálogo para pedir más información
-                                                                                        clarificationSuggestion = suggestion
-                                                                                        clarificationMessageIndex = index
-                                                                                        showClarificationDialog = true
+                                                                                        vm.showClarificationDialog(suggestion, index)
+                                                                                        
+                                                                                        
                                                                                     } else {
                                                                                         // Enviar directamente (Paginacion o Generica tipo listado)
                                                                                         vm.disableSuggestionsForMessage(index)
@@ -1398,33 +1392,33 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
     }
 
     // ✅ NUEVO: Diálogo de aclaración para sugerencias que necesitan más información
-    if (showClarificationDialog && clarificationSuggestion != null) {
+    if (ui.showClarificationDialog && ui.clarificationSuggestion != null) {
         SuggestionClarificationDialog(
-            suggestion = clarificationSuggestion!!,
+            suggestion = ui.clarificationSuggestion!!,
             onDismiss = {
-                showClarificationDialog = false
-                clarificationSuggestion = null
-                clarificationMessageIndex = -1
+                vm.hideClarificationDialog()
+                
+                
             },
             onSend = { editedMessage ->
                 // Deshabilitar las sugerencias del mensaje original
-                if (clarificationMessageIndex >= 0) {
-                    vm.disableSuggestionsForMessage(clarificationMessageIndex)
+                if (ui.clarificationMessageIndex >= 0) {
+                    vm.disableSuggestionsForMessage(ui.clarificationMessageIndex)
                 }
                 // Enviar el mensaje editado
                 vm.sendMessage(editedMessage)
                 // Cerrar el diálogo
-                showClarificationDialog = false
-                clarificationSuggestion = null
-                clarificationMessageIndex = -1
+                vm.hideClarificationDialog()
+                
+                
             }
         )
     }
 
     // ✅ PASO 2: Diálogo de confirmación para baja de alumno (ID=1: Juan García García)
-    if (showBajaAlumnoDialog) {
+    if (ui.showBajaAlumnoDialog) {
         AlertDialog(
-            onDismissRequest = { showBajaAlumnoDialog = false },
+            onDismissRequest = { vm.hideBajaAlumnoDialog() },
             title = { Text("Confirmar baja de alumno") },
             text = {
                 Column {
@@ -1439,7 +1433,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
             confirmButton = {
                 TextButton(
                     onClick = {
-                        showBajaAlumnoDialog = false
+                        vm.hideBajaAlumnoDialog()
                         // ✅ PASO 4: Enviar mensaje simplificado con nombre e ID del alumno
                         val alumnoId = 1
                         val alumnoNombre = "Juan García García"
@@ -1458,7 +1452,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showBajaAlumnoDialog = false }) {
+                TextButton(onClick = { vm.hideBajaAlumnoDialog() }) {
                     Text("Cancelar")
                 }
             }

@@ -36,7 +36,15 @@ data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     
     // 🆕 Input del chat
-    val input: String = ""
+    val input: String = "",
+    
+    // 🆕 Dialog de aclaración de sugerencias
+    val showClarificationDialog: Boolean = false,
+    val clarificationSuggestion: Suggestion? = null,
+    val clarificationMessageIndex: Int = -1,
+    
+    // 🆕 Dialog de baja de alumno
+    val showBajaAlumnoDialog: Boolean = false
 )
 
 class ChatViewModel(
@@ -56,6 +64,38 @@ class ChatViewModel(
     // 🆕 Actualizar el input del chat
     fun onInputChange(newInput: String) {
         _ui.update { it.copy(input = newInput) }
+    }
+
+    // 🆕 Mostrar dialog de aclaración de sugerencias
+    fun showClarificationDialog(suggestion: Suggestion, messageIndex: Int) {
+        _ui.update {
+            it.copy(
+                showClarificationDialog = true,
+                clarificationSuggestion = suggestion,
+                clarificationMessageIndex = messageIndex
+            )
+        }
+    }
+
+    // 🆕 Cerrar dialog de aclaración
+    fun hideClarificationDialog() {
+        _ui.update {
+            it.copy(
+                showClarificationDialog = false,
+                clarificationSuggestion = null,
+                clarificationMessageIndex = -1
+            )
+        }
+    }
+
+    // 🆕 Mostrar dialog de baja de alumno
+    fun showBajaAlumnoDialog() {
+        _ui.update { it.copy(showBajaAlumnoDialog = true) }
+    }
+
+    // 🆕 Cerrar dialog de baja de alumno
+    fun hideBajaAlumnoDialog() {
+        _ui.update { it.copy(showBajaAlumnoDialog = false) }
     }
 
     fun loadWelcome() {
