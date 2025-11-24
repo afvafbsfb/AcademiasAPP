@@ -33,7 +33,10 @@ data class ChatMessage(
 data class ChatUiState(
     val loading: Boolean = false,
     val error: String? = null,
-    val messages: List<ChatMessage> = emptyList()
+    val messages: List<ChatMessage> = emptyList(),
+    
+    // 🆕 Input del chat
+    val input: String = ""
 )
 
 class ChatViewModel(
@@ -48,6 +51,11 @@ class ChatViewModel(
 
     companion object {
         private const val MAX_MESSAGES = 75
+    }
+
+    // 🆕 Actualizar el input del chat
+    fun onInputChange(newInput: String) {
+        _ui.update { it.copy(input = newInput) }
     }
 
     fun loadWelcome() {

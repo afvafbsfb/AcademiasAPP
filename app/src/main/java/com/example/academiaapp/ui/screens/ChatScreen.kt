@@ -247,7 +247,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
     val coroutineScope = rememberCoroutineScope()
 
     var detailsItem by remember { mutableStateOf<Map<String, Any?>?>(null) }
-    var input by remember { mutableStateOf("") }
+    // 🆕 REFACTOR: input ahora viene del ViewModel
     
     // ✅ NUEVO: Contador de clics para "Modificación de alumno" (mock)
     var modificacionAlumnoClickCount by remember { mutableStateOf(0) }
@@ -417,8 +417,8 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OutlinedTextField(
-                            value = input,
-                            onValueChange = { input = it },
+                            value = ui.input,
+                            onValueChange = vm::onInputChange,
                             modifier = Modifier
                                 .weight(1f)
                                 .heightIn(min = 56.dp, max = 120.dp),
@@ -430,9 +430,9 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                             ),
                             keyboardActions = KeyboardActions(
                                 onSend = {
-                                    if (!ui.loading && input.isNotBlank()) {
-                                        vm.sendMessage(input)
-                                        input = ""
+                                    if (!ui.loading && ui.input.isNotBlank()) {
+                                        vm.sendMessage(ui.input)
+                                        vm.onInputChange("")
                                     }
                                 }
                             ),
@@ -450,7 +450,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                 .size(48.dp)
                                 .background(
                                     color = when {
-                                        isPressed && !ui.loading && input.isNotBlank() ->
+                                        isPressed && !ui.loading && ui.input.isNotBlank() ->
                                             androidx.compose.material3.MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                                         else -> Color.Transparent
                                     },
@@ -459,11 +459,11 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                 .clickable(
                                     interactionSource = interactionSource,
                                     indication = androidx.compose.material.ripple.rememberRipple(bounded = true, radius = 24.dp),
-                                    enabled = !ui.loading && input.isNotBlank()
+                                    enabled = !ui.loading && ui.input.isNotBlank()
                                 ) {
-                                    if (!ui.loading && input.isNotBlank()) {
-                                        vm.sendMessage(input)
-                                        input = ""
+                                    if (!ui.loading && ui.input.isNotBlank()) {
+                                        vm.sendMessage(ui.input)
+                                    vm.onInputChange("")
                                     }
                                 },
                             contentAlignment = Alignment.Center
@@ -471,7 +471,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Send,
                                 contentDescription = "Enviar mensaje",
-                                tint = if (!ui.loading && input.isNotBlank()) {
+                                tint = if (!ui.loading && ui.input.isNotBlank()) {
                                     androidx.compose.material3.MaterialTheme.colorScheme.primary
                                 } else {
                                     Color.Gray
@@ -718,7 +718,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                     val sesionId = (clase["sesion_id"] as? Number)?.toInt()
                                                                     val horarioId = (clase["id"] as? Number)?.toInt()
                                                                     val estado = clase["estado"] as? String
-                                                                    val fecha = clase["fecha"] as? String ?: java.time.LocalDate.now().toString()
+                                                                    val fecha = clase["fecha"] as? String ?: java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
                                                                     val horaInicio = clase["hora_inicio"] as? String
                                                                     val horaFin = clase["hora_fin"] as? String
                                                                     val curso = clase["curso"] as? String
@@ -774,7 +774,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                                     // ✅ Extraer TODOS los datos de la sesión
                                                                     val sesionId = (clase["sesion_id"] as? Number)?.toInt()
                                                                     val estado = clase["estado"] as? String
-                                                                    val fecha = clase["fecha"] as? String ?: java.time.LocalDate.now().toString()
+                                                                    val fecha = clase["fecha"] as? String ?: java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
                                                                     val horaInicio = clase["hora_inicio"] as? String
                                                                     val horaFin = clase["hora_fin"] as? String
                                                                     val curso = clase["curso"] as? String
