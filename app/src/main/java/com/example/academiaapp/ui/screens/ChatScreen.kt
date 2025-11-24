@@ -1473,7 +1473,6 @@ private fun AlumnoAltaForm(
     // Extraer cursos disponibles si vienen
     val cursos = (formSpec["cursos_disponibles"] as? List<Map<String, Any?>>) ?: emptyList()
 
-    var nombre by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var dni by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
@@ -1493,7 +1492,7 @@ private fun AlumnoAltaForm(
         var ok = true
         var firstErrorField: FocusRequester? = null
 
-        if (nombre.isBlank()) {
+        if (ui.nombreAlta.isBlank()) {
             vm.setNombreError(true)
             ok = false
             if (firstErrorField == null) firstErrorField = nombreFocusRequester
@@ -1525,8 +1524,8 @@ private fun AlumnoAltaForm(
 
         // Nombre (required)
         OutlinedTextField(
-            value = nombre,
-            onValueChange = { nombre = it; if (it.isNotBlank()) vm.setNombreError(false) },
+            value = ui.nombreAlta,
+            onValueChange = { vm.setNombreAlta(it); if (it.isNotBlank()) vm.setNombreError(false) },
             label = { Text("Nombre completo *") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -1665,7 +1664,7 @@ private fun AlumnoAltaForm(
                     vm.hideConfirmDialogAlta()
                     // Build form map
                     val formMap = mapOf(
-                        "nombre" to nombre,
+                        "nombre" to ui.nombreAlta,
                         "email" to email,
                         "dni" to dni,
                         "telefono" to telefono,
@@ -1717,7 +1716,6 @@ private fun AlumnoModificacionForm(
     }
 
     // ✅ CORREGIDO: Inicializar como String desde alumnoData con conversión de formato de fecha
-    var nombre by remember { mutableStateOf((alumnoData["nombre"] as? String) ?: "") }
     var email by remember { mutableStateOf((alumnoData["email"] as? String) ?: "") }
     var dni by remember { mutableStateOf((alumnoData["dni"] as? String) ?: "") }
     var telefono by remember { mutableStateOf((alumnoData["telefono"] as? String) ?: "") }
@@ -1732,6 +1730,7 @@ private fun AlumnoModificacionForm(
         vm.initCursoLabelModificacion(cursos, cursoIdInicial)
         vm.initCursoSeleccionadoModificacion(cursoIdInicial)
         vm.initCursoNombreModificacion(cursos, cursoIdInicial)
+        vm.initNombreModificacion(alumnoData)
     }
 
     // Diálogo de confirmación
@@ -1747,7 +1746,7 @@ private fun AlumnoModificacionForm(
         var ok = true
         var firstErrorField: FocusRequester? = null
 
-        if (nombre.isBlank()) {
+        if (ui.nombreModificacion.isBlank()) {
             vm.setNombreError(true)
             ok = false
             if (firstErrorField == null) firstErrorField = nombreFocusRequester
@@ -1779,8 +1778,8 @@ private fun AlumnoModificacionForm(
 
         // Nombre (required)
         OutlinedTextField(
-            value = nombre,
-            onValueChange = { nombre = it; if (it.isNotBlank()) vm.setNombreError(false) },
+            value = ui.nombreModificacion,
+            onValueChange = { vm.setNombreModificacion(it); if (it.isNotBlank()) vm.setNombreError(false) },
             label = { Text("Nombre completo *") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -1919,7 +1918,7 @@ private fun AlumnoModificacionForm(
                     vm.hideConfirmDialogModificacion()
                     // Build form map
                     val formMap = mapOf(
-                        "nombre" to nombre,
+                        "nombre" to ui.nombreModificacion,
                         "email" to email,
                         "dni" to dni,
                         "telefono" to telefono,

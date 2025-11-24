@@ -78,7 +78,11 @@ data class ChatUiState(
     
     // 🆕 Nombres de cursos seleccionados
     val cursoNombreAlta: String? = null,
-    val cursoNombreModificacion: String? = null
+    val cursoNombreModificacion: String? = null,
+    
+    // 🆕 Campos de formulario - nombre
+    val nombreAlta: String = "",
+    val nombreModificacion: String = ""
 )
 
 class ChatViewModel(
@@ -251,6 +255,20 @@ class ChatViewModel(
                 ?.get("display_text") as? String
             _ui.update { it.copy(cursoNombreModificacion = nombre) }
         }
+    }
+
+    // 🆕 Manejar campo nombre en formularios
+    fun setNombreAlta(nombre: String) {
+        _ui.update { it.copy(nombreAlta = nombre) }
+    }
+
+    fun setNombreModificacion(nombre: String) {
+        _ui.update { it.copy(nombreModificacion = nombre) }
+    }
+
+    fun initNombreModificacion(alumnoData: Map<String, Any?>) {
+        val nombre = (alumnoData["nombre"] as? String) ?: ""
+        _ui.update { it.copy(nombreModificacion = nombre) }
     }
 
     fun loadWelcome() {
