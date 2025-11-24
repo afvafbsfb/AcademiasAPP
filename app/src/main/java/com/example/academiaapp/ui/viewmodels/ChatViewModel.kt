@@ -44,7 +44,16 @@ data class ChatUiState(
     val clarificationMessageIndex: Int = -1,
     
     // 🆕 Dialog de baja de alumno
-    val showBajaAlumnoDialog: Boolean = false
+    val showBajaAlumnoDialog: Boolean = false,
+    
+    // 🆕 Detalles de item seleccionado
+    val detailsItem: Map<String, Any?>? = null,
+    
+    // 🆕 Estados de visualización
+    val showScrollbar: Boolean = false,
+    val itemsToShow: Int = 5,
+    val selectedItemId: Int? = null,
+    val expandedDay: String? = null
 )
 
 class ChatViewModel(
@@ -96,6 +105,36 @@ class ChatViewModel(
     // 🆕 Cerrar dialog de baja de alumno
     fun hideBajaAlumnoDialog() {
         _ui.update { it.copy(showBajaAlumnoDialog = false) }
+    }
+
+    // 🆕 Mostrar detalles de un item
+    fun showDetailsItem(item: Map<String, Any?>) {
+        _ui.update { it.copy(detailsItem = item) }
+    }
+
+    // 🆕 Cerrar detalles
+    fun hideDetailsItem() {
+        _ui.update { it.copy(detailsItem = null) }
+    }
+
+    // 🆕 Actualizar estado de scrollbar
+    fun setScrollbarVisible(visible: Boolean) {
+        _ui.update { it.copy(showScrollbar = visible) }
+    }
+
+    // 🆕 Actualizar items a mostrar en lista compacta
+    fun setItemsToShow(count: Int) {
+        _ui.update { it.copy(itemsToShow = count) }
+    }
+
+    // 🆕 Seleccionar item
+    fun selectItem(itemId: Int?) {
+        _ui.update { it.copy(selectedItemId = itemId) }
+    }
+
+    // 🆕 Expandir/contraer día en tabla semanal
+    fun toggleExpandedDay(day: String?) {
+        _ui.update { it.copy(expandedDay = day) }
     }
 
     fun loadWelcome() {

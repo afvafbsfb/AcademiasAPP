@@ -1,4 +1,4 @@
-package com.example.academiaapp.ui.screens
+﻿package com.example.academiaapp.ui.screens
 
 import android.util.Log
 import android.widget.Toast
@@ -246,8 +246,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    var detailsItem by remember { mutableStateOf<Map<String, Any?>?>(null) }
-    // 🆕 REFACTOR: input ahora viene del ViewModel
+    // 🆕 REFACTOR: ui.detailsItem ahora viene del ViewModel
     
     // ✅ NUEVO: Contador de clics para "Modificación de alumno" (mock)
     var modificacionAlumnoClickCount by remember { mutableStateOf(0) }
@@ -493,17 +492,14 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                 }
             }
 
-            // Estado para mostrar/ocultar la scrollbar
-            var showScrollbar by remember { mutableStateOf(false) }
-
             // Detectar cuando hay scroll activo
             LaunchedEffect(listState.isScrollInProgress) {
                 if (listState.isScrollInProgress) {
-                    showScrollbar = true
+                    vm.setScrollbarVisible(true)
                 } else {
                     // Ocultar después de 1.5 segundos de inactividad
                     delay(1500)
-                    showScrollbar = false
+                    vm.setScrollbarVisible(false)
                 }
             }
 
@@ -1016,7 +1012,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                     } else {
                                                         val typeLabel = m.type?.let { "Resultados (${it})" } ?: "Resultados:"
                                                         Text(typeLabel, color = textColor)
-                                                        CompactList(items = m.items, summaryFields = m.summaryFields, onOpenDetails = { detailsItem = it })
+                                                        CompactList(items = m.items, summaryFields = m.summaryFields, onOpenDetails = vm::showDetailsItem)
                                                     }
                                                 }
                                                 // No mostrar sugerencias si es formulario (ya tiene sus propios botones)
@@ -1239,7 +1235,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                 }
 
                 // Scrollbar vertical
-                if (showScrollbar && ui.messages.isNotEmpty()) {
+                if (ui.showScrollbar && ui.messages.isNotEmpty()) {
                     val scrollbarHeight = remember { derivedStateOf {
                         val totalItems = ui.messages.size
                         val visibleItems = listState.layoutInfo.visibleItemsInfo.size
@@ -1271,7 +1267,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                     color = if (isDark) Color.White.copy(alpha = 0.4f) else Color.Black.copy(alpha = 0.3f),
                                     shape = RoundedCornerShape(2.dp)
                                 )
-                                .alpha(if (showScrollbar) 0.6f else 0f)
+                                .alpha(if (ui.showScrollbar) 0.6f else 0f)
                         )
                     }
                 }
@@ -1303,9 +1299,9 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
             }
         }
 
-        if (detailsItem != null) {
+        if (ui.detailsItem != null) {
 
-            ModalBottomSheet(onDismissRequest = { detailsItem = null }) {
+            ModalBottomSheet(onDismissRequest = vm::hideDetailsItem) {
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -1327,7 +1323,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                     )
 
                     // Mostrar cada campo en una tarjeta
-                    val itemMap = detailsItem!!
+                    val itemMap = ui.detailsItem!!
                     itemMap.forEach { (k, v) ->
                         // ✅ NUEVO: Skip FKs redundantes cuando existe el objeto expandido
                         val isRedundantFK = k.endsWith("_id") &&
@@ -1376,7 +1372,7 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
 
                     // Botón para cerrar
                     Button(
-                        onClick = { detailsItem = null },
+                        onClick = vm::hideDetailsItem,
                         modifier = Modifier.fillMaxWidth(),
                         colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                             containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary
@@ -2007,11 +2003,7 @@ private fun CompactList(
     }
 
     // Estado para controlar cuántos items mostrar (por defecto 5)
-    var itemsToShow by remember { mutableStateOf(5) }
-    val allItemsShown = itemsToShow >= items.size
-
-    // ✅ NUEVO: Estado para el item seleccionado
-    var selectedItemId by remember { mutableStateOf<Int?>(null) }
+    val allItemsShown = ui.itemsToShow >= items.size
 
     // Estado para el scroll de la LazyColumn de la tabla
     val tableListState = rememberLazyListState()
@@ -2033,13 +2025,13 @@ private fun CompactList(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Mostrando ${itemsToShow.coerceAtMost(items.size)} de ${items.size} registros",
+                text = "Mostrando ${ui.itemsToShow.coerceAtMost(items.size)} de ${items.size} registros",
                 style = androidx.compose.material3.MaterialTheme.typography.labelMedium,
                 color = Color(0xFF555555)
             )
             if (!allItemsShown) {
                 Text(
-                    text = "${items.size - itemsToShow} más",
+                    text = "${items.size - ui.itemsToShow} más",
                     style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
                     color = androidx.compose.material3.MaterialTheme.colorScheme.primary
                 )
@@ -2117,10 +2109,10 @@ private fun CompactList(
         }
 
         // Calcular altura dinámica: crece con los registros hasta un máximo de 600dp
-        val dynamicMaxHeight = remember(itemsToShow) {
+        val dynamicMaxHeight = remember(ui.itemsToShow) {
             val estimatedRowHeight = 52.dp
             val headerHeight = 50.dp
-            val calculatedHeight = headerHeight + (estimatedRowHeight * itemsToShow)
+            val calculatedHeight = headerHeight + (estimatedRowHeight * ui.itemsToShow)
             // Crecimiento: desde 280dp hasta máximo 600dp
             calculatedHeight.coerceIn(280.dp, 600.dp)
         }
@@ -2132,7 +2124,7 @@ private fun CompactList(
                 .heightIn(max = dynamicMaxHeight),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            itemsIndexed(items.take(itemsToShow)) { index, item ->
+            itemsIndexed(items.take(ui.itemsToShow)) { index, item ->
                 val keys = item.keys.toList()
                 fun findKeyIgnoreCase(target: String): String? = keys.firstOrNull { it.equals(target, ignoreCase = true) }
 
@@ -2180,7 +2172,7 @@ private fun CompactList(
 
                 // ✅ PASO 2: Obtener ID del item y determinar si está seleccionado
                 val itemId = (item["id"] as? Number)?.toInt()
-                val isSelected = itemId != null && itemId == selectedItemId
+                val isSelected = itemId != null && itemId == ui.selectedItemId
 
                 // ✅ PASO 3: Color de fila según estado de selección
                 val rowColor = when {
@@ -2195,7 +2187,7 @@ private fun CompactList(
                         .background(rowColor)
                         .clickable {
                             // Toggle selección: si ya está seleccionado, deseleccionar
-                            selectedItemId = if (isSelected) null else itemId
+                            vm.selectItem(if (isSelected) null else itemId)
                         }
                         .padding(vertical = 10.dp, horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -2228,7 +2220,7 @@ private fun CompactList(
                 }
 
                 // Separador entre filas (excepto la última)
-                if (index < itemsToShow - 1) {
+                if (index < ui.itemsToShow - 1) {
                     androidx.compose.material3.HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 8.dp),
                         thickness = 1.dp,
@@ -2248,20 +2240,20 @@ private fun CompactList(
             ) {
                 Button(
                     onClick = {
-                        val previousCount = itemsToShow
+                        val previousCount = ui.itemsToShow
                         // Mostrar 5 items más cada vez que se pulsa
-                        itemsToShow = (itemsToShow + 5).coerceAtMost(items.size)
+                        vm.setItemsToShow((ui.itemsToShow + 5).coerceAtMost(items.size)
 
                         // Hacer scroll automático hacia los nuevos registros después de actualizar
                         coroutineScope.launch {
                             delay(150) // Delay para que se rendericen los nuevos items
 
                             // Calcular si necesitamos hacer scroll al final de la tabla
-                            val newItemIndex = (itemsToShow - 1).coerceAtLeast(0)
+                            val newItemIndex = (ui.itemsToShow - 1).coerceAtLeast(0)
 
                             // Si ya estamos mostrando más de ~11 registros (cuando la tabla alcanza su altura máxima)
                             // hacer scroll hasta el último registro para que se vean los nuevos
-                            if (itemsToShow > 11) {
+                            if (ui.itemsToShow > 11) {
                                 // Scroll hasta el último registro visible
                                 tableListState.animateScrollToItem(newItemIndex)
                             } else {
@@ -2437,7 +2429,7 @@ fun SesionesDelDiaCards(
 fun SesionesSemanalesTable(
     items: List<Map<String, Any?>>
 ) {
-    var expandedDay by remember { mutableStateOf<String?>(null) }
+    
 
     Column(
         modifier = Modifier
@@ -2511,7 +2503,7 @@ fun SesionesSemanalesTable(
                     if (cantidad > 0) {
                         IconButton(
                             onClick = { 
-                                expandedDay = if (expandedDay == dia) null else dia
+                                vm.toggleExpandedDay(if (ui.expandedDay == dia) null else dia)
                             },
                             modifier = Modifier.size(36.dp)
                         ) {
