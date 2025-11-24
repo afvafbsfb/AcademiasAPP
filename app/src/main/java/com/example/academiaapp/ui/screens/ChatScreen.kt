@@ -1473,8 +1473,6 @@ private fun AlumnoAltaForm(
     // Extraer cursos disponibles si vienen
     val cursos = (formSpec["cursos_disponibles"] as? List<Map<String, Any?>>) ?: emptyList()
 
-    var fecha by remember { mutableStateOf("") } // DD/MM/YYYY
-
     // Diálogo de confirmación
     
 
@@ -1499,7 +1497,7 @@ private fun AlumnoAltaForm(
             if (firstErrorField == null) firstErrorField = telefonoFocusRequester
         }
         val fechaRegex = "^\\d{2}/\\d{2}/\\d{4}$".toRegex()
-        if (!fechaRegex.matches(fecha)) {
+        if (!fechaRegex.matches(ui.fechaAlta)) {
             vm.setFechaError(true)
             ok = false
             if (firstErrorField == null) firstErrorField = fechaFocusRequester
@@ -1547,7 +1545,7 @@ private fun AlumnoAltaForm(
 
         // Fecha nacimiento (required) with simple mask
         OutlinedTextField(
-            value = fecha,
+            value = ui.fechaAlta,
             onValueChange = { input ->
                 // Allow only digits and '/'
                 val digits = input.filter { it.isDigit() }
@@ -1558,7 +1556,7 @@ private fun AlumnoAltaForm(
                         if (i >= 7) break
                     }
                 }
-                fecha = masked
+                vm.setFechaAlta(masked)
                 if (masked.isNotBlank()) vm.setFechaError(false)
             },
             label = { Text("Fecha de nacimiento (DD/MM/AAAA) *") },
@@ -1664,7 +1662,7 @@ private fun AlumnoAltaForm(
                         "email" to ui.emailAlta,
                         "dni" to ui.dniAlta,
                         "telefono" to ui.telefonoAlta,
-                        "fecha_nacimiento" to fecha,
+                        "fecha_nacimiento" to ui.fechaAlta,
                         "direccion" to ui.direccionAlta,
                         "curso_id" to ui.cursoSeleccionadoAlta,
                         "curso_nombre" to ui.cursoNombreAlta
@@ -1696,24 +1694,6 @@ private fun AlumnoModificacionForm(
     val cursos = (formSpec["cursos_disponibles"] as? List<Map<String, Any?>>) ?: emptyList()
     val alumnoData = (formSpec["alumno_data"] as? Map<String, Any?>) ?: emptyMap()
 
-    // ✅ Función para convertir fecha de YYYY-MM-DD a DD/MM/YYYY
-    fun convertDateFormat(dateStr: String?): String {
-        if (dateStr.isNullOrBlank()) return ""
-        // Si ya está en formato DD/MM/YYYY, devolver tal cual
-        if (dateStr.matches(Regex("^\\d{2}/\\d{2}/\\d{4}$"))) return dateStr
-        // Si está en formato YYYY-MM-DD, convertir
-        if (dateStr.matches(Regex("^\\d{4}-\\d{2}-\\d{2}$"))) {
-            val parts = dateStr.split("-")
-            if (parts.size == 3) {
-                return "${parts[2]}/${parts[1]}/${parts[0]}"
-            }
-        }
-        return dateStr
-    }
-
-    // ✅ CORREGIDO: Inicializar como String desde alumnoData con conversión de formato de fecha
-    var fecha by remember { mutableStateOf(convertDateFormat(alumnoData["fecha_nacimiento"] as? String)) }
-
     // ✅ Pre-cargar curso seleccionado si existe
     val cursoIdInicial = (alumnoData["curso_id"] as? Number)?.toInt()
 
@@ -1727,6 +1707,7 @@ private fun AlumnoModificacionForm(
         vm.initEmailModificacion(alumnoData)
         vm.initDniModificacion(alumnoData)
         vm.initDireccionModificacion(alumnoData)
+        vm.initFechaModificacion(alumnoData)
     }
 
     // Diálogo de confirmación
@@ -1753,7 +1734,7 @@ private fun AlumnoModificacionForm(
             if (firstErrorField == null) firstErrorField = telefonoFocusRequester
         }
         val fechaRegex = "^\\d{2}/\\d{2}/\\d{4}$".toRegex()
-        if (!fechaRegex.matches(fecha)) {
+        if (!fechaRegex.matches(ui.fechaModificacion)) {
             vm.setFechaError(true)
             ok = false
             if (firstErrorField == null) firstErrorField = fechaFocusRequester
@@ -1801,7 +1782,7 @@ private fun AlumnoModificacionForm(
 
         // Fecha nacimiento (required) with simple mask
         OutlinedTextField(
-            value = fecha,
+            value = ui.fechaModificacion,
             onValueChange = { input ->
                 // Allow only digits and '/'
                 val digits = input.filter { it.isDigit() }
@@ -1812,7 +1793,7 @@ private fun AlumnoModificacionForm(
                         if (i >= 7) break
                     }
                 }
-                fecha = masked
+                vm.setFechaModificacion(masked)
                 if (masked.isNotBlank()) vm.setFechaError(false)
             },
             label = { Text("Fecha de nacimiento (DD/MM/AAAA) *") },
@@ -1918,7 +1899,7 @@ private fun AlumnoModificacionForm(
                         "email" to ui.emailModificacion,
                         "dni" to ui.dniModificacion,
                         "telefono" to ui.telefonoModificacion,
-                        "fecha_nacimiento" to fecha,
+                        "fecha_nacimiento" to ui.fechaModificacion,
                         "direccion" to ui.direccionModificacion,
                         "curso_id" to ui.cursoSeleccionadoModificacion,
                         "curso_nombre" to ui.cursoNombreModificacion

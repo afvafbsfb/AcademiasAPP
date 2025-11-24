@@ -98,7 +98,11 @@ data class ChatUiState(
     
     // 🆕 Campos de formulario - direccion
     val direccionAlta: String = "",
-    val direccionModificacion: String = ""
+    val direccionModificacion: String = "",
+    
+    // 🆕 Campos de formulario - fecha
+    val fechaAlta: String = "",
+    val fechaModificacion: String = ""
 )
 
 class ChatViewModel(
@@ -341,6 +345,35 @@ class ChatViewModel(
     fun initDireccionModificacion(alumnoData: Map<String, Any?>) {
         val direccion = (alumnoData["direccion"] as? String) ?: ""
         _ui.update { it.copy(direccionModificacion = direccion) }
+    }
+    
+    // 🆕 Fecha setters y init
+    fun setFechaAlta(fecha: String) {
+        _ui.update { it.copy(fechaAlta = fecha) }
+    }
+    
+    fun setFechaModificacion(fecha: String) {
+        _ui.update { it.copy(fechaModificacion = fecha) }
+    }
+    
+    fun initFechaModificacion(alumnoData: Map<String, Any?>) {
+        val fechaStr = alumnoData["fecha_nacimiento"] as? String
+        val fecha = convertDateFormat(fechaStr)
+        _ui.update { it.copy(fechaModificacion = fecha) }
+    }
+    
+    private fun convertDateFormat(dateStr: String?): String {
+        if (dateStr.isNullOrBlank()) return ""
+        // Si ya está en formato DD/MM/YYYY, devolver tal cual
+        if (dateStr.matches(Regex("^\\d{2}/\\d{2}/\\d{4}$"))) return dateStr
+        // Si está en formato YYYY-MM-DD, convertir
+        if (dateStr.matches(Regex("^\\d{4}-\\d{2}-\\d{2}$"))) {
+            val parts = dateStr.split("-")
+            if (parts.size == 3) {
+                return "${parts[2]}/${parts[1]}/${parts[0]}"
+            }
+        }
+        return dateStr
     }
 
     fun loadWelcome() {
