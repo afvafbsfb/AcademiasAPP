@@ -351,6 +351,25 @@ graph TB
     style Repository fill:#667eea
     style ChatScreen fill:#764ba2
 	</div>
+	
+	<div class="highlight-box">
+		<strong>📖 Lectura del diagrama:</strong>
+		<p>Las flechas sólidas muestran el flujo unidireccional de datos (patrón UDF - Unidirectional Data Flow). La View observa el ViewModel mediante <strong>StateFlow</strong> (patrón Observer reactivo). El ViewModel usa el Repository como abstracción que puede ser <strong>Mock</strong> o <strong>Real</strong> según configuración. En producción, el Repository se conecta al backend vía Retrofit.</p>
+	</div>
+	
+	<h4>Ejemplo de Flujo - Envío de Mensaje:</h4>
+	<ol style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; line-height: 1.8;">
+		<li><strong>Usuario</strong> escribe "listar alumnos" y presiona enviar</li>
+		<li><strong>ChatScreen</strong> captura el evento → llama <code>vm.sendMessage("listar alumnos")</code></li>
+		<li><strong>ChatViewModel</strong> procesa la petición → actualiza <code>_ui.update { loading = true }</code></li>
+		<li><strong>Repository</strong> decide la fuente de datos (Mock o Backend real)</li>
+		<li><strong>Retrofit</strong> realiza POST /chat/sendMessage (en producción)</li>
+		<li><strong>Backend API</strong> procesa y devuelve JSON con la respuesta</li>
+		<li><strong>ChatViewModel</strong> recibe resultado → actualiza <code>_ui.update { messages = [...] }</code></li>
+		<li><strong>StateFlow</strong> emite el nuevo estado</li>
+		<li><strong>ChatScreen</strong> recompone automáticamente con <code>collectAsState()</code></li>
+		<li><strong>Usuario</strong> ve la lista de alumnos en pantalla</li>
+	</ol>
 </div>
 
 <h3>Separación de Responsabilidades</h3>
