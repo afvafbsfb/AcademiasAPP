@@ -1474,7 +1474,6 @@ private fun AlumnoAltaForm(
     val cursos = (formSpec["cursos_disponibles"] as? List<Map<String, Any?>>) ?: emptyList()
 
     var fecha by remember { mutableStateOf("") } // DD/MM/YYYY
-    var direccion by remember { mutableStateOf("") }
 
     // Diálogo de confirmación
     
@@ -1575,7 +1574,7 @@ private fun AlumnoAltaForm(
         // Email, DNI, Dirección (optional)
         OutlinedTextField(value = ui.emailAlta, onValueChange = { vm.setEmailAlta(it) }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(value = ui.dniAlta, onValueChange = { vm.setDniAlta(it) }, label = { Text("DNI") }, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = direccion, onValueChange = { direccion = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = ui.direccionAlta, onValueChange = { vm.setDireccionAlta(it) }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth())
 
         // Curso (optional) - Dropdown Menu
         if (cursos.isNotEmpty()) {
@@ -1666,7 +1665,7 @@ private fun AlumnoAltaForm(
                         "dni" to ui.dniAlta,
                         "telefono" to ui.telefonoAlta,
                         "fecha_nacimiento" to fecha,
-                        "direccion" to direccion,
+                        "direccion" to ui.direccionAlta,
                         "curso_id" to ui.cursoSeleccionadoAlta,
                         "curso_nombre" to ui.cursoNombreAlta
                     )
@@ -1714,7 +1713,6 @@ private fun AlumnoModificacionForm(
 
     // ✅ CORREGIDO: Inicializar como String desde alumnoData con conversión de formato de fecha
     var fecha by remember { mutableStateOf(convertDateFormat(alumnoData["fecha_nacimiento"] as? String)) }
-    var direccion by remember { mutableStateOf((alumnoData["direccion"] as? String) ?: "") }
 
     // ✅ Pre-cargar curso seleccionado si existe
     val cursoIdInicial = (alumnoData["curso_id"] as? Number)?.toInt()
@@ -1728,6 +1726,7 @@ private fun AlumnoModificacionForm(
         vm.initTelefonoModificacion(alumnoData)
         vm.initEmailModificacion(alumnoData)
         vm.initDniModificacion(alumnoData)
+        vm.initDireccionModificacion(alumnoData)
     }
 
     // Diálogo de confirmación
@@ -1829,7 +1828,7 @@ private fun AlumnoModificacionForm(
         // Email, DNI, Dirección (optional)
         OutlinedTextField(value = ui.emailModificacion, onValueChange = { vm.setEmailModificacion(it) }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(value = ui.dniModificacion, onValueChange = { vm.setDniModificacion(it) }, label = { Text("DNI") }, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = direccion, onValueChange = { direccion = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = ui.direccionModificacion, onValueChange = { vm.setDireccionModificacion(it) }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth())
 
         // Curso (optional) - Dropdown Menu
         if (cursos.isNotEmpty()) {
@@ -1920,7 +1919,7 @@ private fun AlumnoModificacionForm(
                         "dni" to ui.dniModificacion,
                         "telefono" to ui.telefonoModificacion,
                         "fecha_nacimiento" to fecha,
-                        "direccion" to direccion,
+                        "direccion" to ui.direccionModificacion,
                         "curso_id" to ui.cursoSeleccionadoModificacion,
                         "curso_nombre" to ui.cursoNombreModificacion
                     )

@@ -94,7 +94,11 @@ data class ChatUiState(
     
     // 🆕 Campos de formulario - dni
     val dniAlta: String = "",
-    val dniModificacion: String = ""
+    val dniModificacion: String = "",
+    
+    // 🆕 Campos de formulario - direccion
+    val direccionAlta: String = "",
+    val direccionModificacion: String = ""
 )
 
 class ChatViewModel(
@@ -323,6 +327,20 @@ class ChatViewModel(
     fun initDniModificacion(alumnoData: Map<String, Any?>) {
         val dni = (alumnoData["dni"] as? String) ?: ""
         _ui.update { it.copy(dniModificacion = dni) }
+    }
+    
+    // 🆕 Dirección setters y init
+    fun setDireccionAlta(direccion: String) {
+        _ui.update { it.copy(direccionAlta = direccion) }
+    }
+    
+    fun setDireccionModificacion(direccion: String) {
+        _ui.update { it.copy(direccionModificacion = direccion) }
+    }
+    
+    fun initDireccionModificacion(alumnoData: Map<String, Any?>) {
+        val direccion = (alumnoData["direccion"] as? String) ?: ""
+        _ui.update { it.copy(direccionModificacion = direccion) }
     }
 
     fun loadWelcome() {
