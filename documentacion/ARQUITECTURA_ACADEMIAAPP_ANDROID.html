@@ -480,7 +480,7 @@ textView.text = <span class="string">"Hola, $nombre"</span>  <span class="commen
 }
 	</div>
 	
-	<p><strong>🏗️ En AcademiaAPP:</strong> El 100% de la UI está construida con Jetpack Compose. Todas las pantallas (<code>ChatScreen</code>, <code>LoginScreen</code>), componentes reutilizables (<code>CompactList</code>, <code>TypingIndicator</code>, <code>SesionesDelDiaCards</code>), formularios (<code>AlumnoAltaForm</code>, <code>AlumnoModificacionForm</code>) y diálogos son funciones <code>@Composable</code> que se recomponen automáticamente cuando el estado del <code>ChatViewModel</code> cambia.</p>
+	<p><strong>🏗️ En AcademiaAPP:</strong> El 100% de la UI está construida con Jetpack Compose. Todas las pantallas (<code>ChatScreen</code>, <code>LoginScreen</code>), componentes reutilizables (<code>CompactList</code>, <code>TypingIndicator</code>, <code>SesionesDelDiaCards</code>), formularios (<code>AlumnoForm</code> unificado con enum <code>FormMode</code>) y diálogos son funciones <code>@Composable</code> que se recomponen automáticamente cuando el estado del <code>ChatViewModel</code> cambia.</p>
 </div>
 
 <div class="highlight-box">
@@ -749,8 +749,8 @@ graph TB
 		</li>
 		<li><strong>forms/</strong>: Formularios dinámicos modulares
 			<ul>
-				<li>AlumnoAltaForm.kt (234 líneas)</li>
-				<li>AlumnoModificacionForm.kt (252 líneas)</li>
+				<li>AlumnoForm.kt (420 líneas) - Unificado con enum FormMode (ALTA/MODIFICACION)</li>
+				<li>✅ Refactorizado: Reducción de ~108 líneas (-20%) aplicando principio DRY</li>
 			</ul>
 		</li>
 		<li><strong>components/</strong>: Componentes reutilizables (767 líneas totales)
@@ -1043,16 +1043,10 @@ sequenceDiagram
 			<td>-</td>
 		</tr>
 		<tr>
-			<td><strong>AlumnoAltaForm.kt</strong></td>
-			<td>234</td>
-			<td>Formulario de alta de alumnos</td>
-			<td>✅</td>
-		</tr>
-		<tr>
-			<td><strong>AlumnoModificacionForm.kt</strong></td>
-			<td>252</td>
-			<td>Formulario de modificación de alumnos</td>
-			<td>✅</td>
+			<td><strong>AlumnoForm.kt</strong></td>
+			<td>420</td>
+			<td>Formulario unificado (alta/modificación) con enum FormMode</td>
+			<td>✅ Refactorizado</td>
 		</tr>
 		<tr>
 			<td><strong>TypingIndicator.kt</strong></td>
@@ -1093,8 +1087,7 @@ graph TB
     end
     
     subgraph Forms["📝 Formularios"]
-        D[AlumnoAltaForm]
-        E[AlumnoModificacionForm]
+        D[AlumnoForm<br/>FormMode.ALTA / MODIFICACION]
     end
     
     subgraph Components["🧩 Componentes"]

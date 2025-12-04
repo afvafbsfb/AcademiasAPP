@@ -223,6 +223,11 @@ pre {
 <td><code>#000000</code></td>
 <td><strong>TextBlack</strong> - Texto principal en burbujas</td>
 </tr>
+<tr>
+<td><div class="color-box" style="background: #FFE0B2;"></div></td>
+<td><code>#FFE0B2</code></td>
+<td><strong>ValidationWarning</strong> - Fondo de campos obligatorios con error de validación</td>
+</tr>
 </table>
 
 <div class="info-box">
@@ -527,9 +532,13 @@ Tienes <strong>3 sesiones</strong> programadas.
 
 <h2 id="tarjetas">5. Tarjetas de Datos (DataCards)</h2>
 
-<p>Extraído de <code>ui/screens/components/SesionesDelDiaCards.kt</code>:</p>
+<p>Componente: <code>ui/screens/components/SesionesDelDiaCards.kt</code></p>
 
-<h3>Anatomía de una SesionesDelDiaCard</h3>
+<div style="background-color: #E3F2FD; padding: 12px; border-left: 4px solid #2196F3; margin: 16px 0; border-radius: 4px;">
+<p><strong>📊 Contenido dinámico:</strong> Los datos mostrados (horarios, cursos, estados) se actualizan automáticamente según la información del profesor y las clases programadas. El usuario siempre ve información actualizada sin necesidad de recargar manualmente. Los estados visuales cambian en tiempo real (⏰ → ▶️ → ✅).</p>
+</div>
+
+<h3>Anatomía Visual de una SesionesDelDiaCard</h3>
 <pre>
 Card(
     modifier = Modifier.fillMaxWidth(),
@@ -542,20 +551,20 @@ Card(
     Column(padding = 12.dp, spacing = 6.dp) {
         // Línea 1: Horario + Aula
         Row {
-            Text("08:00 - 10:00", style = titleMedium, fontWeight = Bold)
-            Text("| Aula 3", style = bodyMedium)
+            Text("$horaInicio - $horaFin", style = titleMedium, fontWeight = Bold)
+            Text("| $nombreAula", style = bodyMedium)
         }
         
         // Línea 2: Curso
-        Text("Matemáticas 1º ESO", style = bodyLarge, fontWeight = Medium)
+        Text(nombreCurso, style = bodyLarge, fontWeight = Medium)
         
         // Línea 3: Descripción estado
-        Text("Sesión no iniciada", style = bodySmall, color = onSurfaceVariant)
+        Text(descripcionEstado, style = bodySmall, color = onSurfaceVariant)
         
         // Línea 4: Alumnos
-        Text("18 alumnos", style = bodySmall)
+        Text("$alumnosAsistieron/$alumnosTotal alumnos", style = bodySmall)
         
-        // Línea 5: Acciones
+        // Línea 5: Acciones contextuales
         if (acciones.isNotEmpty()) {
             HorizontalDivider(...)
             Row {
@@ -573,6 +582,78 @@ Card(
     }
 }
 </pre>
+
+<h3>Jerarquía Visual y Diseño</h3>
+<table>
+<tr>
+<th>Elemento</th>
+<th>Estilo</th>
+<th>Propósito UX</th>
+</tr>
+<tr>
+<td>1️⃣ Horario</td>
+<td><code>titleMedium, Bold</code></td>
+<td>Máxima prominencia - Información primaria</td>
+</tr>
+<tr>
+<td>2️⃣ Curso</td>
+<td><code>bodyLarge, Medium</code></td>
+<td>Identificación principal del contenido</td>
+</tr>
+<tr>
+<td>3️⃣ Estado</td>
+<td><code>bodySmall, onSurfaceVariant</code></td>
+<td>Información secundaria contextual</td>
+</tr>
+<tr>
+<td>4️⃣ Alumnos</td>
+<td><code>bodySmall</code></td>
+<td>Datos cuantitativos de asistencia</td>
+</tr>
+<tr>
+<td>5️⃣ Acciones</td>
+<td><code>OutlinedButton, 36dp</code></td>
+<td>Interacción contextual según estado</td>
+</tr>
+</table>
+
+<h3>Estados Visuales y Acciones</h3>
+<table>
+<tr>
+<th>Estado</th>
+<th>Icono</th>
+<th>Descripción</th>
+<th>Acciones Disponibles</th>
+</tr>
+<tr>
+<td>Programada</td>
+<td>⏰</td>
+<td>"Sesión no iniciada"</td>
+<td>Iniciar (si está en ventana ±1h)</td>
+</tr>
+<tr>
+<td>En curso</td>
+<td>▶️</td>
+<td>"En curso"</td>
+<td>Ver alumnos, Pasar lista</td>
+</tr>
+<tr>
+<td>Completada</td>
+<td>✅</td>
+<td>"Completada"</td>
+<td>Ver alumnos, Ver anotaciones</td>
+</tr>
+</table>
+
+<h3>Especificaciones de Diseño</h3>
+<ul>
+<li><strong>Padding interno:</strong> 12dp</li>
+<li><strong>Spacing vertical:</strong> 6dp entre elementos</li>
+<li><strong>Bordes:</strong> 8dp de radio, 1dp de grosor con alpha 0.3</li>
+<li><strong>Fondo:</strong> surfaceVariant con alpha 0.5 (translúcido)</li>
+<li><strong>Botones:</strong> Altura 36dp, padding horizontal 12dp</li>
+<li><strong>Separador:</strong> HorizontalDivider antes de acciones</li>
+</ul>
 
 <h3>Tipos de Tarjetas Implementadas</h3>
 <table>
@@ -793,12 +874,12 @@ ModalNavigationDrawer(
 <td><code>cerrar_sesion</code></td>
 <td>Cerrar Sesión</td>
 <td>Logout icon</td>
-<td>Reset ViewModel, clear session, navegar a <code>/login</code></td>
+<td>Cierra la sesión del usuario y vuelve a la pantalla de login con animación de transición</td>
 </tr>
 </table>
 
 <div class="info-box">
-<strong>Auto-envío de mensajes:</strong> Opciones como "Mis clases de hoy" no abren nueva pantalla, sino que envían un mensaje al chat automáticamente usando <code>option.chatMessage</code>.
+<strong>🔄 Navegación conversacional:</strong> Opciones como "Mis clases de hoy" no abren nueva pantalla, sino que envían un mensaje al chat automáticamente. El usuario ve el mensaje aparecer como si lo hubiera escrito, manteniendo la coherencia de la interfaz conversacional.
 </div>
 
 <hr>
@@ -807,21 +888,26 @@ ModalNavigationDrawer(
 
 <h3>1. Pasar Lista (AlumnosSesionTable)</h3>
 <div class="interaction-box">
-<strong>Flujo:</strong><br>
-1. Usuario hace tap en "Pasar lista" desde tarjeta de sesión<br>
-2. Chat muestra tabla con checkboxes (✅/❌) por cada alumno<br>
-3. Usuario toca checkboxes para marcar ausencias<br>
-4. Botón "Confirmar Asistencia" en footer de tabla<br>
-5. Envío de <code>POST /sesiones/{id}/pasar-lista</code> con IDs de ausentes<br>
-6. Respuesta: Resumen de asistencia + nuevas sugerencias
+<strong>Flujo de interacción:</strong><br>
+1️⃣ Usuario hace tap en botón "Pasar lista" desde tarjeta de sesión<br>
+2️⃣ Chat muestra tabla interactiva con checkboxes (✅/❌) por cada alumno<br>
+3️⃣ Usuario toca checkboxes para marcar ausencias - cambio visual instantáneo<br>
+4️⃣ Botón "Confirmar Asistencia" se activa en footer de tabla<br>
+5️⃣ Al confirmar, aparece indicador de carga (TypingIndicator)<br>
+6️⃣ Feedback visual: Resumen de asistencia con nuevas opciones de acción
 </div>
 
 <h3>2. Ver Detalles (Modal BottomSheet)</h3>
-<pre>
-// Cuando usuario hace tap en icono 🔍 en CompactList
-vm.showDetailsItem(item)
+<div class="interaction-box">
+<strong>Flujo de interacción:</strong><br>
+1️⃣ Usuario hace tap en icono 🔍 en cualquier fila de tabla<br>
+2️⃣ Aparece panel deslizante desde abajo (BottomSheet) con animación suave<br>
+3️⃣ Muestra todos los campos del registro en formato legible<br>
+4️⃣ Usuario puede cerrar tocando fuera del panel o arrastrando hacia abajo<br>
+5️⃣ Animación de cierre con efecto de deslizamiento
+</div>
 
-// ChatScreen renderiza ModalBottomSheet
+<pre>
 if (ui.detailsItem != null) {
     ModalBottomSheet(onDismissRequest = vm::hideDetailsItem) {
         Column(padding = 16.dp) {
@@ -842,38 +928,94 @@ if (ui.detailsItem != null) {
 }
 </pre>
 
-<h3>3. Aclaración de Sugerencias (SuggestionClarificationDialog)</h3>
+<h3>3. Aclaración de Sugerencias (Diálogo Interactivo)</h3>
 <div class="component-box">
-<strong>Componente:</strong> <code>ui/components/SuggestionClarificationDialog.kt</code><br>
-<strong>Trigger:</strong> Cuando sugerencia tiene flag <code>needsClarification == true</code><br>
-<strong>UI:</strong> AlertDialog con TextField pre-rellenado con <code>suggestion.displayText</code><br>
-<strong>Acciones:</strong> Usuario edita el mensaje → "Enviar" llama <code>vm.sendMessage(editedMessage)</code>
+<strong>Experiencia de usuario:</strong><br>
+• Cuando una acción requiere información adicional, aparece un diálogo emergente<br>
+• Campo de texto pre-rellenado con el texto de la sugerencia seleccionada<br>
+• Usuario puede editar o ampliar el mensaje antes de enviar<br>
+• Botones "Cancelar" (cierra sin enviar) y "Enviar" (confirma acción)<br>
+• Feedback visual inmediato: diálogo se cierra y mensaje aparece en el chat
 </div>
 
-<h3>4. Formularios Interactivos (AlumnoAltaForm / AlumnoModificacionForm)</h3>
+<h3>4. Formularios Interactivos (AlumnoForm)</h3>
+<div class="component-box">
+<strong>📝 Formulario unificado con dos modos:</strong><br>
+• <strong>Modo Alta:</strong> Todos los campos vacíos para crear nuevo alumno<br>
+• <strong>Modo Modificación:</strong> Campos pre-rellenados con datos actuales del alumno
+</div>
+
 <table>
 <tr>
-<th>Formulario</th>
-<th>Tipo Mensaje</th>
-<th>Campos</th>
+<th>Campo</th>
+<th>Tipo</th>
+<th>Validación Visual</th>
 </tr>
 <tr>
-<td><code>AlumnoAltaForm</code></td>
-<td><code>formulario_alta_alumno</code></td>
-<td>Nombre, Teléfono, Fecha Nacimiento, Email, DNI, Dirección, Curso (dropdown)</td>
+<td>Nombre</td>
+<td>Texto obligatorio</td>
+<td>Borde rojo si vacío al enviar</td>
 </tr>
 <tr>
-<td><code>AlumnoModificacionForm</code></td>
-<td><code>formulario_modificacion_alumno</code></td>
-<td>Mismos campos pero pre-rellenados con datos actuales del alumno</td>
+<td>Teléfono</td>
+<td>Numérico</td>
+<td>Formato automático (XXX XXX XXX)</td>
+</tr>
+<tr>
+<td>Fecha Nacimiento</td>
+<td>Selector de fecha</td>
+<td>Popup calendario Material Design</td>
+</tr>
+<tr>
+<td>Email</td>
+<td>Texto con validación</td>
+<td>Icono ✅ si formato correcto</td>
+</tr>
+<tr>
+<td>Curso</td>
+<td>Dropdown</td>
+<td>Lista desplegable con cursos disponibles</td>
 </tr>
 </table>
 
-<p><strong>Botones del formulario:</strong></p>
+<p><strong>Interacciones del formulario:</strong></p>
 <ul>
-<li><code>onCancel</code> → Envía mensaje "cancelar alta" o "cancelar modificación"</li>
-<li><code>onSubmit</code> → Construye mensaje descriptivo + envía con contexto <code>{ "action": "submit_alta", "form_data": {...} }</code></li>
+<li><strong>Cancelar:</strong> Cierra el formulario sin guardar cambios, vuelve al chat</li>
+<li><strong>Enviar/Guardar:</strong> Valida campos, muestra indicador de carga, confirma con mensaje de éxito</li>
+<li><strong>Validación en tiempo real:</strong> Campos obligatorios muestran ayuda visual si están incompletos</li>
 </ul>
+
+<h3>Validación Visual de Campos</h3>
+<table>
+<tr>
+<th>Estado del Campo</th>
+<th>Indicador Visual</th>
+<th>Color de Fondo</th>
+<th>Comportamiento</th>
+</tr>
+<tr>
+<td>✅ Campo válido</td>
+<td>Fondo transparente, borde normal gris</td>
+<td><code>Transparent</code></td>
+<td>Usuario puede escribir normalmente</td>
+</tr>
+<tr>
+<td>⚠️ Campo obligatorio vacío</td>
+<td>Fondo naranja claro + borde rojo + asterisco (*)</td>
+<td><div class="color-box" style="background: #FFE0B2; display: inline-block; width: 40px; height: 20px; vertical-align: middle;"></div> <code>#FFE0B2</code></td>
+<td>Se activa al intentar enviar formulario sin completar</td>
+</tr>
+<tr>
+<td>🔍 Focus activo</td>
+<td>Cursor parpadeante, fondo se limpia al escribir</td>
+<td><code>Transparent</code></td>
+<td>El color naranja desaparece automáticamente cuando el usuario empieza a escribir</td>
+</tr>
+</table>
+
+<div class="info-box">
+<strong>🎯 Feedback instantáneo:</strong> Cuando el usuario intenta enviar el formulario sin completar los campos obligatorios (Nombre, Teléfono, Fecha de nacimiento), estos campos se resaltan automáticamente con fondo naranja claro (<code>#FFE0B2</code>) y el foco se posiciona en el primer campo con error. Al empezar a escribir, el color de advertencia desaparece instantáneamente.
+</div>
 
 <hr>
 
