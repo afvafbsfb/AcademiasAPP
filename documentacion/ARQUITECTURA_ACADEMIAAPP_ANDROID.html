@@ -99,6 +99,148 @@ body {
 	border-radius: 4px;
 }
 
+/* ===== ESTILOS PARA IMPRESIÓN PDF ===== */
+@media print {
+	/* Forzar colores de fondo e imágenes en PDF */
+	* {
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+		color-adjust: exact !important;
+	}
+	
+	body {
+		max-width: 100%;
+		padding: 10px;
+	}
+	
+	/* Preservar colores de badges */
+	.version-badge {
+		background-color: #4CAF50 !important;
+		color: white !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	.architecture-badge {
+		background-color: #2196F3 !important;
+		color: white !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	/* Preservar gradientes del stack tecnológico */
+	.tech-stack {
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+		color: white !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	.tech-stack h3 {
+		color: white !important;
+	}
+	
+	.tech-item {
+		background-color: rgba(255, 255, 255, 0.2) !important;
+		color: white !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	/* Preservar colores de layer cards */
+	.layer-card {
+		background-color: #fafafa !important;
+		border: 2px solid #e0e0e0 !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+		page-break-inside: avoid;
+	}
+	
+	.layer-card h3 {
+		color: #1976D2 !important;
+		border-bottom: 2px solid #1976D2 !important;
+	}
+	
+	/* Preservar gradiente MVVM */
+	.mvvm-section {
+		background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+		color: white !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+		page-break-inside: avoid;
+	}
+	
+	.mvvm-section h2,
+	.mvvm-section h3,
+	.mvvm-section p,
+	.mvvm-section li {
+		color: white !important;
+	}
+	
+	/* Preservar stats box */
+	.stats-box {
+		background-color: #E3F2FD !important;
+		border-left: 4px solid #2196F3 !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+		page-break-inside: avoid;
+	}
+	
+	/* Preservar colores de tablas */
+	table {
+		page-break-inside: avoid;
+	}
+	
+	thead {
+		background-color: #f5f5f5 !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	tbody tr:nth-child(even) {
+		background-color: #fafafa !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	/* Preservar bordes de tablas */
+	table, th, td {
+		border: 1px solid #ddd !important;
+	}
+	
+	/* Preservar bloques de código */
+	code {
+		background-color: #f5f5f5 !important;
+		border: 1px solid #e0e0e0 !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	pre {
+		background-color: #f5f5f5 !important;
+		border: 1px solid #ddd !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+		page-break-inside: avoid;
+	}
+	
+	/* Evitar cortes de página molestos */
+	h1, h2, h3, h4 {
+		page-break-after: avoid;
+		page-break-inside: avoid;
+	}
+	
+	ul, ol {
+		page-break-inside: avoid;
+	}
+	
+	/* Preservar enlaces visibles */
+	a {
+		color: #2196F3 !important;
+		text-decoration: underline !important;
+	}
+}
+
 .stats-number {
 	font-size: 32px;
 	font-weight: bold;
@@ -269,6 +411,174 @@ h3 {
 <div class="toc">
 	<h3>📋 Índice</h3>
 	<ul>
+		<li><a href="#conceptos">0. Conceptos Fundamentales (Composables y Coroutines)</a></li>
+		<li><a href="#vision-general">1. Visión General</a></li>
+		<li><a href="#arquitectura-mvvm">2. Arquitectura MVVM</a></li>
+		<li><a href="#capas">3. Capas de la Aplicación</a></li>
+		<li><a href="#chatviewmodel">4. ChatViewModel - Núcleo del Sistema</a></li>
+		<li><a href="#refactoring">5. Modularización de la UI</a></li>
+		<li><a href="#flujo-datos">6. Flujo de Datos</a></li>
+		<li><a href="#patrones">7. Patrones de Diseño</a></li>
+		<li><a href="#decisiones">8. Decisiones Arquitectónicas</a></li>
+	</ul>
+</div>
+
+<h2 id="conceptos">0. 🔑 Conceptos Fundamentales</h2>
+
+<div class="highlight-box">
+	<h3>🎨 ¿Qué es Jetpack Compose?</h3>
+	<p><strong>Jetpack Compose</strong> es el <strong>toolkit moderno de Google para construir interfaces de usuario nativas en Android</strong>, lanzado en producción en 2021. Representa un cambio paradigmático completo respecto al sistema tradicional de Views con XML.</p>
+	
+	<h4>Características principales de Jetpack Compose:</h4>
+	<ul>
+		<li><strong>🎯 UI Declarativa</strong>: Describes el estado final de la UI, no los pasos para construirla. A diferencia del modelo imperativo tradicional (findViewById, setText, etc.), en Compose dices "la UI debe verse así cuando el estado es X"</li>
+		
+		<li><strong>⚡ Totalmente en Kotlin</strong>: No más XML. Todo se escribe en Kotlin, lo que permite aprovechar el sistema de tipos, funciones de orden superior, DSLs, y todas las características modernas del lenguaje</li>
+		
+		<li><strong>🔄 Recomposición Inteligente</strong>: Cuando el estado cambia, Compose automáticamente detecta qué partes de la UI necesitan actualizarse y solo recompone esas partes específicas (recomposición granular)</li>
+		
+		<li><strong>🧩 Basado en Funciones Composables</strong>: La UI se construye componiendo funciones <code>@Composable</code> que se pueden anidar, reutilizar y combinar como bloques de construcción</li>
+		
+		<li><strong>📦 Sin Estado Mutable Oculto</strong>: El estado se gestiona explícitamente mediante <code>State</code>, <code>StateFlow</code>, etc. La UI es una función pura del estado: UI = f(state)</li>
+		
+		<li><strong>🎨 Material Design 3 Integrado</strong>: Soporte nativo para los últimos componentes de Material Design con temas dinámicos</li>
+		
+		<li><strong>🧪 Testeable</strong>: Las funciones composables son más fáciles de testear que las Views tradicionales, con APIs específicas para testing de UI</li>
+		
+		<li><strong>⚙️ Interoperable</strong>: Puede coexistir con código de Views tradicional, permitiendo migración gradual</li>
+	</ul>
+	
+	<div class="code-snippet">
+<span class="comment">// ❌ Estilo tradicional con Views (XML + Kotlin imperativo)</span>
+<span class="comment">// activity_main.xml</span>
+&lt;TextView
+    android:id="@+id/textView"
+    android:text="Hola" /&gt;
+
+<span class="comment">// MainActivity.kt</span>
+<span class="keyword">val</span> textView = findViewById&lt;TextView&gt;(R.id.textView)
+textView.text = <span class="string">"Hola, $nombre"</span>  <span class="comment">// Imperativo: dices CÓMO cambiar</span>
+
+<span class="comment">// ✅ Estilo Jetpack Compose (Declarativo, todo en Kotlin)</span>
+<span class="keyword">@Composable</span>
+<span class="keyword">fun</span> <span class="type">Greeting</span>(nombre: String) {
+    Text(text = <span class="string">"Hola, $nombre"</span>)  <span class="comment">// Declarativo: describes QUÉ mostrar</span>
+}
+
+<span class="comment">// Con estado reactivo (se actualiza automáticamente)</span>
+<span class="keyword">@Composable</span>
+<span class="keyword">fun</span> <span class="type\">ChatScreen</span>() {
+    <span class="keyword">val</span> vm: ChatViewModel = viewModel()
+    <span class="keyword">val</span> ui <span class="keyword">by</span> vm.ui.<span class="type">collectAsState</span>()
+    
+    <span class="comment">// ✅ Cuando ui.messages cambia, esta parte se recompone automáticamente</span>
+    LazyColumn {
+        items(ui.messages) { message ->
+            MessageBubble(message)  <span class="comment">// UI = función del estado</span>
+        }
+    }
+}
+	</div>
+	
+	<p><strong>🏗️ En AcademiaAPP:</strong> El 100% de la UI está construida con Jetpack Compose. Todas las pantallas (<code>ChatScreen</code>, <code>LoginScreen</code>), componentes reutilizables (<code>CompactList</code>, <code>TypingIndicator</code>, <code>SesionesDelDiaCards</code>), formularios (<code>AlumnoAltaForm</code>, <code>AlumnoModificacionForm</code>) y diálogos son funciones <code>@Composable</code> que se recomponen automáticamente cuando el estado del <code>ChatViewModel</code> cambia.</p>
+</div>
+
+<div class="highlight-box">
+	<h3>📱 ¿Qué son los Composables?</h3>
+	
+	<h4>📱 ¿Qué son los Composables?</h4>
+	<p>Un <strong>Composable</strong> es una función especial de Jetpack Compose marcada con la anotación <code>@Composable</code> que define la interfaz de usuario de forma <strong>declarativa</strong>.</p>
+	
+	<p><strong>Características principales:</strong></p>
+	<ul>
+		<li><strong>UI Declarativa</strong>: Describes <em>QUÉ</em> quieres mostrar, no <em>CÓMO</em> dibujarlo (a diferencia del sistema tradicional de Views con XML)</li>
+		<li><strong>Recomposición automática</strong>: Cuando cambia el estado, Compose recompone automáticamente solo las partes afectadas de la UI</li>
+		<li><strong>Idempotente</strong>: Llamar la función varias veces con los mismos datos produce el mismo resultado visual</li>
+		<li><strong>Sin valor de retorno</strong>: Los Composables no devuelven nada (Unit), simplemente emiten UI</li>
+		<li><strong>Componible</strong>: Se pueden combinar como bloques de construcción para crear interfaces complejas</li>
+	</ul>
+	
+	<div class="code-snippet">
+<span class="comment">// Ejemplo básico de Composable</span>
+<span class="keyword">@Composable</span>
+<span class="keyword">fun</span> <span class="type">Greeting</span>(name: String) {
+    Text(text = <span class="string">"Hola, $name!"</span>)  <span class="comment">// Describe QUÉ mostrar</span>
+}
+
+<span class="comment">// Composable con estado reactivo</span>
+<span class="keyword">@Composable</span>
+<span class="keyword">fun</span> <span class="type">LoginScreen</span>() {
+    <span class="keyword">val</span> vm: LoginViewModel = viewModel()
+    <span class="keyword">val</span> ui <span class="keyword">by</span> vm.ui.<span class="type">collectAsState</span>()  <span class="comment">// ✅ Observa cambios</span>
+    
+    OutlinedTextField(
+        value = ui.username,
+        onValueChange = { vm.setUsername(it) }  <span class="comment">// ✅ Notifica cambios</span>
+    )
+}
+	</div>
+	
+	<p><strong>En AcademiaAPP:</strong> Todas las pantallas son Composables (<code>ChatScreen</code>, <code>LoginScreen</code>), así como los componentes reutilizables (<code>CompactList</code>, <code>TypingIndicator</code>, <code>SesionesDelDiaCards</code>, etc.).</p>
+	
+	<h4>⚡ ¿Qué son las Coroutines (Corrutinas)?</h4>
+	<p>Las <strong>Coroutines</strong> son el sistema de <strong>programación asíncrona</strong> de Kotlin que permite escribir código concurrente de forma secuencial y legible, sin bloquear el hilo principal.</p>
+	
+	<p><strong>Características principales:</strong></p>
+	<ul>
+		<li><strong>Código asíncrono que parece síncrono</strong>: Se escribe de forma secuencial pero se ejecuta de forma asíncrona</li>
+		<li><strong>Ligeras</strong>: Se pueden ejecutar miles de coroutines simultáneamente (a diferencia de los threads tradicionales)</li>
+		<li><strong>Evitan callback hell</strong>: No necesitas anidar callbacks para operaciones asíncronas encadenadas</li>
+		<li><strong>Funciones suspendibles</strong>: Marcadas con <code>suspend fun</code>, pueden pausar su ejecución sin bloquear el thread</li>
+		<li><strong>Scopes de ciclo de vida</strong>: Se cancelan automáticamente cuando su scope termina (ej: <code>viewModelScope</code>)</li>
+	</ul>
+	
+	<div class="code-snippet">
+<span class="comment">// Función suspendible - puede pausarse sin bloquear</span>
+<span class="keyword">suspend fun</span> <span class="type">fetchAlumnos</span>(): List&lt;Alumno&gt; {
+    delay(1000)  <span class="comment">// ⏸️ Pausa 1s sin bloquear el thread principal</span>
+    <span class="keyword">return</span> api.getAlumnos()  <span class="comment">// Llamada HTTP asíncrona</span>
+}
+
+<span class="comment">// Uso en ViewModel con viewModelScope</span>
+<span class="keyword">class</span> <span class="type">ChatViewModel</span> : ViewModel() {
+    <span class="keyword">fun</span> <span class="type">loadAlumnos</span>() {
+        viewModelScope.launch {  <span class="comment">// ✅ Se cancela si el ViewModel es destruido</span>
+            _ui.update { it.copy(loading = <span class="keyword">true</span>) }
+            
+            <span class="keyword">val</span> alumnos = fetchAlumnos()  <span class="comment">// ⏸️ Se pausa aquí sin bloquear</span>
+            
+            _ui.update { it.copy(  <span class="comment">// ▶️ Continúa cuando fetchAlumnos termina</span>
+                loading = <span class="keyword">false</span>,
+                alumnos = alumnos
+            )}
+        }
+    }
+}
+
+<span class="comment">// Código secuencial pero ejecución asíncrona</span>
+<span class="keyword">suspend fun</span> <span class="type">procesarAlta</span>() {
+    <span class="keyword">val</span> alumno = validarDatos()      <span class="comment">// 1. Valida</span>
+    <span class="keyword">val</span> id = crearEnBD(alumno)     <span class="comment">// 2. Crea (espera a que termine)</span>
+    <span class="keyword">val</span> mensaje = enviarEmail(id)  <span class="comment">// 3. Envía (espera a que termine)</span>
+    actualizarUI(mensaje)           <span class="comment">// 4. Actualiza</span>
+    <span class="comment">// ✅ Parece secuencial pero es asíncrono y no bloquea</span>
+}
+	</div>
+	
+	<p><strong>En AcademiaAPP:</strong> Todas las llamadas a las APIs (<code>backend-chat-openai</code>, <code>api-workers-profesores</code>) se realizan mediante coroutines en el <code>ChatViewModel</code>. Por ejemplo: <code>sendMessage()</code>, <code>loadWelcome()</code>, <code>fetchNextPage()</code> lanzan coroutines que hacen peticiones HTTP sin bloquear la UI.</p>
+	
+	<div class="success-box">
+		<h4>🎯 Sinergia Composables + Coroutines en AcademiaAPP</h4>
+		<p><strong>Composables</strong> definen la UI de forma declarativa y observan el estado del ViewModel mediante <code>StateFlow.collectAsState()</code>.</p>
+		<p><strong>Coroutines</strong> ejecutan operaciones asíncronas (llamadas a APIs) en el ViewModel sin bloquear la UI, y actualizan el estado que los Composables observan.</p>
+		<p><strong>Resultado:</strong> UI reactiva y fluida que se actualiza automáticamente cuando las operaciones asíncronas completan.</p>
+	</div>
+</div>
+
+<div class="toc">
+	<h3>📋 Índice</h3>
+	<ul>
+		<li><a href="#conceptos">0. Conceptos Fundamentales (Composables y Coroutines)</a></li>
 		<li><a href="#vision-general">1. Visión General</a></li>
 		<li><a href="#arquitectura-mvvm">2. Arquitectura MVVM</a></li>
 		<li><a href="#capas">3. Capas de la Aplicación</a></li>
@@ -312,64 +622,78 @@ h3 {
 	<h3>Diagrama MVVM</h3>
 	<div class="mermaid">
 graph TB
-    subgraph View["🖼️ VIEW LAYER (Jetpack Compose)"]
-        ChatScreen["ChatScreen.kt<br/>📱 UI Composables"]
+    subgraph View["🖼️ VIEW LAYER (Capa de Presentación)"]
+        ChatScreen["ChatScreen.kt<br/>📱 Recibe eventos del usuario<br/>📺 Renderiza UI"]
         LoginScreen["LoginScreen.kt"]
         OtherScreens["Otras Pantallas"]
     end
     
-    subgraph ViewModel["⚙️ VIEWMODEL LAYER"]
-        ChatViewModel["ChatViewModel<br/>🧠 Lógica de negocio<br/>38 estados gestionados"]
-        ChatUiState["ChatUiState<br/>📊 Estado reactivo"]
+    subgraph ViewModel["⚙️ VIEWMODEL LAYER (Capa de Lógica de Negocio)"]
+        ChatViewModel["ChatViewModel<br/>🎧 Escucha eventos<br/>🧠 Procesa lógica<br/>📤 Llama a APIs"]
+        ChatUiState["ChatUiState<br/>📊 Estado reactivo<br/>38 propiedades"]
     end
     
-    subgraph Model["💾 MODEL LAYER"]
+    subgraph Model["💾 MODEL LAYER (Capa de Acceso a Datos)"]
         Repository["ChatRepository<br/>🔄 Abstracción de datos"]
-        SessionStore["SessionStore<br/>🔐 Sesión usuario"]
+        SessionStore["SessionStore<br/>🔐 Token y sesión"]
         MockRepo["MockChatRepository<br/>🎭 Datos simulados"]
-        RealRepo["RemoteChatRepository<br/>🌐 API REST"]
+        RealRepo["RemoteChatRepository<br/>🌐 Llama APIs REST"]
     end
     
-    subgraph Data["📡 DATA LAYER"]
+    subgraph Data["📡 DATA LAYER (Capa de Comunicación)"]
         DTOs["DTOs (Envelope, ChatMessageDto)<br/>📦 Modelos de datos"]
         Retrofit["Retrofit/OkHttp<br/>🔌 Cliente HTTP"]
-        API["Backend API<br/>🖥️ api-workers-profesores"]
+        ChatAPI["API Chat<br/>💬 backend-chat-openai"]
+        AcademiaAPI["API Academia<br/>🖥️ api-workers-profesores"]
     end
     
-    ChatScreen -->|"observa ui: StateFlow"| ChatUiState
-    ChatScreen -->|"llama funciones vm.*()"| ChatViewModel
-    ChatViewModel -->|"actualiza _ui.update"| ChatUiState
-    ChatViewModel -->|"usa"| Repository
+    ChatScreen -->|"1️⃣ Evento: onClick, onValueChange"| ChatViewModel
+    ChatScreen -->|"5️⃣ observa: collectAsState()"| ChatUiState
+    ChatViewModel -->|"2️⃣ Procesa y llama"| Repository
+    ChatViewModel -->|"4️⃣ Recibe respuesta y actualiza"| ChatUiState
     Repository -.->|"Mock Mode"| MockRepo
     Repository -.->|"Production"| RealRepo
     RealRepo -->|"usa"| Retrofit
-    Retrofit -->|"HTTP"| API
-    SessionStore -->|"proporciona token"| Repository
+    Retrofit -->|"3️⃣ POST /chat/enviar"| ChatAPI
+    Retrofit -->|"3️⃣ GET/POST recursos"| AcademiaAPI
+    SessionStore -->|"proporciona Bearer token"| RealRepo
     
     style ChatViewModel fill:#f093fb
     style ChatUiState fill:#f5576c
     style Repository fill:#667eea
     style ChatScreen fill:#764ba2
+    style ChatAPI fill:#4caf50
+    style AcademiaAPI fill:#ff9800
 	</div>
+	
+	<h4>🔍 Capas y Responsabilidades</h4>
+	
+	<ul>
+		<li><strong>🖼️ VIEW LAYER (Capa de Presentación - Recibe eventos del usuario)</strong>: Los Composables como <code>ChatScreen</code> capturan eventos del usuario (onClick, onValueChange, onSendMessage) y los notifican al ViewModel mediante llamadas a funciones. También observa el estado reactivo mediante <code>StateFlow.collectAsState()</code> para renderizar la UI. <strong>Sin lógica de negocio</strong>. Patrones: Observer, State Hoisting, Event Handling.</li>
+		
+		<li><strong>⚙️ VIEWMODEL LAYER (Capa de Lógica de Negocio - Escucha eventos y orquesta)</strong>: <code>ChatViewModel</code> recibe los eventos de la VIEW, procesa la lógica de negocio, llama al Repository para acceder a las APIs, recibe las respuestas, las procesa y actualiza el <code>ChatUiState</code> (38 propiedades) para que la VIEW se recomponga. Patrones: MVVM, UDF (Unidirectional Data Flow), State Management con StateFlow.</li>
+		
+		<li><strong>💾 MODEL LAYER (Capa de Acceso a Datos)</strong>: <code>ChatRepository</code> abstrae el origen de datos (Mock/Real) y realiza las llamadas HTTP a las APIs mediante <code>RemoteChatRepository</code>. Implementa el patrón Repository para desacoplar la lógica de negocio de los detalles de comunicación. <code>SessionStore</code> gestiona el token de autenticación.</li>
+		
+		<li><strong>📡 DATA LAYER (Capa de Comunicación - Llama a dos APIs)</strong>: <code>Retrofit</code> realiza peticiones HTTP a <strong>dos backends</strong>: <code>backend-chat-openai</code> (gestión conversacional con IA) y <code>api-workers-profesores</code> (recursos de academias). Los DTOs modelan los datos intercambiados. Patrón: DTO (Data Transfer Object), REST Client.</li>
+	</ul>
 	
 	<div class="highlight-box">
-		<strong>📖 Lectura del diagrama:</strong>
-		<p>Las flechas sólidas muestran el flujo unidireccional de datos (patrón UDF - Unidirectional Data Flow). La View observa el ViewModel mediante <strong>StateFlow</strong> (patrón Observer reactivo). El ViewModel usa el Repository como abstracción que puede ser <strong>Mock</strong> o <strong>Real</strong> según configuración. En producción, el Repository se conecta al backend vía Retrofit.</p>
+		<h4>🔄 Flujo Completo de Eventos Usuario → APIs → UI</h4>
+		<ol>
+			<li><strong>VIEW recibe evento</strong>: Usuario hace clic en "Enviar mensaje" → <code>ChatScreen</code> captura el evento</li>
+			<li><strong>VIEW notifica a VIEWMODEL</strong>: <code>ChatScreen</code> llama a <code>vm.sendMessage(texto)</code></li>
+			<li><strong>VIEWMODEL procesa y llama a MODEL</strong>: <code>ChatViewModel.sendMessage()</code> valida el texto y llama a <code>repository.sendMessage()</code></li>
+			<li><strong>MODEL llama a DATA</strong>: <code>RemoteChatRepository</code> usa <code>Retrofit</code> para hacer <code>POST /chat/enviar</code> a <code>backend-chat-openai</code></li>
+			<li><strong>DATA ejecuta HTTP</strong>: <code>Retrofit</code> envía petición HTTP con el token de <code>SessionStore</code></li>
+			<li><strong>Backend procesa</strong>: <code>backend-chat-openai</code> procesa con IA y puede llamar a <code>api-workers-profesores</code> para obtener datos de alumnos/sesiones</li>
+			<li><strong>DATA recibe respuesta</strong>: <code>Retrofit</code> recibe el <code>Envelope</code> con la respuesta del chat</li>
+			<li><strong>MODEL devuelve a VIEWMODEL</strong>: <code>RemoteChatRepository</code> devuelve el objeto al <code>ChatViewModel</code></li>
+			<li><strong>VIEWMODEL procesa y actualiza estado</strong>: <code>ChatViewModel</code> añade el mensaje a la lista y actualiza <code>_ui.update { copy(messages = ...) }</code></li>
+			<li><strong>VIEW observa cambio y recompone</strong>: <code>ChatScreen</code> detecta el cambio en <code>ui.messages</code> mediante <code>collectAsState()</code> y Compose recompone la LazyColumn mostrando el nuevo mensaje en pantalla</li>
+		</ol>
+		<p><strong>Resumen:</strong> VIEW captura eventos → VIEWMODEL escucha y orquesta → MODEL accede a datos → DATA llama APIs (chat + academias) → respuesta vuelve por las mismas capas → VIEWMODEL actualiza estado → VIEW se recompone automáticamente.</p>
 	</div>
-	
-	<h4>Ejemplo de Flujo - Envío de Mensaje:</h4>
-	<ol style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; line-height: 1.8;">
-		<li><strong>Usuario</strong> escribe "listar alumnos" y presiona enviar</li>
-		<li><strong>ChatScreen</strong> captura el evento → llama <code>vm.sendMessage("listar alumnos")</code></li>
-		<li><strong>ChatViewModel</strong> procesa la petición → actualiza <code>_ui.update { loading = true }</code></li>
-		<li><strong>Repository</strong> decide la fuente de datos (Mock o Backend real)</li>
-		<li><strong>Retrofit</strong> realiza POST /chat/sendMessage (en producción)</li>
-		<li><strong>Backend API</strong> procesa y devuelve JSON con la respuesta</li>
-		<li><strong>ChatViewModel</strong> recibe resultado → actualiza <code>_ui.update { messages = [...] }</code></li>
-		<li><strong>StateFlow</strong> emite el nuevo estado</li>
-		<li><strong>ChatScreen</strong> recompone automáticamente con <code>collectAsState()</code></li>
-		<li><strong>Usuario</strong> ve la lista de alumnos en pantalla</li>
-	</ol>
 </div>
 
 <h3>Separación de Responsabilidades</h3>
@@ -906,27 +1230,88 @@ flowchart TD
 	</div>
 </div>
 
-<h3>Ejemplo: Alta de Alumno</h3>
+<h3>📚 Explicación Completa del Flujo de Datos</h3>
+
+<div class="success-box">
+	<p><strong>Introducción:</strong></p>
+	<p>A continuación se explica el flujo completo de una interacción del usuario con la aplicación, desde que toca un botón hasta que ve la respuesta en pantalla. Este flujo atraviesa las 4 capas de nuestra arquitectura MVVM, demostrando cómo cada componente cumple su responsabilidad específica.</p>
+</div>
+
+<h4>🎯 Paso 1: Usuario interactúa</h4>
+<p>Todo comienza cuando el usuario toca un botón en la pantalla. El <strong>Composable</strong>, que es la función que define la interfaz de usuario, captura este evento mediante un callback como <code>onClick</code>.</p>
+
+<h4>🎯 Paso 2: Llamada al ViewModel</h4>
+<p>Inmediatamente, el Composable llama directamente a una función del ViewModel, por ejemplo <code>vm.sendMessage()</code>. Esta es una <strong>llamada directa</strong>, no un sistema de eventos que se escuchan. El Composable tiene acceso a la instancia del ViewModel y ejecuta sus funciones como respuesta a la interacción del usuario.</p>
+
+<h4>🎯 Paso 3: ViewModel lanza Coroutine</h4>
+<p>El ViewModel recibe la llamada y lanza una <strong>Coroutine</strong> usando <code>viewModelScope</code>. Esto es crucial porque vamos a hacer una operación que puede tardar, como llamar a una API, y no queremos bloquear la interfaz de usuario mientras esperamos la respuesta. Las Coroutines permiten ejecutar código asíncrono de forma secuencial y legible.</p>
 
 <div class="code-snippet">
-<span class="comment">// 1. Usuario completa formulario</span>
-OutlinedTextField(
-    value = ui.nombreAlta,
-    onValueChange = { vm.setNombreAlta(it) }  <span class="comment">// ⬆️ Evento</span>
-)
-
-<span class="comment">// 2. ViewModel actualiza estado</span>
-<span class="keyword">fun</span> <span class="type">setNombreAlta</span>(nombre: String) {
-    _ui.update { it.copy(nombreAlta = nombre) }  <span class="comment">// 🔄 Actualización</span>
+<span class="keyword">fun</span> <span class="type">sendMessage</span>(text: String) {
+    viewModelScope.launch {  <span class="comment">// ⚡ Lanza Coroutine</span>
+        _ui.update { it.copy(loading = <span class="keyword">true</span>) }
+        <span class="keyword">val</span> result = repository.sendMessage(text)  <span class="comment">// ⏸️ Pausa aquí sin bloquear</span>
+        <span class="comment">// Procesa resultado...</span>
+    }
 }
+</div>
 
-<span class="comment">// 3. StateFlow emite nuevo estado</span>
-<span class="keyword">val</span> ui: StateFlow&lt;ChatUiState&gt; = _ui  <span class="comment">// 📡 Emisión reactiva</span>
+<h4>🎯 Paso 4: Llamada al Repository</h4>
+<p>Dentro de la Coroutine, el ViewModel llama a <code>repository.sendMessage()</code>, que es una <strong>función suspendible</strong> (<code>suspend fun</code>). Las funciones suspendibles pueden pausar su ejecución sin bloquear el hilo principal, esperando a que termine una operación larga como una llamada HTTP. Cuando la función se pausa, el hilo principal queda libre para procesar otros eventos de UI.</p>
 
-<span class="comment">// 4. ChatScreen recibe y renderiza</span>
-<span class="keyword">val</span> ui <span class="keyword">by</span> vm.ui.collectAsState()  <span class="comment">// ⬇️ Observación</span>
-Text(<span class="string">"Nombre: ${ui.nombreAlta}"</span>)  <span class="comment">// 🎨 Renderizado</span>
-	</div>
+<h4>🎯 Paso 5: Petición HTTP</h4>
+<p>El Repository utiliza <strong>Retrofit</strong> para hacer una petición HTTP POST a nuestra API backend. Aquí es donde realmente salimos de la aplicación y nos comunicamos con el servidor. Retrofit serializa automáticamente los objetos Kotlin a JSON y configura los headers necesarios (como el token de autenticación).</p>
+
+<h4>🎯 Paso 6: Respuesta del servidor</h4>
+<p>La API procesa nuestra petición y responde con un objeto <code>Envelope</code> que contiene los datos en formato JSON. El backend puede haber consultado la base de datos, procesado con IA (en el caso del chat), ejecutado lógica de negocio, o cualquier operación necesaria. La respuesta incluye el mensaje del asistente, datos estructurados (items), sugerencias contextuales, y metadatos de paginación.</p>
+
+<h4>🎯 Paso 7: Repository devuelve resultado</h4>
+<p>El Repository recibe la respuesta HTTP, Retrofit la parsea automáticamente a objetos Kotlin gracias a las anotaciones de serialización, y la devuelve al ViewModel envuelta en un objeto <code>Result.Success</code>. Este patrón de Result permite manejar errores de forma elegante mediante <code>when</code> expressions, distinguiendo entre éxito y error sin excepciones.</p>
+
+<h4>🎯 Paso 8: ViewModel actualiza estado</h4>
+<p>El ViewModel recibe los datos y actualiza el estado llamando a <code>_ui.update { ... }</code> con los nuevos datos. Esto modifica el objeto <code>ChatUiState</code> que contiene todos los <strong>38 estados</strong> de nuestra aplicación, incluyendo la lista de mensajes, formularios, diálogos, errores, estados de carga, y más. La función <code>update</code> es atómica y thread-safe.</p>
+
+<div class="code-snippet">
+<span class="keyword">when</span> (<span class="keyword">val</span> result = repository.sendMessage(text)) {
+    <span class="keyword">is</span> Result.Success -> {
+        _ui.update { it.copy(
+            messages = it.messages + result.data.message,
+            loading = <span class="keyword">false</span>,
+            suggestions = result.data.suggestions
+        )}
+    }
+    <span class="keyword">is</span> Result.Error -> {
+        _ui.update { it.copy(error = result.message, loading = <span class="keyword">false</span>) }
+    }
+}
+</div>
+
+<h4>🎯 Paso 9: StateFlow emite</h4>
+<p>El <code>StateFlow</code> detecta que el estado ha cambiado y emite el nuevo estado a todos sus observadores. StateFlow es un <strong>flujo reactivo</strong> (hot stream) que siempre tiene un valor actual y notifica automáticamente cuando cambia. Es superior a LiveData porque funciona con Coroutines, es type-safe, y no está atado al ciclo de vida de Android.</p>
+
+<h4>🎯 Paso 10: Recomposición</h4>
+<p>El Composable, que está observando el StateFlow mediante <code>collectAsState()</code>, detecta que hay un nuevo estado. Jetpack Compose compara el estado anterior con el nuevo utilizando comparación estructural (<code>equals()</code>) y determina qué partes específicas de la interfaz deben redibujarse. Este proceso se llama <strong>recomposición inteligente</strong> y solo afecta a los Composables que dependen de los datos que cambiaron.</p>
+
+<h4>🎯 Paso 11: Usuario ve el resultado</h4>
+<p>Finalmente, Compose redibuja automáticamente solo las partes de la interfaz que han cambiado, mostrando al usuario la respuesta en pantalla. Todo esto ocurre de forma fluida y reactiva, sin que el desarrollador tenga que gestionar manualmente qué actualizar, cuándo actualizar, o cómo sincronizar datos entre capas. La UI es una función pura del estado: <code>UI = f(state)</code>.</p>
+
+<div class="success-box">
+	<h4>🔑 Puntos Clave del Flujo</h4>
+	<ul>
+		<li><strong>✅ Separación de responsabilidades:</strong> Cada capa tiene una función específica - VIEW captura eventos, ViewModel orquesta lógica, Model accede a datos, Data comunica con APIs.</li>
+		<li><strong>✅ Programación asíncrona:</strong> Las Coroutines permiten hacer operaciones largas sin bloquear la UI, manteniendo la aplicación fluida y responsiva.</li>
+		<li><strong>✅ Reactividad automática:</strong> Gracias a StateFlow y Compose, la UI se actualiza automáticamente cuando cambia el estado, sin código manual de sincronización.</li>
+		<li><strong>✅ Flujo unidireccional:</strong> Los eventos suben (VIEW → ViewModel) y el estado baja (ViewModel → VIEW), haciendo el flujo predecible y fácil de debuguear.</li>
+		<li><strong>✅ Type-safe:</strong> Todo el flujo está tipado, desde los eventos hasta los DTOs, lo que previene errores en tiempo de compilación y mejora el autocompletado del IDE.</li>
+	</ul>
+</div>
+
+<div class="highlight-box">
+	<p style="text-align: center; font-size: 16px; font-style: italic;">
+		<strong>💡 Conclusión:</strong><br>
+		"Este flujo demuestra cómo MVVM con Jetpack Compose crea una arquitectura robusta, mantenible y escalable, donde cada capa tiene su responsabilidad clara y la comunicación entre ellas está perfectamente definida."
+	</p>
+</div>
 
 <h2 id="patrones">7. 🎨 Patrones de Diseño</h2>
 
@@ -987,6 +1372,8 @@ Text(<span class="string">"Nombre: ${ui.nombreAlta}"</span>)  <span class="comme
 	<strong>Concepto:</strong> El estado se "eleva" al nivel más alto necesario
 	<p>Los Composables hijos son "sin estado" (stateless) y reciben datos + callbacks del padre.</p>
 </div>
+
+<h4>Ejemplo: Antipatrón vs Patrón Correcto</h4>
 
 <div class="code-snippet">
 <span class="comment">// ❌ MAL: Estado local en componente hijo</span>

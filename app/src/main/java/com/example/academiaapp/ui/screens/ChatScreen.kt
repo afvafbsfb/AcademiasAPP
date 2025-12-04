@@ -118,8 +118,8 @@ import com.example.academiaapp.ui.utils.MenuBuilder
 import com.example.academiaapp.data.remote.dto.needsClarification
 import com.example.academiaapp.data.mock.MockData
 import com.example.academiaapp.ui.viewmodels.ChatUiState
-import com.example.academiaapp.ui.screens.forms.AlumnoAltaForm
-import com.example.academiaapp.ui.screens.forms.AlumnoModificacionForm
+import com.example.academiaapp.ui.screens.forms.AlumnoForm
+import com.example.academiaapp.ui.screens.forms.FormMode
 import com.example.academiaapp.ui.screens.components.TypingIndicator
 import com.example.academiaapp.ui.screens.components.SesionesSemanalesTable
 import com.example.academiaapp.ui.screens.components.SesionesDelDiaCards
@@ -526,7 +526,8 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                 if (m.items.isNotEmpty()) {
                                                     // Si es formulario de alta, renderizar formulario editable CON botones
                                                     if (m.type == "formulario_alta_alumno") {
-                                                        AlumnoAltaForm(
+                                                        AlumnoForm(
+                                                            mode = FormMode.ALTA,
                                                             formSpec = m.items.firstOrNull() ?: emptyMap(),
                                                             onCancel = { vm.sendMessageWithContext("cancelar alta", mapOf("screen" to "alumnos")) },
                                                             onSubmit = { formData ->
@@ -564,11 +565,13 @@ fun ChatScreen(fromLogin: Boolean = false, navController: NavController? = null)
                                                             ui = ui
                                                         )
                                                     } else if (m.type == "formulario_modificacion_alumno") {
-                                                        // ✅ NUEVO: Formulario de modificación con datos pre-cargados
-                                                        AlumnoModificacionForm(
+                                                        // ✅ Formulario de modificación con datos pre-cargados
+                                                        AlumnoForm(
+                                                            mode = FormMode.MODIFICACION,
                                                             formSpec = m.items.firstOrNull() ?: emptyMap(),
                                                             onCancel = { vm.sendMessageWithContext("cancelar modificación", mapOf("screen" to "alumnos")) },
-                                                            onSubmit = { formData, alumnoId, datosOriginales ->
+                                                            onSubmit = { },
+                                                            onSubmitWithId = { formData, alumnoId, datosOriginales ->
                                                                 // Construir mensaje solo con campos modificados
                                                                 val mensaje = buildString {
                                                                     // Añadir nombre e ID del alumno al inicio

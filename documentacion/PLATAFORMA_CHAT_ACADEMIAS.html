@@ -247,6 +247,125 @@ pre code {
 	border-color: rgba(255, 255, 255, 0.18);
 }
 
+/* ===== ESTILOS PARA IMPRESIÓN PDF ===== */
+@media print {
+	/* Forzar colores de fondo e imágenes en PDF */
+	* {
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+		color-adjust: exact !important;
+	}
+	
+	body {
+		max-width: 100%;
+		padding: 10px;
+	}
+	
+	/* Preservar colores de badges y notas */
+	.version-badge {
+		background-color: #4CAF50 !important;
+		color: white !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	.update-note {
+		background-color: #FFF9C4 !important;
+		border-left: 4px solid #FBC02D !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+		page-break-inside: avoid;
+	}
+	
+	/* Preservar colores de fondo en bloques de código */
+	pre,
+	.vscode-light pre,
+	.vscode-dark pre {
+		background-color: rgba(220, 220, 220, 0.4) !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+		page-break-inside: avoid;
+	}
+	
+	code {
+		background-color: rgba(220, 220, 220, 0.4) !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	/* Preservar bordes de tablas */
+	table {
+		page-break-inside: avoid;
+		border-collapse: collapse !important;
+	}
+	
+	table > thead > tr > th {
+		background-color: #f5f5f5 !important;
+		border: 1px solid rgba(0, 0, 0, 0.69) !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	table > tbody > tr > td {
+		border: 1px solid rgba(0, 0, 0, 0.18) !important;
+	}
+	
+	table > tbody > tr:nth-child(even) {
+		background-color: #fafafa !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	/* Preservar blockquotes */
+	blockquote {
+		background-color: #f5f5f5 !important;
+		border-left: 5px solid #2196F3 !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+		page-break-inside: avoid;
+	}
+	
+	/* Preservar h1 borders */
+	h1 {
+		border-bottom: 1px solid rgba(0, 0, 0, 0.18) !important;
+		page-break-after: avoid;
+	}
+	
+	hr {
+		border-bottom: 2px solid rgba(0, 0, 0, 0.18) !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	/* Evitar cortes de página molestos */
+	h1, h2, h3, h4, h5, h6 {
+		page-break-after: avoid;
+		page-break-inside: avoid;
+	}
+	
+	ul, ol {
+		page-break-inside: avoid;
+	}
+	
+	/* Preservar enlaces visibles */
+	a {
+		color: #2196F3 !important;
+		text-decoration: underline !important;
+	}
+	
+	/* Diagramas Mermaid - preservar estilos */
+	.mermaid {
+		page-break-inside: avoid;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	
+	.mermaid svg {
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+}
+
 </style>
 
 <style>
@@ -389,7 +508,7 @@ code {
     });
   </script>
 <h1 id="documentacion-tfg-fp-dam">Documentación TFG FP DAM - Ángel Fernández Vidal</h1>
-<h2 id="arquitectura-completa---sistema-academia-chat-driven">Sistema Academia Chat-Driven <span class="version-badge">v2.1.0</span></h2>
+<h2 id="plataforma-chat-academias">Plataforma Chat Academias <span class="version-badge">v2.1.0</span></h2>
 
 <div class="update-note">
 <strong>📅 Actualización v2.1.0 - Noviembre 2025</strong><br/>
@@ -807,7 +926,7 @@ Backups: Daily automated (retention 7 days)
 <tr>
 <td><code>Sesion</code></td>
 <td>Clases concretas (instancias de horarios)</td>
-<td>id, horario_curso_id, aula_id, curso_profesor_id, timestamp_alta, timestamp_baja, notas_sesion, notas_materia</td>
+<td>id, horario_curso_id, curso_profesor_id, timestamp_alta, hora_inicio, hora_fin, timestamp_baja, motivo_baja, notas_sesion, notas_materia</td>
 </tr>
 </tbody>
 </table>
@@ -834,12 +953,12 @@ Backups: Daily automated (retention 7 days)
 <tr>
 <td><code>familias_alumnos</code></td>
 <td>Relaciones familiares entre alumnos</td>
-<td>id_familia_alumno, id_alumno1, id_alumno2, relacion_familiar</td>
+<td>id_familia_alumno, id_alumno, relacion_familiar</td>
 </tr>
 <tr>
 <td><code>AnotacionesAlumnoSesion</code></td>
 <td>Registro de asistencia, evaluaciones y comportamiento</td>
-<td>id, sesion_id, inscripcion_id, alumno_id, tipo_anotacion (Ausencia, Evaluacion, Comportamiento), texto</td>
+<td>id, sesion_id, inscripcion_id, tipo_anotacion (Ausencia, Evaluacion, Comportamiento, Observacion, Otros), texto, timestamp_alta, timestamp_baja, motivo_baja</td>
 </tr>
 </tbody>
 </table>
@@ -2608,26 +2727,26 @@ OpenAI: <span class="hljs-string">"El curso Matemáticas 1º ESO tiene 25 alumno
 <p>Solo <strong>2 archivos de configuración</strong> (5-15 horas de trabajo):</p>
 
 <p><strong>1. Whitelist de endpoints</strong> (<code>served-openapi.json</code>):</p>
-<pre class="hljs"><code><div><span class="hljs-comment">// Ejemplo: Cambiar de Academia a Clínica Médica</span>
+<pre class="hljs"><code><div><span class="hljs-comment">// Ejemplo: Cambiar de Academia a Autoescuela</span>
 {
   <span class="hljs-string">"allowed_endpoints"</span>: [
-    { <span class="hljs-string">"name"</span>: <span class="hljs-string">"pacientes.listar"</span>, <span class="hljs-string">"path"</span>: <span class="hljs-string">"/pacientes"</span>, <span class="hljs-string">"method"</span>: <span class="hljs-string">"GET"</span> },
-    { <span class="hljs-string">"name"</span>: <span class="hljs-string">"citas.crear"</span>, <span class="hljs-string">"path"</span>: <span class="hljs-string">"/citas"</span>, <span class="hljs-string">"method"</span>: <span class="hljs-string">"POST"</span> },
-    { <span class="hljs-string">"name"</span>: <span class="hljs-string">"historiales.consultar"</span>, <span class="hljs-string">"path"</span>: <span class="hljs-string">"/historiales/:id"</span>, <span class="hljs-string">"method"</span>: <span class="hljs-string">"GET"</span> }
+    { <span class="hljs-string">"name"</span>: <span class="hljs-string">"alumnos.listar"</span>, <span class="hljs-string">"path"</span>: <span class="hljs-string">"/alumnos"</span>, <span class="hljs-string">"method"</span>: <span class="hljs-string">"GET"</span> },
+    { <span class="hljs-string">"name"</span>: <span class="hljs-string">"clases_practicas.crear"</span>, <span class="hljs-string">"path"</span>: <span class="hljs-string">"/clases-practicas"</span>, <span class="hljs-string">"method"</span>: <span class="hljs-string">"POST"</span> },
+    { <span class="hljs-string">"name"</span>: <span class="hljs-string">"examenes.consultar"</span>, <span class="hljs-string">"path"</span>: <span class="hljs-string">"/examenes/:id"</span>, <span class="hljs-string">"method"</span>: <span class="hljs-string">"GET"</span> }
   ]
 }
 </div></code></pre>
 
 <p><strong>2. System Prompt</strong> (descripción del dominio):</p>
 <pre class="hljs"><code><div><span class="hljs-comment"># application.properties</span>
-<span class="hljs-meta">openai.system.prompt</span>=<span class="hljs-string">Eres un asistente de gestión de clínica médica. 
-Ayudas a médicos y recepcionistas a gestionar pacientes, citas, 
-historiales clínicos y facturación. Usa un tono profesional y empático.</span>
+<span class="hljs-meta">openai.system.prompt</span>=<span class="hljs-string">Eres un asistente de gestión de autoescuela. 
+Ayudas a instructores y administradores a gestionar alumnos, clases teóricas y prácticas, 
+exámenes y permisos de conducir. Usa un tono profesional y motivador.</span>
 </div></code></pre>
 
 <p><strong>3. Variables de entorno</strong> (apuntar a nueva API):</p>
 <pre class="hljs"><code><div><span class="hljs-comment"># Cambiar URL de API Workers</span>
-<span class="hljs-meta">API_WORKERS_URL</span>=<span class="hljs-string">https://api-clinica.tudominio.com</span>
+<span class="hljs-meta">API_WORKERS_URL</span>=<span class="hljs-string">https://api-autoescuela.tudominio.com</span>
 <span class="hljs-meta">JWT_DELEGATION_SECRET</span>=<span class="hljs-string">${SHARED_SECRET}</span>  <span class="hljs-comment"># Mismo secret compartido</span>
 </div></code></pre>
 
@@ -2643,8 +2762,8 @@ historiales clínicos y facturación. Usa un tono profesional y empático.</span
 </thead>
 <tbody>
 <tr>
-<td>🏥 <strong>Clínica Médica</strong></td>
-<td>Pacientes, Citas, Historiales, Facturación</td>
+<td>🚗 <strong>Autoescuela</strong></td>
+<td>Alumnos, Clases Prácticas, Exámenes, Permisos</td>
 <td>Whitelist + Prompt</td>
 <td>10-15h</td>
 </tr>
@@ -2687,13 +2806,13 @@ historiales clínicos y facturación. Usa un tono profesional y empático.</span
 <p><strong>Arquitectura Multi-Proyecto:</strong></p>
 <pre class="hljs"><code><div>Backend Chat (Único - Compartido)
        ↓
-   ┌───┴───┬───────┬──────────┐
-   ↓       ↓       ↓          ↓
-API       API     API        API
-Academias Clínicas Gimnasios Hoteles
-   ↓       ↓       ↓          ↓
- MySQL   MySQL   MySQL      MySQL
-(BD 1)  (BD 2)  (BD 3)    (BD 4)
+   ┌───┴───┬────────────┬──────────┐
+   ↓       ↓            ↓          ↓
+API       API          API        API
+Academias Autoescuelas Gimnasios Hoteles
+   ↓       ↓            ↓          ↓
+ MySQL   MySQL        MySQL      MySQL
+(BD 1)  (BD 2)       (BD 3)    (BD 4)
 </div></code></pre>
 
 <p><strong>Nota Importante:</strong> El JWT debe incluir un claim que identifique el proyecto/dominio para que el Backend Chat sepa a qué API Workers dirigir las peticiones. Esto se puede implementar con un campo <code>projectId</code> o <code>domain</code> en el token.</p>
@@ -2944,6 +3063,750 @@ Academias Clínicas Gimnasios Hoteles
 </tr>
 </tbody>
 </table>
+
+<h3 id="94-arquitectura-del-backend-chat-spring-boot">9.4 - Arquitectura del Backend Chat (Spring Boot)</h3>
+
+<p>El Backend Chat es el <strong>orquestador central</strong> del sistema, actuando como intermediario entre la aplicación Android, OpenAI GPT-4 y la API Workers. Esta sección explica en profundidad cómo funciona internamente, qué componentes utiliza y cómo se coordinan.</p>
+
+<h4 id="por-qué-spring-boot">Por Qué Spring Boot</h4>
+
+<p>Spring Boot fue elegido como framework del Backend Chat por las siguientes razones:</p>
+
+<ul>
+<li><strong>Anotaciones que Simplifican el Código:</strong> Spring Boot utiliza anotaciones como <code>@RestController</code>, <code>@Service</code> y <code>@Autowired</code> que permiten escribir menos código y centrarse en la lógica de negocio. Por ejemplo, no necesitas crear manualmente instancias de servicios, Spring Boot lo hace automáticamente.</li>
+<li><strong>Inyección de Dependencias Automática:</strong> Cuando una clase necesita utilizar otra (por ejemplo, ChatController necesita ChatService), Spring Boot se encarga de "inyectar" automáticamente esa dependencia. Esto hace el código más limpio y fácil de probar.</li>
+<li><strong>Servidor Web Integrado:</strong> Spring Boot incluye un servidor Tomcat embebido, lo que significa que no necesitas instalar ni configurar un servidor web por separado. Simplemente ejecutas la aplicación y ya funciona.</li>
+<li><strong>Configuración Centralizada:</strong> Todas las configuraciones (claves API, URLs, puertos) se guardan en un único archivo <code>application.properties</code>, facilitando el cambio entre entornos (desarrollo, pruebas, producción).</li>
+<li><strong>Ecosistema Java Maduro:</strong> Al usar Java, tenemos acceso a miles de librerías bien documentadas y probadas en producción, especialmente para seguridad (JWT, autenticación) y comunicación HTTP.</li>
+</ul>
+
+<h4 id="componentes-principales-del-backend-chat">Componentes Principales del Backend Chat</h4>
+
+<p>El Backend Chat está organizado en capas según el patrón <strong>MVC + Services</strong>:</p>
+
+<p><strong>1. Controladores (@RestController):</strong></p>
+<ul>
+<li><strong>Responsabilidad:</strong> Recibir requests HTTP, validar headers, delegar a servicios</li>
+<li><strong>Anotaciones clave:</strong> <code>@RestController</code>, <code>@PostMapping</code>, <code>@RequestBody</code></li>
+<li><strong>Ejemplo:</strong> <code>ChatController.java</code></li>
+</ul>
+
+<pre class="hljs"><code><div><span class="hljs-meta">@RestController</span>
+<span class="hljs-meta">@RequestMapping</span>(<span class="hljs-string">"/chat"</span>)
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ChatController</span> </span>{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ChatService chatService;
+    
+    <span class="hljs-comment">// Spring Boot inyecta automáticamente ChatService</span>
+    <span class="hljs-meta">@Autowired</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">ChatController</span><span class="hljs-params">(ChatService chatService)</span> </span>{
+        <span class="hljs-keyword">this</span>.chatService = chatService;
+    }
+    
+    <span class="hljs-meta">@PostMapping</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> ResponseEntity&lt;Envelope&gt; <span class="hljs-title">sendMessage</span><span class="hljs-params">(
+        <span class="hljs-meta">@RequestBody</span> ChatRequest request,
+        <span class="hljs-meta">@RequestHeader</span>(<span class="hljs-string">"Authorization"</span>)</span> String jwt
+    )</span> {
+        <span class="hljs-comment">// 1. Extraer JWT del header</span>
+        String token = jwt.replace(<span class="hljs-string">"Bearer "</span>, <span class="hljs-string">""</span>);
+        
+        <span class="hljs-comment">// 2. Delegar procesamiento al servicio</span>
+        Envelope response = chatService.processMessage(request, token);
+        
+        <span class="hljs-comment">// 3. Devolver respuesta HTTP 200</span>
+        <span class="hljs-keyword">return</span> ResponseEntity.ok(response);
+    }
+}
+</div></code></pre>
+
+<p><strong>2. Servicios (@Service):</strong></p>
+<ul>
+<li><strong>Responsabilidad:</strong> Lógica de negocio, orquestación de llamadas</li>
+<li><strong>Anotaciones clave:</strong> <code>@Service</code>, <code>@Autowired</code></li>
+<li><strong>Ejemplos:</strong> <code>ChatService.java</code>, <code>OpenAICallApiService.java</code>, <code>ApiProxyService.java</code></li>
+</ul>
+
+<pre class="hljs"><code><div><span class="hljs-meta">@Service</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ChatService</span> </span>{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> OpenAICallApiService openAIService;
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> JwtService jwtService;
+    
+    <span class="hljs-meta">@Autowired</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">ChatService</span><span class="hljs-params">(OpenAICallApiService openAI, JwtService jwt)</span> </span>{
+        <span class="hljs-keyword">this</span>.openAIService = openAI;
+        <span class="hljs-keyword">this</span>.jwtService = jwt;
+    }
+    
+    <span class="hljs-function"><span class="hljs-keyword">public</span> Envelope <span class="hljs-title">processMessage</span><span class="hljs-params">(ChatRequest req, String token)</span> </span>{
+        <span class="hljs-comment">// Validar JWT y extraer claims</span>
+        Claims claims = jwtService.validateAndExtract(token);
+        
+        <span class="hljs-comment">// Orquestar llamadas a OpenAI</span>
+        <span class="hljs-keyword">return</span> openAIService.runChat(req.messages(), token, claims);
+    }
+}
+</div></code></pre>
+
+<p><strong>3. Configuración (@Configuration):</strong></p>
+<ul>
+<li><strong>Responsabilidad:</strong> Crear beans, configurar componentes</li>
+<li><strong>Anotaciones clave:</strong> <code>@Configuration</code>, <code>@Bean</code>, <code>@Value</code></li>
+</ul>
+
+<pre class="hljs"><code><div><span class="hljs-meta">@Configuration</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AppConfig</span> </span>{
+    <span class="hljs-meta">@Value</span>(<span class="hljs-string">"${openai.api.key}"</span>)
+    <span class="hljs-keyword">private</span> String openAIKey;
+    
+    <span class="hljs-meta">@Bean</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> OpenAI <span class="hljs-title">openAIClient</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> OpenAI.Builder()
+            .apiKey(openAIKey)
+            .build();
+    }
+}
+</div></code></pre>
+
+<p><strong>4. Middleware (Filters/Interceptors):</strong></p>
+<ul>
+<li><strong>Responsabilidad:</strong> Validación JWT, logging, CORS</li>
+<li><strong>Implementación:</strong> <code>JwtAuthenticationFilter.java</code></li>
+</ul>
+
+<h4 id="flujo-completo-de-un-request-paso-a-paso">📚 Flujo Completo de un Request (Paso a Paso)</h4>
+
+<p><strong>Escenario:</strong> Usuario envía "Muéstrame mis clases de hoy" desde la app Android</p>
+
+<p><strong>Paso 1: Android App envía HTTP POST</strong></p>
+<pre class="hljs"><code><div>POST https://backend-chat.elasticbeanstalk.com/chat
+Headers:
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Content-Type: application/json
+  X-Flow-Diagram: true  <span class="hljs-comment"># Opcional: activa reportes HTML</span>
+
+Body:
+{
+  <span class="hljs-string">"messages"</span>: [
+    { <span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>, <span class="hljs-string">"content"</span>: <span class="hljs-string">"Muéstrame mis clases de hoy"</span> }
+  ]
+}
+</div></code></pre>
+
+<p><strong>Paso 2: Spring Boot recibe el request</strong></p>
+<ul>
+<li>El servidor Tomcat embebido (puerto 8080) recibe la conexión HTTP</li>
+<li>DispatcherServlet (componente central de Spring MVC) analiza la URL</li>
+<li>Encuentra el método <code>ChatController.sendMessage()</code> que mapea <code>POST /chat</code></li>
+</ul>
+
+<p><strong>Paso 3: Middleware valida JWT</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment">// JwtAuthenticationFilter.java</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">JwtAuthenticationFilter</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">OncePerRequestFilter</span> </span>{
+    <span class="hljs-meta">@Override</span>
+    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">doFilterInternal</span><span class="hljs-params">(...)</span> </span>{
+        String jwt = extractJWT(request);
+        
+        <span class="hljs-keyword">try</span> {
+            Claims claims = Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(jwt)
+                .getBody();
+            
+            <span class="hljs-comment">// Extraer claims del JWT</span>
+            Integer usuarioId = claims.get(<span class="hljs-string">"usuarioId"</span>, Integer.class);
+            Integer academiaId = claims.get(<span class="hljs-string">"academiaId"</span>, Integer.class);
+            String role = claims.get(<span class="hljs-string">"role"</span>, String.class);
+            
+            <span class="hljs-comment">// Almacenar en contexto de seguridad</span>
+            SecurityContextHolder.getContext()
+                .setAuthentication(<span class="hljs-keyword">new</span> JwtAuthentication(claims));
+            
+            <span class="hljs-comment">// Continuar con la cadena de filtros</span>
+            filterChain.doFilter(request, response);
+        } <span class="hljs-keyword">catch</span> (ExpiredJwtException e) {
+            response.setStatus(<span class="hljs-number">401</span>);
+            response.getWriter().write(<span class="hljs-string">"{ \"error\": \"Token expired\" }"</span>);
+        }
+    }
+}
+</div></code></pre>
+
+<p><strong>Resultado del Paso 3:</strong> JWT validado, claims extraídos: <code>{usuarioId: 12, academiaId: 5, role: "Profesor_academia"}</code></p>
+
+<p><strong>Paso 4: ChatController recibe el request</strong></p>
+<ul>
+<li>Spring Boot deserializa el JSON del body en objeto <code>ChatRequest</code> (gracias a Jackson)</li>
+<li>Inyecta el header <code>Authorization</code> en el parámetro <code>@RequestHeader String jwt</code></li>
+<li>Llama a <code>chatService.processMessage(request, token)</code></li>
+</ul>
+
+<p><strong>Paso 5: ChatService procesa el mensaje</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment">// ChatService.java</span>
+<span class="hljs-function"><span class="hljs-keyword">public</span> Envelope <span class="hljs-title">processMessage</span><span class="hljs-params">(ChatRequest req, String token)</span> </span>{
+    <span class="hljs-comment">// 1. Extraer claims del JWT</span>
+    Claims claims = jwtService.validateAndExtract(token);
+    Integer usuarioId = claims.get(<span class="hljs-string">"usuarioId"</span>, Integer.class);
+    
+    <span class="hljs-comment">// 2. Agregar mensaje de sistema con contexto</span>
+    List&lt;Message&gt; messages = <span class="hljs-keyword">new</span> ArrayList&lt;&gt;();
+    messages.add(<span class="hljs-keyword">new</span> Message(<span class="hljs-string">"system"</span>, getSystemPrompt(claims)));
+    messages.addAll(req.messages());
+    
+    <span class="hljs-comment">// 3. Delegar a OpenAICallApiService</span>
+    <span class="hljs-keyword">return</span> openAIService.runChat(messages, token, claims);
+}
+</div></code></pre>
+
+<p><strong>Paso 6: OpenAICallApiService - PRIMER TURNO con OpenAI</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment">// OpenAICallApiService.java</span>
+<span class="hljs-function"><span class="hljs-keyword">public</span> Envelope <span class="hljs-title">runChat</span><span class="hljs-params">(List&lt;Message&gt; msgs, String token, Claims claims)</span> </span>{
+    <span class="hljs-comment">// Iteración 1: Llamar OpenAI con tool "call_api"</span>
+    ChatCompletionRequest openAIRequest = ChatCompletionRequest.builder()
+        .model(<span class="hljs-string">"gpt-4o"</span>)  <span class="hljs-comment">// Configurable vía properties</span>
+        .messages(msgs)
+        .tools(loadToolDefinitions())  <span class="hljs-comment">// served-openapi.json</span>
+        .build();
+    
+    <span class="hljs-comment">// Llamada HTTP a OpenAI API</span>
+    ChatCompletionResponse response = openAI.createChatCompletion(openAIRequest);
+    
+    <span class="hljs-comment">// ¿OpenAI quiere llamar a alguna herramienta?</span>
+    <span class="hljs-keyword">if</span> (response.hasToolCalls()) {
+        List&lt;ToolCall&gt; toolCalls = response.getToolCalls();
+        <span class="hljs-comment">// Continuar en Paso 7</span>
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-comment">// Respuesta directa sin herramientas</span>
+        <span class="hljs-keyword">return</span> buildEnvelope(response);
+    }
+}
+</div></code></pre>
+
+<p><strong>Resultado del Paso 6:</strong> OpenAI responde: <code>{"tool_calls": [{"name": "call_api", "arguments": {"endpoint": "GET /sesiones", "params": {"fecha": "2025-10-23", "profesor_id": 12}}}]}</code></p>
+
+<p><strong>Paso 7: ApiProxyService - Llamar a API Workers</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment">// ApiProxyService.java</span>
+<span class="hljs-meta">@Service</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ApiProxyService</span> </span>{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> RestTemplate restTemplate;
+    
+    <span class="hljs-function"><span class="hljs-keyword">public</span> String <span class="hljs-title">callAPI</span><span class="hljs-params">(ToolCall tool, String jwt)</span> </span>{
+        <span class="hljs-comment">// 1. Validar que endpoint está en whitelist</span>
+        <span class="hljs-keyword">if</span> (!isAllowed(tool.endpoint())) {
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> SecurityException(<span class="hljs-string">"Endpoint not allowed"</span>);
+        }
+        
+        <span class="hljs-comment">// 2. Construir URL completa</span>
+        String url = API_WORKERS_BASE_URL + tool.endpoint() 
+                   + buildQueryString(tool.params());
+        
+        <span class="hljs-comment">// 3. Configurar headers (REENVIAR EL MISMO JWT)</span>
+        HttpHeaders headers = <span class="hljs-keyword">new</span> HttpHeaders();
+        headers.set(<span class="hljs-string">"Authorization"</span>, <span class="hljs-string">"Bearer "</span> + jwt);
+        headers.set(<span class="hljs-string">"Content-Type"</span>, <span class="hljs-string">"application/json"</span>);
+        
+        <span class="hljs-comment">// 4. Ejecutar llamada HTTP</span>
+        ResponseEntity&lt;String&gt; response = restTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            <span class="hljs-keyword">new</span> HttpEntity&lt;&gt;(headers),
+            String.class
+        );
+        
+        <span class="hljs-comment">// 5. Retornar respuesta JSON como String</span>
+        <span class="hljs-keyword">return</span> response.getBody();
+    }
+}
+</div></code></pre>
+
+<p><strong>Request enviado a API Workers:</strong></p>
+<pre class="hljs"><code><div>GET https://api-workers.elasticbeanstalk.com/sesiones?fecha=<span class="hljs-number">2025</span>-<span class="hljs-number">10</span>-<span class="hljs-number">23</span>&amp;profesor_id=<span class="hljs-number">12</span>
+Headers:
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...  <span class="hljs-comment"># ¡EL MISMO JWT!</span>
+  Content-Type: application/json
+</div></code></pre>
+
+<p><strong>Respuesta de API Workers:</strong></p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-string">"ok"</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-string">"data"</span>: [
+    {
+      <span class="hljs-string">"id"</span>: <span class="hljs-number">5</span>,
+      <span class="hljs-string">"curso_nombre"</span>: <span class="hljs-string">"Matemáticas 1º ESO"</span>,
+      <span class="hljs-string">"aula"</span>: <span class="hljs-string">"Aula 3"</span>,
+      <span class="hljs-string">"hora_inicio"</span>: <span class="hljs-string">"08:00"</span>,
+      <span class="hljs-string">"hora_fin"</span>: <span class="hljs-string">"10:00"</span>,
+      <span class="hljs-string">"estado"</span>: <span class="hljs-string">"completada"</span>
+    },
+    { ... },
+    { ... }
+  ]
+}
+</div></code></pre>
+
+<p><strong>Paso 8: OpenAICallApiService - SEGUNDO TURNO con OpenAI</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment">// Agregar resultado de la herramienta a los mensajes</span>
+messages.add(<span class="hljs-keyword">new</span> Message(
+    <span class="hljs-string">"assistant"</span>, 
+    <span class="hljs-literal">null</span>, 
+    response.getToolCalls()  <span class="hljs-comment">// tool_calls del primer turno</span>
+));
+
+messages.add(<span class="hljs-keyword">new</span> Message(
+    <span class="hljs-string">"tool"</span>,
+    apiResult,  <span class="hljs-comment">// JSON de API Workers</span>
+    toolCallId
+));
+
+<span class="hljs-comment">// Segunda llamada a OpenAI (SIN herramientas esta vez)</span>
+ChatCompletionRequest secondRequest = ChatCompletionRequest.builder()
+    .model(<span class="hljs-string">"gpt-4o"</span>)
+    .messages(messages)
+    .build();  <span class="hljs-comment">// Sin .tools()</span>
+
+ChatCompletionResponse finalResponse = openAI.createChatCompletion(secondRequest);
+</div></code></pre>
+
+<p><strong>Respuesta de OpenAI (segundo turno):</strong></p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-string">"choices"</span>: [{
+    <span class="hljs-string">"message"</span>: {
+      <span class="hljs-string">"role"</span>: <span class="hljs-string">"assistant"</span>,
+      <span class="hljs-string">"content"</span>: <span class="hljs-string">"Tus clases de hoy - Jueves 23 de octubre de 2025\n\nTienes 3 clase(s) programada(s):\n\n1. Matemáticas 1º ESO - Aula 3 (08:00-10:00) - Completada\n2. Física 2º ESO - Aula 5 (11:00-13:00) - En curso\n3. Matemáticas 1º ESO - Aula 3 (21:00-23:00) - Programada"</span>
+    }
+  }]
+}
+</div></code></pre>
+
+<p><strong>Paso 9: ChatService estructura respuesta como Envelope</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment">// EnvelopeBuilder.java</span>
+<span class="hljs-function"><span class="hljs-keyword">public</span> Envelope <span class="hljs-title">buildEnvelopeFromApiResult</span><span class="hljs-params">(String apiJson, String message)</span> </span>{
+    <span class="hljs-keyword">return</span> Envelope.builder()
+        .message(message)  <span class="hljs-comment">// Mensaje de OpenAI</span>
+        .data(Data.builder()
+            .type(<span class="hljs-string">"sesiones_dia"</span>)  <span class="hljs-comment">// Inferido del endpoint</span>
+            .items(transformToGenericItems(apiJson))
+            .summary(calculateSummary(apiJson))
+            .build())
+        .uiSuggestions(generateSuggestions(<span class="hljs-string">"sesiones"</span>))
+        .pagination(<span class="hljs-literal">null</span>)
+        .metadata(Metadata.builder()
+            .conversationId(generateConversationId())
+            .timestamp(Instant.now())
+            .model(<span class="hljs-string">"gpt-4o"</span>)
+            .tokensUsed(<span class="hljs-number">1847</span>)
+            .responseTime(<span class="hljs-number">2.34</span>)
+            .version(<span class="hljs-string">"1.0.0"</span>)
+            .build())
+        .build();
+}
+</div></code></pre>
+
+<p><strong>Paso 10: ChatController devuelve HTTP Response</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment">// Spring Boot serializa automáticamente Envelope a JSON (Jackson)</span>
+<span class="hljs-keyword">return</span> ResponseEntity.ok(envelope);
+</div></code></pre>
+
+<p><strong>Response HTTP enviado a Android:</strong></p>
+<pre class="hljs"><code><div>HTTP/<span class="hljs-number">1.1</span> <span class="hljs-number">200</span> OK
+Content-Type: application/json
+Content-Length: <span class="hljs-number">2456</span>
+
+{
+  <span class="hljs-string">"message"</span>: <span class="hljs-string">"Tus clases de hoy - Jueves 23 de octubre de 2025..."</span>,
+  <span class="hljs-string">"data"</span>: {
+    <span class="hljs-string">"type"</span>: <span class="hljs-string">"sesiones_dia"</span>,
+    <span class="hljs-string">"items"</span>: [ ... ],
+    <span class="hljs-string">"summary"</span>: { <span class="hljs-string">"total_clases"</span>: <span class="hljs-number">3</span>, ... }
+  },
+  <span class="hljs-string">"uiSuggestions"</span>: [ ... ],
+  <span class="hljs-string">"pagination"</span>: <span class="hljs-literal">null</span>,
+  <span class="hljs-string">"metadata"</span>: { ... }
+}
+</div></code></pre>
+
+<p><strong>Paso 11: Android renderiza la UI</strong></p>
+<ul>
+<li>Retrofit deserializa JSON en <code>Envelope</code> Kotlin data class</li>
+<li>ViewModel actualiza <code>StateFlow&lt;List&lt;GenericItem&gt;&gt;</code></li>
+<li>Composable <code>ChatScreen</code> observa cambios y renderiza 3 tarjetas de sesiones</li>
+<li>Usuario ve sus clases del día con estados, horarios y acciones disponibles</li>
+</ul>
+
+<h4 id="beneficios-de-la-arquitectura-spring-boot">Beneficios de la Arquitectura Spring Boot</h4>
+
+<p><strong>1. Inyección de Dependencias Automática</strong></p>
+<ul>
+<li>No hay <code>new ChatService()</code> manual</li>
+<li>Spring Boot crea un singleton de cada servicio</li>
+<li>Fácil testear con mocks mediante <code>@MockBean</code></li>
+</ul>
+
+<p><strong>2. Configuración Externa (application.properties)</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment"># No hardcodear valores en código</span>
+<span class="hljs-meta">openai.api.key</span>=<span class="hljs-string">${OPENAI_API_KEY}</span>  <span class="hljs-comment"># Variable de entorno</span>
+<span class="hljs-meta">openai.model</span>=<span class="hljs-string">gpt-4o</span>
+<span class="hljs-meta">api.workers.base.url</span>=<span class="hljs-string">${API_WORKERS_URL}</span>
+<span class="hljs-meta">jwt.delegation.secret</span>=<span class="hljs-string">${JWT_SECRET_KEY}</span>
+</div></code></pre>
+
+<p><strong>3. Actuators y Health Checks</strong></p>
+<pre class="hljs"><code><div>GET /actuator/health
+{
+  <span class="hljs-string">"status"</span>: <span class="hljs-string">"UP"</span>,
+  <span class="hljs-string">"components"</span>: {
+    <span class="hljs-string">"openAI"</span>: { <span class="hljs-string">"status"</span>: <span class="hljs-string">"UP"</span> },
+    <span class="hljs-string">"apiWorkers"</span>: { <span class="hljs-string">"status"</span>: <span class="hljs-string">"UP"</span> }
+  }
+}
+</div></code></pre>
+
+<p><strong>4. Testing Simplificado</strong></p>
+<pre class="hljs"><code><div><span class="hljs-meta">@SpringBootTest</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ChatServiceTest</span> </span>{
+    <span class="hljs-meta">@Autowired</span>
+    <span class="hljs-keyword">private</span> ChatService chatService;
+    
+    <span class="hljs-meta">@MockBean</span>  <span class="hljs-comment">// Spring Boot crea mock automáticamente</span>
+    <span class="hljs-keyword">private</span> OpenAICallApiService openAIMock;
+    
+    <span class="hljs-meta">@Test</span>
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">testProcessMessage</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-comment">// Configurar comportamiento del mock</span>
+        when(openAIMock.runChat(any(), any(), any()))
+            .thenReturn(mockedEnvelope);
+        
+        <span class="hljs-comment">// Ejecutar</span>
+        Envelope result = chatService.processMessage(request, token);
+        
+        <span class="hljs-comment">// Verificar</span>
+        assertEquals(<span class="hljs-string">"sesiones_dia"</span>, result.getData().getType());
+        verify(openAIMock, times(<span class="hljs-number">1</span>)).runChat(any(), any(), any());
+    }
+}
+</div></code></pre>
+
+<p><strong>5. Manejo de Errores Centralizado</strong></p>
+<pre class="hljs"><code><div><span class="hljs-meta">@ControllerAdvice</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GlobalExceptionHandler</span> </span>{
+    <span class="hljs-meta">@ExceptionHandler</span>(JwtException.class)
+    <span class="hljs-function"><span class="hljs-keyword">public</span> ResponseEntity&lt;ErrorResponse&gt; <span class="hljs-title">handleJwtError</span><span class="hljs-params">(JwtException e)</span> </span>{
+        <span class="hljs-keyword">return</span> ResponseEntity
+            .status(<span class="hljs-number">401</span>)
+            .body(<span class="hljs-keyword">new</span> ErrorResponse(<span class="hljs-string">"Token inválido"</span>, e.getMessage()));
+    }
+    
+    <span class="hljs-meta">@ExceptionHandler</span>(OpenAIException.class)
+    <span class="hljs-function"><span class="hljs-keyword">public</span> ResponseEntity&lt;ErrorResponse&gt; <span class="hljs-title">handleOpenAIError</span><span class="hljs-params">(OpenAIException e)</span> </span>{
+        <span class="hljs-keyword">return</span> ResponseEntity
+            .status(<span class="hljs-number">503</span>)
+            .body(<span class="hljs-keyword">new</span> ErrorResponse(<span class="hljs-string">"Servicio temporalmente no disponible"</span>, e.getMessage()));
+    }
+}
+</div></code></pre>
+
+<p><strong>Conclusión:</strong> Spring Boot fue elegido por su robustez, tipado fuerte y ecosistema maduro, ideal para un sistema de producción con requisitos de seguridad y trazabilidad.</p>
+
+<h3 id="95-arquitectura-de-la-api-workers-flask-python">9.5 - Arquitectura de la API Workers (Flask + Python)</h3>
+
+<p>La API Workers es el componente que <strong>gestiona todos los datos del negocio</strong> (academias, alumnos, cursos, sesiones, inscripciones, etc.). Está construida con Python y Flask, siguiendo el patrón arquitectónico <strong>Domain-Driven Design (DDD)</strong>.</p>
+
+<h4 id="por-qué-python-y-flask">Por Qué Python y Flask</h4>
+
+<p>Python y Flask fueron elegidos para la API Workers por las siguientes razones:</p>
+
+<ul>
+<li><strong>Sintaxis Clara y Legible:</strong> Python es uno de los lenguajes más fáciles de leer y escribir. El código se parece mucho al lenguaje natural, lo que facilita el mantenimiento y la colaboración. Por ejemplo, crear un endpoint REST es tan simple como decorar una función con <code>@app.route('/alumnos')</code>.</li>
+<li><strong>Flask: Microframework Minimalista:</strong> A diferencia de frameworks "grandes" como Django, Flask es muy ligero y solo incluye lo esencial. Tú decides qué componentes añadir (base de datos, autenticación, validación), lo que da mucha flexibilidad para organizar el proyecto a tu manera.</li>
+<li><strong>Ecosistema Rico para Bases de Datos:</strong> Python tiene excelentes librerías para trabajar con bases de datos: <code>SQLAlchemy</code> (ORM que convierte tablas en clases Python), <code>Alembic</code> (migraciones automáticas), <code>PyMySQL</code> (conector para MySQL).</li>
+<li><strong>Rápido Desarrollo de APIs REST:</strong> Con Flask puedes crear un endpoint funcional en menos de 10 líneas de código. Ideal para proyectos donde necesitas muchos endpoints diferentes (en este caso, más de 30 endpoints).</li>
+<li><strong>Integración con MySQL y AWS:</strong> Python se integra perfectamente con MySQL 8.0 (nuestra base de datos) y con los servicios de AWS (Elastic Beanstalk para despliegue, RDS para base de datos gestionada).</li>
+</ul>
+
+<h4 id="patrón-domain-driven-design-ddd">Patrón Domain-Driven Design (DDD)</h4>
+
+<p>DDD es un <strong>patrón de arquitectura de software</strong> que organiza el código según el <strong>dominio del negocio</strong> (en nuestro caso: academias, alumnos, cursos, inscripciones, sesiones). La idea principal es que el código refleje exactamente cómo funciona el negocio real.</p>
+
+<p><strong>¿Qué problema resuelve DDD?</strong></p>
+<p>Sin DDD, el código de una API tiende a convertirse en un "gran archivo" donde todo está mezclado: lógica de negocio, acceso a base de datos, validaciones, endpoints HTTP... Esto hace el proyecto difícil de mantener y escalar.</p>
+
+<p>DDD separa el código en <strong>capas claramente definidas</strong>:</p>
+
+<div style="background-color: #f0f8ff; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+<p><strong>📁 Estructura de Carpetas DDD en la API Workers:</strong></p>
+<pre><code>api-workers-profesores/
+├── domain/
+│   ├── models/           ← "¿Qué es el negocio?" (Entidades del negocio real)
+│   │   ├── academia.py         # Clase Academia
+│   │   ├── alumno.py           # Clase Alumno
+│   │   ├── curso.py            # Clase Curso
+│   │   ├── inscripcion.py      # Clase Inscripcion
+│   │   └── sesion.py           # Clase Sesion/Clases
+│   │
+│   └── repositories/     ← "¿Qué operaciones necesitamos?" (Interfaces de acceso a datos)
+│       ├── alumno_repository.py        # def buscar_por_dni(dni: str)
+│       ├── inscripcion_repository.py   # def inscribir_alumno(alumno_id, curso_id)
+│       └── ...
+│
+├── application/
+│   └── services/         ← "¿Cuál es la lógica del negocio?" (Orquestación y reglas)
+│       ├── inscripcion_service.py      # Validar capacidad máxima del curso
+│       └── ...                         # Verificar que alumno no esté ya inscrito
+│                                       # Enviar notificación
+│
+└── infrastructure/
+    ├── alumno_repository_impl.py       # Implementación real con SQLAlchemy + MySQL
+    ├── task_routes.py                  # Endpoints REST (Flask routes)
+    └── config.py                       # Configuración DB (MySQL 8.0)
+</code></pre>
+</div>
+
+<h4 id="explicación-de-cada-capa-ddd">Explicación de Cada Capa DDD</h4>
+
+<p><strong>1. domain/models/ - Conceptos del Negocio Real</strong></p>
+
+<p>Aquí definimos las <strong>entidades del dominio</strong>: Academia, Alumno, Curso, Inscripcion, Sesion. Estas clases representan exactamente los conceptos que existen en una academia real.</p>
+
+<pre class="hljs"><code><div><span class="hljs-comment"># domain/models/alumno.py</span>
+<span class="hljs-keyword">from</span> dataclasses <span class="hljs-keyword">import</span> dataclass
+<span class="hljs-keyword">from</span> datetime <span class="hljs-keyword">import</span> date
+
+<span class="hljs-meta">@dataclass</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Alumno</span>:</span>
+    <span class="hljs-string">"""
+    Entidad del dominio: Alumno
+    Representa a un estudiante de la academia
+    """</span>
+    id: int
+    nombre: str
+    apellidos: str
+    dni: str
+    fecha_nacimiento: date
+    email: str
+    telefono: str
+    academia_id: int
+    
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">edad</span><span class="hljs-params">(self)</span> -&gt; int:</span>
+        <span class="hljs-string">"""Calcula la edad actual del alumno"""</span>
+        hoy = date.today()
+        <span class="hljs-keyword">return</span> hoy.year - self.fecha_nacimiento.year
+    
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">es_mayor_de_edad</span><span class="hljs-params">(self)</span> -&gt; bool:</span>
+        <span class="hljs-string">"""Verifica si el alumno es mayor de 18 años"""</span>
+        <span class="hljs-keyword">return</span> self.edad() &gt;= <span class="hljs-number">18</span>
+</div></code></pre>
+
+<p><strong>Ventaja:</strong> La clase <code>Alumno</code> no sabe nada de MySQL ni de Flask. Es código puro del negocio, fácil de entender y testear.</p>
+
+<p><strong>2. domain/repositories/ - Interfaces que Abstraen el Acceso a Datos</strong></p>
+
+<p>Los <strong>repositorios</strong> definen <strong>qué operaciones</strong> podemos hacer con cada entidad, pero <strong>sin especificar cómo</strong> (eso se hace en <code>infrastructure/</code>).</p>
+
+<pre class="hljs"><code><div><span class="hljs-comment"># domain/repositories/alumno_repository.py</span>
+<span class="hljs-keyword">from</span> abc <span class="hljs-keyword">import</span> ABC, abstractmethod
+<span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> List, Optional
+<span class="hljs-keyword">from</span> domain.models.alumno <span class="hljs-keyword">import</span> Alumno
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AlumnoRepository</span><span class="hljs-params">(ABC)</span>:</span>
+    <span class="hljs-string">"""
+    Interfaz que define operaciones sobre Alumnos.
+    NO implementa la lógica, solo declara qué operaciones existen.
+    """</span>
+    
+    <span class="hljs-meta">@abstractmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">buscar_por_dni</span><span class="hljs-params">(self, dni: str)</span> -&gt; Optional[Alumno]:</span>
+        <span class="hljs-string">"""Busca un alumno por su DNI"""</span>
+        <span class="hljs-keyword">pass</span>
+    
+    <span class="hljs-meta">@abstractmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">listar_por_academia</span><span class="hljs-params">(self, academia_id: int)</span> -&gt; List[Alumno]:</span>
+        <span class="hljs-string">"""Lista todos los alumnos de una academia"""</span>
+        <span class="hljs-keyword">pass</span>
+    
+    <span class="hljs-meta">@abstractmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">guardar</span><span class="hljs-params">(self, alumno: Alumno)</span> -&gt; Alumno:</span>
+        <span class="hljs-string">"""Guarda un nuevo alumno o actualiza uno existente"""</span>
+        <span class="hljs-keyword">pass</span>
+</div></code></pre>
+
+<p><strong>Ventaja:</strong> Si mañana queremos cambiar MySQL por PostgreSQL, solo modificamos la implementación en <code>infrastructure/</code>, no todo el código.</p>
+
+<p><strong>3. application/services/ - Lógica de Negocio</strong></p>
+
+<p>Los <strong>servicios</strong> contienen las <strong>reglas del negocio</strong>. Por ejemplo, al inscribir a un alumno en un curso, hay que:</p>
+<ol>
+<li>Verificar que el alumno acepte nuevos cursos (no ha alcanzado máximo)</li>
+<li>Verificar que el curso tenga plazas disponibles</li>
+<li>Verificar que el alumno no esté ya inscrito</li>
+<li>Crear la inscripción en la base de datos</li>
+<li>Enviar notificación (opcional)</li>
+</ol>
+
+<pre class="hljs"><code><div><span class="hljs-comment"># application/services/inscripcion_service.py</span>
+<span class="hljs-keyword">from</span> domain.repositories.inscripcion_repository <span class="hljs-keyword">import</span> InscripcionRepository
+<span class="hljs-keyword">from</span> domain.repositories.curso_repository <span class="hljs-keyword">import</span> CursoRepository
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">InscripcionService</span>:</span>
+    <span class="hljs-string">"""
+    Servicio que contiene la lógica de negocio para inscripciones
+    """</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, 
+                 inscripcion_repo: InscripcionRepository,
+                 curso_repo: CursoRepository)</span>:</span>
+        self.inscripcion_repo = inscripcion_repo
+        self.curso_repo = curso_repo
+    
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">inscribir_alumno</span><span class="hljs-params">(self, alumno_id: int, curso_id: int)</span>:</span>
+        <span class="hljs-string">"""
+        Inscribe a un alumno en un curso, validando todas las reglas
+        """</span>
+        <span class="hljs-comment"># 1. Verificar que el curso existe y tiene plazas</span>
+        curso = self.curso_repo.buscar_por_id(curso_id)
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> curso:
+            <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">f"Curso {curso_id} no encontrado"</span>)
+        
+        <span class="hljs-keyword">if</span> curso.plazas_ocupadas &gt;= curso.capacidad_maxima:
+            <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">"Curso sin plazas disponibles"</span>)
+        
+        <span class="hljs-comment"># 2. Verificar que alumno no esté ya inscrito</span>
+        inscripcion_existente = self.inscripcion_repo.buscar_por_alumno_y_curso(
+            alumno_id, curso_id
+        )
+        <span class="hljs-keyword">if</span> inscripcion_existente:
+            <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">"Alumno ya está inscrito en este curso"</span>)
+        
+        <span class="hljs-comment"># 3. Crear inscripción</span>
+        <span class="hljs-keyword">return</span> self.inscripcion_repo.crear_inscripcion(alumno_id, curso_id)
+</div></code></pre>
+
+<p><strong>Ventaja:</strong> Toda la lógica compleja está en un solo lugar, no dispersa por múltiples archivos.</p>
+
+<p><strong>4. infrastructure/ - Implementación Técnica con SQLAlchemy y Flask</strong></p>
+
+<p>Aquí es donde finalmente conectamos con MySQL usando <strong>SQLAlchemy</strong> (un ORM que convierte tablas en clases Python).</p>
+
+<pre class="hljs"><code><div><span class="hljs-comment"># infrastructure/alumno_repository_impl.py</span>
+<span class="hljs-keyword">from</span> domain.repositories.alumno_repository <span class="hljs-keyword">import</span> AlumnoRepository
+<span class="hljs-keyword">from</span> domain.models.alumno <span class="hljs-keyword">import</span> Alumno
+<span class="hljs-keyword">from</span> sqlalchemy.orm <span class="hljs-keyword">import</span> Session
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AlumnoRepositoryImpl</span><span class="hljs-params">(AlumnoRepository)</span>:</span>
+    <span class="hljs-string">"""
+    Implementación real del repositorio usando SQLAlchemy + MySQL
+    """</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, db_session: Session)</span>:</span>
+        self.db = db_session
+    
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">buscar_por_dni</span><span class="hljs-params">(self, dni: str)</span> -&gt; Optional[Alumno]:</span>
+        <span class="hljs-string">"""
+        Ejecuta una consulta SQL para buscar alumno por DNI
+        """</span>
+        <span class="hljs-comment"># SQLAlchemy convierte esto en: SELECT * FROM alumnos WHERE dni = :dni</span>
+        resultado = self.db.query(AlumnoModel).filter(AlumnoModel.dni == dni).first()
+        
+        <span class="hljs-keyword">if</span> resultado:
+            <span class="hljs-comment"># Convertir de AlumnoModel (SQLAlchemy) a Alumno (dominio)</span>
+            <span class="hljs-keyword">return</span> Alumno(
+                id=resultado.id,
+                nombre=resultado.nombre,
+                apellidos=resultado.apellidos,
+                dni=resultado.dni,
+                fecha_nacimiento=resultado.fecha_nacimiento,
+                email=resultado.email,
+                telefono=resultado.telefono,
+                academia_id=resultado.academia_id
+            )
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">None</span>
+</div></code></pre>
+
+<p><strong>Ventaja:</strong> SQLAlchemy genera las queries SQL automáticamente. No escribimos SQL a mano, reduciendo errores.</p>
+
+<h4 id="endpoints-rest-con-flask">Endpoints REST con Flask</h4>
+
+<p>Finalmente, los <strong>endpoints HTTP</strong> que el Backend Chat llama están definidos con Flask:</p>
+
+<pre class="hljs"><code><div><span class="hljs-comment"># infrastructure/task_routes.py</span>
+<span class="hljs-keyword">from</span> flask <span class="hljs-keyword">import</span> Blueprint, request, jsonify
+<span class="hljs-keyword">from</span> application.services.inscripcion_service <span class="hljs-keyword">import</span> InscripcionService
+
+<span class="hljs-comment"># Crear un "Blueprint" (grupo de rutas relacionadas)</span>
+bp = Blueprint(<span class="hljs-string">'inscripciones'</span>, __name__)
+
+<span class="hljs-meta">@bp.route('/inscripciones', methods=['POST'])</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">inscribir_alumno</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-string">"""
+    POST /inscripciones
+    Body: {"alumno_id": 12, "curso_id": 5}
+    """</span>
+    data = request.get_json()
+    
+    <span class="hljs-keyword">try</span>:
+        <span class="hljs-comment"># Delegar lógica al servicio</span>
+        inscripcion_service = InscripcionService(inscripcion_repo, curso_repo)
+        resultado = inscripcion_service.inscribir_alumno(
+            alumno_id=data[<span class="hljs-string">'alumno_id'</span>],
+            curso_id=data[<span class="hljs-string">'curso_id'</span>]
+        )
+        
+        <span class="hljs-keyword">return</span> jsonify({
+            <span class="hljs-string">"ok"</span>: <span class="hljs-literal">True</span>,
+            <span class="hljs-string">"data"</span>: {
+                <span class="hljs-string">"inscripcion_id"</span>: resultado.id,
+                <span class="hljs-string">"mensaje"</span>: <span class="hljs-string">"Alumno inscrito exitosamente"</span>
+            }
+        }), <span class="hljs-number">201</span>
+    
+    <span class="hljs-keyword">except</span> ValueError <span class="hljs-keyword">as</span> e:
+        <span class="hljs-keyword">return</span> jsonify({
+            <span class="hljs-string">"ok"</span>: <span class="hljs-literal">False</span>,
+            <span class="hljs-string">"error"</span>: str(e)
+        }), <span class="hljs-number">400</span>
+</div></code></pre>
+
+<h4 id="beneficios-de-flask-python-ddd">Beneficios de Flask + Python + DDD</h4>
+
+<p><strong>1. Código Organizado y Mantenible</strong></p>
+<ul>
+<li>Cada capa tiene una responsabilidad clara</li>
+<li>Fácil encontrar dónde modificar algo (modelo, regla de negocio, o query SQL)</li>
+<li>Nuevo miembro del equipo entiende rápidamente la estructura</li>
+</ul>
+
+<p><strong>2. Testeable en Todos los Niveles</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment"># tests/test_inscripcion_service.py</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">test_inscribir_alumno_sin_plazas</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-comment"># Mock del repositorio (no necesitamos MySQL real)</span>
+    mock_repo = Mock()
+    mock_repo.buscar_por_id.return_value = Curso(capacidad_maxima=<span class="hljs-number">10</span>, plazas_ocupadas=<span class="hljs-number">10</span>)
+    
+    service = InscripcionService(mock_repo, mock_repo)
+    
+    <span class="hljs-keyword">with</span> pytest.raises(ValueError, match=<span class="hljs-string">"sin plazas"</span>):
+        service.inscribir_alumno(alumno_id=<span class="hljs-number">1</span>, curso_id=<span class="hljs-number">5</span>)
+</div></code></pre>
+
+<p><strong>3. Fácil Migración de Base de Datos</strong></p>
+<ul>
+<li>Cambiar de MySQL a PostgreSQL solo requiere cambiar <code>infrastructure/</code></li>
+<li>El dominio (<code>domain/models/</code>) y la lógica (<code>application/services/</code>) permanecen intactos</li>
+</ul>
+
+<p><strong>4. Desarrollo Rápido con Python</strong></p>
+<ul>
+<li>Un endpoint REST funcional en 5-10 líneas de código</li>
+<li>SQLAlchemy genera SQL automáticamente (evita inyección SQL, errores de sintaxis)</li>
+<li>Flask-CORS para manejar CORS en 1 línea: <code>CORS(app)</code></li>
+</ul>
+
+<p><strong>5. Integración con Herramientas Modernas</strong></p>
+<ul>
+<li><strong>Alembic:</strong> Migraciones de base de datos automáticas (como Git para esquemas SQL)</li>
+<li><strong>Flask-JWT-Extended:</strong> Validación JWT simplificada</li>
+<li><strong>SQLAlchemy 2.0:</strong> ORM moderno con type hints y async opcional</li>
+</ul>
+
+<p><strong>Conclusión:</strong> Python + Flask + DDD permiten construir una API REST escalable, mantenible y fácil de entender, ideal para un proyecto académico donde la claridad del código es tan importante como la funcionalidad. El patrón DDD organiza el código según el negocio real (academias, alumnos, cursos), facilitando que cualquier persona entienda el proyecto rápidamente.</p>
+
 <hr>
 <h2 id="10-testing-y-calidad">10. Testing y Calidad</h2>
 <h3 id="tipos-de-testing-implementados">Tipos de Testing Implementados</h3>
@@ -3810,7 +4673,7 @@ Academias necesarias ≈ <strong><span class="hljs-number">77</span> academias d
 <li><strong>Ahorro neto: 20-25%</strong> en desarrollo de nuevos proyectos SaaS</li>
 </ul>
 
-<p><strong>Ejemplo: Desarrollo de Sistema de Clínica Médica</strong></p>
+<p><strong>Ejemplo: Desarrollo de Sistema de Autoescuela</strong></p>
 <table>
 <thead>
 <tr>
@@ -3884,10 +4747,10 @@ Academias necesarias ≈ <strong><span class="hljs-number">77</span> academias d
 <td>€2,000</td>
 </tr>
 <tr>
-<td>Clínica Médica</td>
+<td>Autoescuela</td>
 <td>€28,000 (con ahorro)</td>
-<td>40 clínicas</td>
-<td>€2,000</td>
+<td>35 autoescuelas</td>
+<td>€1,750</td>
 </tr>
 <tr>
 <td>Gimnasio</td>
@@ -3898,8 +4761,8 @@ Academias necesarias ≈ <strong><span class="hljs-number">77</span> academias d
 <tr>
 <td><strong>TOTAL</strong></td>
 <td><strong>€91,200</strong></td>
-<td><strong>110 clientes</strong></td>
-<td><strong>€5,500/mes</strong></td>
+<td><strong>105 clientes</strong></td>
+<td><strong>€5,250/mes</strong></td>
 </tr>
 </tbody>
 </table>

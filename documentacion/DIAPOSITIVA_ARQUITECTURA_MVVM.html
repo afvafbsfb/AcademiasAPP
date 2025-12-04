@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquitectura MVVM - AcademiaAPP Android</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.slide {
+    background: white;
+    width: 1280px;
+    height: 720px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    padding: 50px;
+    position: relative;
+    overflow: hidden;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 26px;
+    color: #1976D2;
+    margin-bottom: 0;
+    font-weight: 700;
+}
+
+.content {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 25px;
+    height: calc(100% - 90px);
+}
+
+.layers {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+}
+
+.layer {
+    background: #fafafa;
+    border-radius: 12px;
+    padding: 12px 15px;
+    border-left: 6px solid;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.layer-view {
+    border-left-color: #42A5F5;
+    background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+}
+
+.layer-viewmodel {
+    border-left-color: #EC407A;
+    background: linear-gradient(135deg, #FCE4EC 0%, #F8BBD0 100%);
+}
+
+.layer-model {
+    border-left-color: #7E57C2;
+    background: linear-gradient(135deg, #EDE7F6 0%, #D1C4E9 100%);
+}
+
+.layer-data {
+    border-left-color: #66BB6A;
+    background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+}
+
+.layer-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.layer-icon {
+    font-size: 22px;
+}
+
+.layer-tech {
+    font-size: 11px;
+    font-weight: 600;
+    color: #1976D2;
+    margin-bottom: 8px;
+    padding: 3px 8px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 20px;
+    display: inline-block;
+    align-self: flex-start;
+}
+
+.layer-items {
+    font-size: 11px;
+    line-height: 1.5;
+    color: #424242;
+}
+
+.layer-items ul {
+    list-style: none;
+    margin-left: 0;
+}
+
+.layer-items li {
+    margin-bottom: 3px;
+}
+
+.layer-items li:before {
+    content: "•";
+    color: inherit;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.arrow-down {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    z-index: 10;
+}
+
+.arrow-1 {
+    bottom: -10px;
+    border-top: 15px solid #42A5F5;
+}
+
+.arrow-2 {
+    bottom: -10px;
+    border-top: 15px solid #EC407A;
+}
+
+.arrow-3 {
+    bottom: -10px;
+    border-top: 15px solid #7E57C2;
+}
+
+.arrow-label {
+    position: absolute;
+    left: 55%;
+    bottom: -8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #666;
+    background: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.tech-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.tech-box h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.tech-item {
+    margin-bottom: 10px;
+}
+
+.tech-item-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.tech-item-desc {
+    font-size: 11px;
+    line-height: 1.3;
+    opacity: 0.95;
+    margin-left: 20px;
+}
+
+.flow-box {
+    background: white;
+    border: 2px solid #667eea;
+    border-radius: 12px;
+    padding: 15px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.flow-box h3 {
+    font-size: 17px;
+    color: #1976D2;
+    margin-bottom: 12px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.flow-step {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #424242;
+    margin-bottom: 5px;
+    padding-left: 3px;
+}
+
+.flow-step strong {
+    color: #1976D2;
+}
+
+.flow-substep {
+    margin-left: 10px;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+    line-height: 1.5;
+    margin-bottom: 4px;
+}
+
+.emoji {
+    font-style: normal;
+}
+
+@media print {
+    body {
+        background: white;
+    }
+    .slide {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="slide">
+    <div class="header">
+        <h1>Arquitectura MVVM en AcademiaAPP Android - Jetpack Compose + Coroutines + StateFlow</h1>
+    </div>
+
+    <div class="content">
+        <div class="layers">
+            <!-- VIEW LAYER -->
+            <div class="layer layer-view">
+                <div class="layer-title">
+                    <span class="layer-icon emoji">🖼️</span>
+                    <span>VIEW LAYER</span>
+                    <span style="font-size: 12px; color: #666; font-weight: 400;">(Capa de Presentación)</span>
+                    <span style="margin-left: auto; font-size: 11px; font-weight: 600; color: #1976D2; background: rgba(255, 255, 255, 0.7); padding: 3px 8px; border-radius: 20px;">JETPACK COMPOSE (@Composable)</span>
+                </div>
+                <div class="layer-items">
+                    <ul>
+                        <li><strong>ChatScreen, LoginScreen</strong> (Composables)</li>
+                        <li>Componentes: <strong>CompactList, TypingIndicator</strong></li>
+                        <li>Formularios: <strong>AlumnoAltaForm, AlumnoModificacionForm</strong></li>
+                    </ul>
+                    <div style="margin-top: 6px; font-size: 10px;">
+                        ✅ UI Declarativa: UI = f(estado) • ✅ Observa StateFlow • ✅ Recomposición automática
+                    </div>
+                </div>
+                <div class="arrow-down arrow-1"></div>
+                <div class="arrow-label">⬇️ Eventos / ⬆️ Estado</div>
+            </div>
+
+            <!-- VIEWMODEL LAYER -->
+            <div class="layer layer-viewmodel">
+                <div class="layer-title">
+                    <span class="layer-icon emoji">⚙️</span>
+                    <span>VIEWMODEL LAYER</span>
+                    <span style="font-size: 12px; color: #666; font-weight: 400;">(Lógica de Negocio)</span>
+                    <span style="margin-left: auto; font-size: 11px; font-weight: 600; color: #1976D2; background: rgba(255, 255, 255, 0.7); padding: 3px 8px; border-radius: 20px;">COROUTINES (viewModelScope)</span>
+                </div>
+                <div class="layer-items">
+                    <ul>
+                        <li><strong>ChatViewModel</strong> (636 líneas, 38 estados)</li>
+                        <li><strong>ChatUiState</strong> (StateFlow reactivo)</li>
+                        <li>60+ funciones de lógica de negocio</li>
+                    </ul>
+                    <div style="margin-top: 6px; font-size: 10px;">
+                        ✅ Orquesta Coroutines • ✅ Gestiona StateFlow • ✅ Sin lógica de UI
+                    </div>
+                </div>
+                <div class="arrow-down arrow-2"></div>
+                <div class="arrow-label">⬇️ suspend fun / ⬆️ Result&lt;T&gt;</div>
+            </div>
+
+            <!-- MODEL LAYER -->
+            <div class="layer layer-model">
+                <div class="layer-title">
+                    <span class="layer-icon emoji">💾</span>
+                    <span>MODEL LAYER</span>
+                    <span style="font-size: 12px; color: #666; font-weight: 400;">(Acceso a Datos)</span>
+                    <span style="margin-left: auto; font-size: 11px; font-weight: 600; color: #1976D2; background: rgba(255, 255, 255, 0.7); padding: 3px 8px; border-radius: 20px;">REPOSITORY PATTERN</span>
+                </div>
+                <div class="layer-items">
+                    <ul>
+                        <li><strong>ChatRepository</strong> (interfaz)</li>
+                        <li><strong>MockChatRepository / RemoteChatRepository</strong></li>
+                        <li><strong>SessionStore</strong> (token de autenticación)</li>
+                    </ul>
+                    <div style="margin-top: 6px; font-size: 10px;">
+                        ✅ Abstrae origen de datos • ✅ Desacopla ViewModel de APIs
+                    </div>
+                </div>
+                <div class="arrow-down arrow-3"></div>
+                <div class="arrow-label">⬇️ HTTP / ⬆️ DTOs</div>
+            </div>
+
+            <!-- DATA LAYER -->
+            <div class="layer layer-data">
+                <div class="layer-title">
+                    <span class="layer-icon emoji">📡</span>
+                    <span>DATA LAYER</span>
+                    <span style="font-size: 12px; color: #666; font-weight: 400;">(Comunicación)</span>
+                    <span style="margin-left: auto; font-size: 11px; font-weight: 600; color: #1976D2; background: rgba(255, 255, 255, 0.7); padding: 3px 8px; border-radius: 20px;">RETROFIT + OkHttp</span>
+                </div>
+                <div class="layer-items">
+                    <ul>
+                        <li><strong>ChatApiService</strong> (endpoints REST)</li>
+                        <li><strong>2 APIs:</strong> backend-chat-openai + api-workers</li>
+                        <li>DTOs: <strong>Envelope, GenericItem, Suggestion</strong></li>
+                    </ul>
+                    <div style="margin-top: 6px; font-size: 10px;">
+                        ✅ Llamadas HTTP • ✅ Serialización JSON automática
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <!-- Flujo de Datos -->
+            <div class="flow-box">
+                <h3>🔄 Flujo de Datos Completo</h3>
+                <div class="flow-step"><strong>1️⃣</strong> Usuario toca botón → Composable captura evento</div>
+                
+                <div class="flow-step"><strong>2️⃣</strong> Composable llama → vm.sendMessage()</div>
+                
+                <div class="flow-step"><strong>3️⃣</strong> ViewModel lanza → Coroutine (viewModelScope)</div>
+                <div class="flow-substep">⚡ Operación asíncrona sin bloquear UI</div>
+                
+                <div class="flow-step"><strong>4️⃣</strong> Coroutine llama → repository.sendMessage()</div>
+                <div class="flow-substep">📞 Función suspendible que puede pausarse</div>
+                
+                <div class="flow-step"><strong>5️⃣</strong> Repository hace → HTTP POST (Retrofit)</div>
+                <div class="flow-substep">🌐 Llamada a API backend</div>
+                
+                <div class="flow-step"><strong>6️⃣</strong> API responde → Envelope con datos</div>
+                <div class="flow-substep">📦 Backend devuelve JSON</div>
+                
+                <div class="flow-step"><strong>7️⃣</strong> Repository devuelve → Result.Success</div>
+                <div class="flow-substep">📤 Datos viajan de vuelta al ViewModel</div>
+                
+                <div class="flow-step"><strong>8️⃣</strong> ViewModel actualiza → _ui.update { ... }</div>
+                <div class="flow-substep">🔄 Modifica StateFlow con nuevos datos</div>
+                
+                <div class="flow-step"><strong>9️⃣</strong> StateFlow emite → nuevo estado</div>
+                <div class="flow-substep">📡 Notifica a todos los observadores</div>
+                
+                <div class="flow-step"><strong>🔟</strong> Composable detecta → Recomposición</div>
+                <div class="flow-substep">👁️ collectAsState() detecta cambio</div>
+                
+                <div class="flow-step"><strong>✅</strong> Usuario ve → respuesta en pantalla</div>
+                <div class="flow-substep">🎨 UI se redibuja automáticamente</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
